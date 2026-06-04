@@ -92,6 +92,31 @@ pub struct RTCDataChannel {
     pub(crate) setting_engine: Arc<SettingEngine>,
 }
 
+/// Packages the received bytes from `buffer` into a `Bytes` value to hand to the message handler.
+///
+/// Two implementations are available via feature flags:
+///
+/// - `buf-copy` (default): copies the first `n` valid bytes into a fresh allocation. Correct and
+///   memory-efficient; one small allocation + memcpy per message.
+///
+/// - `buf-handoff`: zero-copy — moves the old buffer to `Bytes` and allocates a fresh one.
+///   WARN (Bug 1): `Vec::with_capacity` produces `len=0`. On the next `read_loop` iteration
+///   `&mut buffer` coerces to `&mut []`, so `read_data_channel` returns `Ok((0,_))` and the
+///   channel closes after the first message.
+///   WARN (Bug 2): `Bytes::from(old)` where `old.len() == DATA_CHANNEL_BUFFER_SIZE` sends the
+///   full zeroed buffer, not just the `n` valid bytes.
+#[cfg(feature = "buf-copy")]
+fn package_message(buffer: &mut Vec<u8>, n: usize) -> Bytes {
+    Bytes::from(buffer[..n].to_vec())
+}
+
+#[cfg(feature = "buf-handoff")]
+fn package_message(buffer: &mut Vec<u8>, _n: usize) -> Bytes {
+    let new_buf = Vec::with_capacity(DATA_CHANNEL_BUFFER_SIZE as usize);
+    let old = std::mem::replace(buffer, new_buf);
+    Bytes::from(old)
+}
+
 impl RTCDataChannel {
     // create the DataChannel object before the networking is set up.
     pub(crate) fn new(params: DataChannelParameters, setting_engine: Arc<SettingEngine>) -> Self {
@@ -375,11 +400,8 @@ impl RTCDataChannel {
 
             if let Some(handler) = &*on_message_handler.load() {
                 let mut f = handler.lock().await;
-                f(DataChannelMessage {
-                    is_string,
-                    data: Bytes::from(buffer[..n].to_vec()),
-                })
-                .await;
+                let data = package_message(&mut buffer, n);
+                f(DataChannelMessage { is_string, data }).await;
             }
         }
     }

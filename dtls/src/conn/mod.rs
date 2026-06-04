@@ -1,7 +1,11 @@
 #[cfg(test)]
 mod conn_test;
 
-use std::io::{BufReader, BufWriter};
+use std::io::BufWriter;
+#[cfg(not(feature = "dtls-buf-reader"))]
+use std::io::Cursor;
+#[cfg(feature = "dtls-buf-reader")]
+use std::io::BufReader;
 use std::marker::{Send, Sync};
 use std::net::SocketAddr;
 use std::sync::atomic::Ordering;
@@ -37,6 +41,18 @@ use crate::record_layer::record_layer_header::*;
 use crate::record_layer::*;
 use crate::signature_hash_algorithm::parse_signature_schemes;
 use crate::state::*;
+
+// Selects the reader type for in-memory byte slices based on feature flags.
+// `dtls-buf-reader` restores the pre-commit BufReader; the default is Cursor,
+// which avoids BufReader's internal 8 KB heap buffer (wasted on already-RAM data).
+macro_rules! make_reader {
+    ($slice:expr) => {{
+        #[cfg(not(feature = "dtls-buf-reader"))]
+        { Cursor::new($slice) }
+        #[cfg(feature = "dtls-buf-reader")]
+        { BufReader::new($slice) }
+    }};
+}
 
 pub(crate) const INITIAL_TICKER_INTERVAL: Duration = Duration::from_secs(1);
 pub(crate) const COOKIE_LENGTH: usize = 20;
@@ -652,11 +668,24 @@ impl DTLSConn {
         }
         p.record.record_layer_header.sequence_number = seq;
 
-        let mut raw_packet = vec![];
-        {
-            let mut writer = BufWriter::<&mut Vec<u8>>::new(raw_packet.as_mut());
-            p.record.marshal(&mut writer)?;
-        }
+        // 1200 is a bit of a magic number, apparently this is what google default to https://github.com/rust-openssl/rust-openssl/issues/1155
+        // `dtls-buf-writer` restores the pre-commit BufWriter path (vec![] + 8 KB internal buffer);
+        // the default pre-allocates 1200 bytes and marshals directly, avoiding the wrapper overhead.
+        #[cfg(not(feature = "dtls-buf-writer"))]
+        let mut raw_packet = {
+            let mut buf = Vec::with_capacity(1200);
+            p.record.marshal(&mut buf)?;
+            buf
+        };
+        #[cfg(feature = "dtls-buf-writer")]
+        let mut raw_packet = {
+            let mut buf = vec![];
+            {
+                let mut w = BufWriter::<&mut Vec<u8>>::new(buf.as_mut());
+                p.record.marshal(&mut w)?;
+            }
+            buf
+        };
 
         if p.should_encrypt {
             let cipher_suite = cipher_suite.lock().await;
@@ -705,13 +734,19 @@ impl DTLSConn {
             };
 
             let mut record_layer_header_bytes = vec![];
+            // `dtls-buf-writer` restores the pre-commit BufWriter path for the header bytes.
+            #[cfg(not(feature = "dtls-buf-writer"))]
+            record_layer_header.marshal(&mut record_layer_header_bytes)?;
+            #[cfg(feature = "dtls-buf-writer")]
             {
-                let mut writer = BufWriter::<&mut Vec<u8>>::new(record_layer_header_bytes.as_mut());
-                record_layer_header.marshal(&mut writer)?;
+                let mut w = BufWriter::<&mut Vec<u8>>::new(record_layer_header_bytes.as_mut());
+                record_layer_header.marshal(&mut w)?;
             }
 
-            //p.record.record_layer_header = record_layer_header;
-
+            // `dtls-buf-writer` also restores the pre-commit unallocated raw_packet vec.
+            #[cfg(not(feature = "dtls-buf-writer"))]
+            let mut raw_packet = Vec::with_capacity(1200);
+            #[cfg(feature = "dtls-buf-writer")]
             let mut raw_packet = vec![];
             raw_packet.extend_from_slice(&record_layer_header_bytes);
             raw_packet.extend_from_slice(handshake_fragment);
@@ -925,7 +960,7 @@ impl DTLSConn {
         mut pkt: Vec<u8>,
         enqueue: bool,
     ) -> (bool, Option<Alert>, Option<Error>) {
-        let mut reader = BufReader::new(pkt.as_slice());
+        let mut reader = make_reader!(pkt.as_slice());
         let h = match RecordLayerHeader::unmarshal(&mut reader) {
             Ok(h) => h,
             Err(err) => {
@@ -1043,7 +1078,7 @@ impl DTLSConn {
             ctx.replay_detector[h.epoch as usize].accept();
             while let Ok((out, epoch)) = ctx.fragment_buffer.pop() {
                 //log::debug!("Extension Debug: out.len()={}", out.len());
-                let mut reader = BufReader::new(out.as_slice());
+                let mut reader = make_reader!(out.as_slice());
                 let raw_handshake = match Handshake::unmarshal(&mut reader) {
                     Ok(rh) => {
                         trace!(
@@ -1078,8 +1113,7 @@ impl DTLSConn {
 
             return (true, None, None);
         }
-
-        let mut reader = BufReader::new(pkt.as_slice());
+        let mut reader = make_reader!(pkt.as_slice());
         let r = match RecordLayer::unmarshal(&mut reader) {
             Ok(r) => r,
             Err(err) => {

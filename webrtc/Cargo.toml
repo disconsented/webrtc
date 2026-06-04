@@ -61,8 +61,17 @@ unicase = "2.8"
 
 [dev-dependencies]
 env_logger = "0.11.3"
+criterion = "0.5"
+
 
 [features]
+default = ["buf-copy"]
 pem = ["dep:pem", "dtls/pem"]
 openssl = ["srtp/openssl"]
 vendored-openssl = ["srtp/vendored-openssl"]
+buf-copy    = []  # pre-commit: alloc + memcpy n bytes per message (correct, default)
+buf-handoff = []  # post-commit: zero-copy buffer hand-off — see WARN comments in data_channel/mod.rs
+
+[[bench]]
+name = "data_channel_buffer"
+harness = false

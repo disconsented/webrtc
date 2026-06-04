@@ -53,9 +53,16 @@ portable-atomic = "1.6"
 chacha20poly1305 = "0.10.1"
 
 [dev-dependencies]
+criterion = "0.5"
 
 [features]
 pem = ["dep:pem"]
+dtls-buf-reader = []  # pre-commit: BufReader for in-memory reads (vs Cursor, the default)
+dtls-buf-writer = []  # pre-commit: BufWriter + unallocated vec for writes (vs direct Vec::with_capacity, the default)
+
+[[bench]]
+name = "conn_io"
+harness = false
 
 #[[example]]
 #name = "dial_psk"

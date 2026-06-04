@@ -22,8 +22,11 @@ resolver = "2"
 [profile.dev]
 opt-level = 0
 
+[profile.bench]
+debug = true
+
 [workspace.package]
-version = "0.17.1"
+version = "0.17.2"
 authors = ["Rain Liu <yliu@webrtc.rs>"]
 edition = "2021"
 license = "MIT/Apache-2.0"
@@ -34,18 +37,18 @@ keywords = ["sansio", "networking", "protocols"]
 categories = ["network-programming"]
 
 [workspace.dependencies]
-webrtc = { version = "0.17.1", path = "webrtc" }
-data = { version = "0.17.1", path = "data", package = "webrtc-data" }
-dtls = { version = "0.17.1", path = "dtls" }
-ice = { version = "0.17.1", path = "ice", package = "webrtc-ice" }
-interceptor = { version = "0.17.1", path = "interceptor" }
-mdns = { version = "0.17.1", path = "mdns", package = "webrtc-mdns" }
-media = { version = "0.17.1", path = "media", package = "webrtc-media" }
-rtcp = { version = "0.17.1", path = "rtcp" }
-rtp = { version = "0.17.1", path = "rtp" }
-sctp = { version = "0.17.1", path = "sctp", package = "webrtc-sctp" }
-sdp = { version = "0.17.1", path = "sdp" }
-srtp = { version = "0.17.1", path = "srtp", package = "webrtc-srtp" }
+webrtc = { version = "0.17.2", path = "webrtc" }
+data = { version = "0.17.2", path = "data", package = "webrtc-data" }
+dtls = { version = "0.17.2", path = "dtls" }
+ice = { version = "0.17.2", path = "ice", package = "webrtc-ice" }
+interceptor = { version = "0.17.2", path = "interceptor" }
+mdns = { version = "0.17.2", path = "mdns", package = "webrtc-mdns" }
+media = { version = "0.17.2", path = "media", package = "webrtc-media" }
+rtcp = { version = "0.17.2", path = "rtcp" }
+rtp = { version = "0.17.2", path = "rtp" }
+sctp = { version = "0.17.2", path = "sctp", package = "webrtc-sctp" }
+sdp = { version = "0.17.2", path = "sdp" }
+srtp = { version = "0.17.2", path = "srtp", package = "webrtc-srtp" }
 stun = { version = "0.17.0", path = "stun" }
-turn = { version = "0.17.1", path = "turn" }
-util = { version = "0.17.1", path = "util", package = "webrtc-util", default-features = false }
+turn = { version = "0.17.2", path = "turn" }
+util = { version = "0.17.2", path = "util", package = "webrtc-util", default-features = false }
