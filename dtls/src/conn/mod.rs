@@ -654,8 +654,8 @@ impl DTLSConn {
 
         let mut raw_packet = vec![];
         {
-            let mut writer = BufWriter::<&mut Vec<u8>>::new(raw_packet.as_mut());
-            p.record.marshal(&mut writer)?;
+
+            p.record.marshal(&mut raw_packet)?;
         }
 
         if p.should_encrypt {
@@ -706,8 +706,8 @@ impl DTLSConn {
 
             let mut record_layer_header_bytes = vec![];
             {
-                let mut writer = BufWriter::<&mut Vec<u8>>::new(record_layer_header_bytes.as_mut());
-                record_layer_header.marshal(&mut writer)?;
+                // let mut writer = BufWriter::<&mut Vec<u8>>::new(record_layer_header_bytes.as_mut());
+                record_layer_header.marshal(&mut record_layer_header_bytes)?;
             }
 
             //p.record.record_layer_header = record_layer_header;
@@ -925,7 +925,8 @@ impl DTLSConn {
         mut pkt: Vec<u8>,
         enqueue: bool,
     ) -> (bool, Option<Alert>, Option<Error>) {
-        let mut reader = BufReader::new(pkt.as_slice());
+        let mut reader = std::io::Cursor::new(&mut pkt);
+        // let mut reader = BufReader::new(pkt.as_slice());
         let h = match RecordLayerHeader::unmarshal(&mut reader) {
             Ok(h) => h,
             Err(err) => {
@@ -1043,7 +1044,8 @@ impl DTLSConn {
             ctx.replay_detector[h.epoch as usize].accept();
             while let Ok((out, epoch)) = ctx.fragment_buffer.pop() {
                 //log::debug!("Extension Debug: out.len()={}", out.len());
-                let mut reader = BufReader::new(out.as_slice());
+                let mut reader = std::io::Cursor::new(out.as_slice());
+                // let mut reader = BufReader::new(out.as_slice());
                 let raw_handshake = match Handshake::unmarshal(&mut reader) {
                     Ok(rh) => {
                         trace!(
@@ -1078,8 +1080,8 @@ impl DTLSConn {
 
             return (true, None, None);
         }
-
-        let mut reader = BufReader::new(pkt.as_slice());
+        let mut reader = std::io::Cursor::new(pkt.as_slice());
+        // let mut reader = BufReader::new(pkt.as_slice());
         let r = match RecordLayer::unmarshal(&mut reader) {
             Ok(r) => r,
             Err(err) => {

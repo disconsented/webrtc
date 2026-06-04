@@ -375,11 +375,21 @@ impl RTCDataChannel {
 
             if let Some(handler) = &*on_message_handler.load() {
                 let mut f = handler.lock().await;
-                f(DataChannelMessage {
-                    is_string,
-                    data: Bytes::from(buffer[..n].to_vec()),
-                })
-                .await;
+                if n == buffer.len() {
+                    let buffer = std::mem::replace(&mut buffer, vec![0u8; DATA_CHANNEL_BUFFER_SIZE as usize]);
+                    f(DataChannelMessage {
+                        is_string,
+                        data: Bytes::from(buffer),
+                    })
+                        .await;
+                } else {
+                    f(DataChannelMessage {
+                        is_string,
+                        data: Bytes::from(buffer[..n].to_vec()),
+                    })
+                        .await;
+                }
+
             }
         }
     }
