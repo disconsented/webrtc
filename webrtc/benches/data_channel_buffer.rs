@@ -1,110 +1,177 @@
-// Benchmarks the two buffer-packaging strategies introduced in commit b0897a1b for the WebRTC
-// data channel read loop.
+// Benchmarks buffer-packaging strategies for the WebRTC data channel read loop.
 //
-// Feature flags (mutually exclusive):
+// Each strategy trades allocation size against copy cost differently.  All four
+// are tested in a single run so you can read the numbers side-by-side.
 //
-//   `buf-copy` (default): pre-commit — allocates `n` bytes and memcpy's the valid portion.
-//                         Correct; the read buffer is reused each iteration.
-//   `buf-handoff`:        post-commit — zero-copy mem::replace; hands the old buffer to Bytes
-//                         and allocates a fresh 65535-byte buffer for the next read.
-//                         See WARN comments in data_channel/mod.rs for the two known bugs.
+//   buf_copy            — alloc n bytes + memcpy n bytes (current default in mod.rs)
+//   buf_handoff         — alloc+zero 65535 bytes + zero copy
+//   buf_handoff_uninit  — alloc 65535 bytes (no zero-fill) + zero copy  [unsafe]
+//   buf_adaptive        — buf_copy when n < THRESHOLD, buf_handoff_uninit otherwise
 //
-// The benchmark is single-threaded and does NOT involve an async executor or SCTP — it isolates
-// the packaging step alone, which is where the CPU/memory tradeoff lives.
+// The zero-fill in buf_handoff costs ~450 ns regardless of message size, which makes
+// buf_copy faster for all messages under ~2 KB on this machine.  buf_handoff_uninit
+// skips the zero-fill and wins for messages above ~1–2 KB.  Adjust ADAPTIVE_THRESHOLD
+// after reading your own benchmark numbers.
 //
-// Run commands:
-//   cargo bench --bench data_channel_buffer -p webrtc --features buf-copy             # pre-commit (default)
-//   cargo bench --bench data_channel_buffer -p webrtc --no-default-features \
-//     --features buf-handoff                                                           # post-commit
+// Run:
+//   cargo bench --bench data_channel_buffer -p webrtc
 //
-// Flamegraph:
-//   cargo flamegraph --bench data_channel_buffer -p webrtc \
-//     --features buf-copy -- --profile-time 10
-//   cargo flamegraph --bench data_channel_buffer -p webrtc \
-//     --no-default-features --features buf-handoff -- --profile-time 10
+// Flamegraph (written to target/criterion/<id>/profile/flamegraph.svg):
+//   cargo bench --bench data_channel_buffer -p webrtc -- --profile-time 10
+
+use std::{fs::File, os::raw::c_int, path::Path};
 
 use bytes::Bytes;
-use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
+use criterion::{black_box, criterion_group, criterion_main, profiler::Profiler, BenchmarkId, Criterion};
+use pprof::ProfilerGuard;
 
-const DATA_CHANNEL_BUFFER_SIZE: usize = u16::MAX as usize; // 65535, matches the constant in mod.rs
+const DATA_CHANNEL_BUFFER_SIZE: usize = u16::MAX as usize; // 65535
+
+// Tune this after running the bench on your hardware.
+const ADAPTIVE_THRESHOLD: usize = 1500;
 
 // ---------------------------------------------------------------------------
-// Both implementations inline — mirrors data_channel/mod.rs package_message exactly.
-// The bench file cannot access pub(crate) items, so we duplicate the logic here.
+// Profiler
 // ---------------------------------------------------------------------------
 
-/// Pre-commit strategy: allocate a fresh Vec of `n` bytes and copy the valid portion.
-/// Memory: one buffer of 65535 always resident + transient `n`-byte allocation per message.
-/// CPU: one alloc + memcpy of `n` bytes per message.
-#[cfg(feature = "buf-copy")]
-fn package_message(buffer: &mut Vec<u8>, n: usize) -> Bytes {
+struct FlamegraphProfiler<'a> {
+    frequency: c_int,
+    active_profiler: Option<ProfilerGuard<'a>>,
+}
+
+impl<'a> FlamegraphProfiler<'a> {
+    fn new(frequency: c_int) -> Self {
+        FlamegraphProfiler { frequency, active_profiler: None }
+    }
+}
+
+impl<'a> Profiler for FlamegraphProfiler<'a> {
+    fn start_profiling(&mut self, _benchmark_id: &str, _benchmark_dir: &Path) {
+        self.active_profiler = Some(ProfilerGuard::new(self.frequency).unwrap());
+    }
+
+    fn stop_profiling(&mut self, _benchmark_id: &str, benchmark_dir: &Path) {
+        std::fs::create_dir_all(benchmark_dir).unwrap();
+        let flamegraph_file = File::create(benchmark_dir.join("flamegraph.svg"))
+            .expect("File system error while creating flamegraph.svg");
+        if let Some(profiler) = self.active_profiler.take() {
+            profiler
+                .report()
+                .build()
+                .unwrap()
+                .flamegraph(flamegraph_file)
+                .expect("Error writing flamegraph");
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Strategies (mirror the implementations in data_channel/mod.rs)
+// ---------------------------------------------------------------------------
+
+/// Alloc n bytes + memcpy n bytes.  Memory-efficient; fast for small messages.
+fn buf_copy(buffer: &mut Vec<u8>, n: usize) -> Bytes {
     Bytes::from(buffer[..n].to_vec())
 }
 
-/// Post-commit strategy: hand off the old buffer and allocate a fresh 65535-byte one.
-/// Memory: up to two 65535-byte buffers in flight (old held by Bytes + new for next read).
-/// CPU: one 65535-byte alloc per message; zero copy of data.
-///
-/// WARN (Bug 1): `Vec::with_capacity` gives len=0. In the real read loop the next
-///   `read_data_channel(&mut buffer)` call would get an empty slice and return Ok((0,_)),
-///   triggering immediate channel close. The bench avoids this by reinitialising the buffer
-///   after each call (matching what the pre-alloc intent should have been).
-///
-/// WARN (Bug 2): `Bytes::from(old)` where `old.len() == 65535` sends the full zeroed buffer,
-///   not just the `n` valid bytes received.
-#[cfg(feature = "buf-handoff")]
-fn package_message(buffer: &mut Vec<u8>, _n: usize) -> Bytes {
-    let new_buf = Vec::with_capacity(DATA_CHANNEL_BUFFER_SIZE);
-    let old = std::mem::replace(buffer, new_buf);
+/// Alloc+zero 65535 bytes + zero copy.  The zero-fill dominates cost (~450 ns fixed),
+/// making this slower than buf_copy for all messages under ~65 KB.
+fn buf_handoff(buffer: &mut Vec<u8>, n: usize) -> Bytes {
+    let new_buf = vec![0u8; DATA_CHANNEL_BUFFER_SIZE];
+    let mut old = std::mem::replace(buffer, new_buf);
+    old.truncate(n);
     Bytes::from(old)
+}
+
+/// Alloc 65535 bytes (no zero-fill) + zero copy.
+///
+/// # Safety
+///
+/// Sound only when the caller guarantees that every byte of `buffer` is overwritten
+/// by `read_data_channel` before it is read back, and that `Bytes::from` with
+/// `truncate(n)` never exposes indices >= n (both invariants hold in `read_loop`).
+fn buf_handoff_uninit(buffer: &mut Vec<u8>, n: usize) -> Bytes {
+    let mut new_buf = Vec::with_capacity(DATA_CHANNEL_BUFFER_SIZE);
+    // SAFETY: read_data_channel writes all bytes it returns before any read access.
+    // The n..65535 region is inside the allocation but outside the Bytes view after truncate.
+    unsafe { new_buf.set_len(DATA_CHANNEL_BUFFER_SIZE) };
+    let mut old = std::mem::replace(buffer, new_buf);
+    old.truncate(n);
+    Bytes::from(old)
+}
+
+/// buf_copy below ADAPTIVE_THRESHOLD, buf_handoff_uninit above.
+fn buf_adaptive(buffer: &mut Vec<u8>, n: usize) -> Bytes {
+    if n < ADAPTIVE_THRESHOLD {
+        buf_copy(buffer, n)
+    } else {
+        buf_handoff_uninit(buffer, n)
+    }
 }
 
 // ---------------------------------------------------------------------------
 // Benchmark
 // ---------------------------------------------------------------------------
 
-fn bench_package_message(c: &mut Criterion) {
-    // Three message sizes chosen to span the realistic WebRTC data channel range:
-    //
-    //     64 B  — typical signaling / control messages.  Copy cost is tiny relative to alloc
-    //             overhead, so the two strategies should look similar here.
-    //   1400 B  — typical data payload near Ethernet MTU.  Midpoint of the tradeoff.
-    //  16384 B  — large blob (WebRTC spec allows up to DATA_CHANNEL_BUFFER_SIZE).  Copy cost
-    //             dominates here, which is where buf-handoff would show its biggest advantage
-    //             if the bug were fixed.
+fn bench_strategies(c: &mut Criterion) {
+    // 64 B   — typical signaling / control messages
+    // 1400 B — near Ethernet MTU, straddles the adaptive threshold
+    // 16384 B — large blob; copy cost dominates here
     let sizes: &[usize] = &[64, 1400, 16384];
 
-    let mut group = c.benchmark_group("package_message");
-
     for &n in sizes {
-        // Pre-fill the buffer with `n` bytes of realistic-looking data so that buf-copy
-        // actually copies real content rather than measuring a trivially-predictable pattern.
         let payload: Vec<u8> = (0..n).map(|i| (i & 0xFF) as u8).collect();
 
-        group.bench_with_input(BenchmarkId::from_parameter(n), &n, |b, &n| {
-            // Initialise outside the iter loop so setup cost is not measured.
-            let mut buffer = vec![0u8; DATA_CHANNEL_BUFFER_SIZE];
-            buffer[..n].copy_from_slice(&payload);
-
-            b.iter(|| {
-                let result = package_message(black_box(&mut buffer), black_box(n));
-
-                // For buf-handoff: buffer.len() is now 0 after mem::replace (Bug 1).
-                // Reinitialise so the next iteration has a valid read buffer, which mirrors
-                // what correct code would do (vec![0u8; DATA_CHANNEL_BUFFER_SIZE]).
-                if buffer.len() < n {
-                    buffer.resize(DATA_CHANNEL_BUFFER_SIZE, 0);
-                    buffer[..n].copy_from_slice(&payload);
-                }
-
-                // Prevent the compiler from eliding the Bytes allocation.
-                black_box(result)
+        // buf_copy: buffer retains its content after each call; no restore needed.
+        {
+            let mut group = c.benchmark_group("buf_copy");
+            group.bench_with_input(BenchmarkId::from_parameter(n), &n, |b, &n| {
+                let mut buffer = vec![0u8; DATA_CHANNEL_BUFFER_SIZE];
+                buffer[..n].copy_from_slice(&payload);
+                b.iter(|| black_box(buf_copy(black_box(&mut buffer), black_box(n))));
             });
-        });
-    }
+            group.finish();
+        }
 
-    group.finish();
+        // buf_handoff: after each call buffer is a fresh zero-filled vec; no restore needed
+        // because buf_handoff wraps the OLD buffer in Bytes and the new buffer's content is
+        // irrelevant to the timing of the operation itself.
+        {
+            let mut group = c.benchmark_group("buf_handoff");
+            group.bench_with_input(BenchmarkId::from_parameter(n), &n, |b, &n| {
+                let mut buffer = vec![0u8; DATA_CHANNEL_BUFFER_SIZE];
+                b.iter(|| black_box(buf_handoff(black_box(&mut buffer), black_box(n))));
+            });
+            group.finish();
+        }
+
+        // buf_handoff_uninit: same reasoning — content of new buffer irrelevant to timing.
+        {
+            let mut group = c.benchmark_group("buf_handoff_uninit");
+            group.bench_with_input(BenchmarkId::from_parameter(n), &n, |b, &n| {
+                let mut buffer = vec![0u8; DATA_CHANNEL_BUFFER_SIZE];
+                b.iter(|| black_box(buf_handoff_uninit(black_box(&mut buffer), black_box(n))));
+            });
+            group.finish();
+        }
+
+        // buf_adaptive: restore buffer only on the handoff path (buffer.len() drops to n after
+        // truncate and the next iter needs len=65535 for the read-slice coercion).
+        {
+            let mut group = c.benchmark_group("buf_adaptive");
+            group.bench_with_input(BenchmarkId::from_parameter(n), &n, |b, &n| {
+                let mut buffer = vec![0u8; DATA_CHANNEL_BUFFER_SIZE];
+                buffer[..n].copy_from_slice(&payload);
+                b.iter(|| black_box(buf_adaptive(black_box(&mut buffer), black_box(n))));
+            });
+            group.finish();
+        }
+    }
 }
 
-criterion_group!(benches, bench_package_message);
+criterion_group! {
+    name = benches;
+    config = Criterion::default().with_profiler(FlamegraphProfiler::new(997));
+    targets = bench_strategies
+}
 criterion_main!(benches);

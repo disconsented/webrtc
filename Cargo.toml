@@ -23,7 +23,14 @@ resolver = "2"
 opt-level = 0
 
 [profile.bench]
-debug = true
+debug = "full"
+strip = "none"
+
+[profile.release]
+debug = "full"
+strip = "none"
+
+
 
 [workspace.package]
 version = "0.17.2"

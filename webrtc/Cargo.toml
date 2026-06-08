@@ -62,6 +62,7 @@ unicase = "2.8"
 [dev-dependencies]
 env_logger = "0.11.3"
 criterion = "0.5"
+pprof = { version = "0.15", features = ["flamegraph", "criterion"] }
 
 
 [features]
@@ -69,8 +70,10 @@ default = ["buf-copy"]
 pem = ["dep:pem", "dtls/pem"]
 openssl = ["srtp/openssl"]
 vendored-openssl = ["srtp/vendored-openssl"]
-buf-copy    = []  # pre-commit: alloc + memcpy n bytes per message (correct, default)
-buf-handoff = []  # post-commit: zero-copy buffer hand-off — see WARN comments in data_channel/mod.rs
+buf-copy            = []  # alloc n bytes + memcpy n bytes (default)
+buf-handoff         = []  # alloc+zero 65535 bytes + zero copy
+buf-handoff-uninit  = []  # alloc 65535 bytes (no zero-fill) + zero copy [unsafe]; fastest for large messages
+buf-adaptive        = []  # buf-copy below 1500 B, buf-handoff-uninit above
 
 [[bench]]
 name = "data_channel_buffer"

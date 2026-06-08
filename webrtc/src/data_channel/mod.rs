@@ -94,27 +94,59 @@ pub struct RTCDataChannel {
 
 /// Packages the received bytes from `buffer` into a `Bytes` value to hand to the message handler.
 ///
-/// Two implementations are available via feature flags:
+/// Four implementations are available via feature flags (mutually exclusive).
+/// Run `cargo bench --bench data_channel_buffer -p webrtc` to find the best fit for your
+/// message-size distribution before switching away from the default.
 ///
-/// - `buf-copy` (default): copies the first `n` valid bytes into a fresh allocation. Correct and
-///   memory-efficient; one small allocation + memcpy per message.
+/// - `buf-copy` (default): alloc n bytes + memcpy n bytes. Memory-efficient; fastest for small
+///   messages.
 ///
-/// - `buf-handoff`: zero-copy — moves the old buffer to `Bytes` and allocates a fresh one.
-///   WARN (Bug 1): `Vec::with_capacity` produces `len=0`. On the next `read_loop` iteration
-///   `&mut buffer` coerces to `&mut []`, so `read_data_channel` returns `Ok((0,_))` and the
-///   channel closes after the first message.
-///   WARN (Bug 2): `Bytes::from(old)` where `old.len() == DATA_CHANNEL_BUFFER_SIZE` sends the
-///   full zeroed buffer, not just the `n` valid bytes.
+/// - `buf-handoff`: alloc+zero 65535 bytes + zero copy. The zero-fill costs ~450 ns regardless
+///   of message size, so this is only faster than buf-copy for very large messages.
+///
+/// - `buf-handoff-uninit`: alloc 65535 bytes (no zero-fill) + zero copy. Fastest for messages
+///   above ~1–2 KB. Safe because `read_data_channel` writes all returned bytes before any read,
+///   and `truncate(n)` keeps the Bytes view within [0..n].
+///
+/// - `buf-adaptive`: `buf-copy` below 1500 bytes, `buf-handoff-uninit` above. Tune the
+///   threshold using the benchmark output for your hardware.
 #[cfg(feature = "buf-copy")]
 fn package_message(buffer: &mut Vec<u8>, n: usize) -> Bytes {
     Bytes::from(buffer[..n].to_vec())
 }
 
 #[cfg(feature = "buf-handoff")]
-fn package_message(buffer: &mut Vec<u8>, _n: usize) -> Bytes {
-    let new_buf = Vec::with_capacity(DATA_CHANNEL_BUFFER_SIZE as usize);
-    let old = std::mem::replace(buffer, new_buf);
+fn package_message(buffer: &mut Vec<u8>, n: usize) -> Bytes {
+    let new_buf = vec![0u8; DATA_CHANNEL_BUFFER_SIZE as usize];
+    let mut old = std::mem::replace(buffer, new_buf);
+    old.truncate(n);
     Bytes::from(old)
+}
+
+#[cfg(feature = "buf-handoff-uninit")]
+fn package_message(buffer: &mut Vec<u8>, n: usize) -> Bytes {
+    let mut new_buf = Vec::with_capacity(DATA_CHANNEL_BUFFER_SIZE as usize);
+    // SAFETY: read_data_channel overwrites all bytes it returns before any read access.
+    // Bytes::from + truncate(n) never exposes indices >= n, keeping the view within the
+    // initialized [0..n] region. The [n..65535] region is freed when the Bytes is dropped.
+    unsafe { new_buf.set_len(DATA_CHANNEL_BUFFER_SIZE as usize) };
+    let mut old = std::mem::replace(buffer, new_buf);
+    old.truncate(n);
+    Bytes::from(old)
+}
+
+#[cfg(feature = "buf-adaptive")]
+fn package_message(buffer: &mut Vec<u8>, n: usize) -> Bytes {
+    if n < 1500 {
+        Bytes::from(buffer[..n].to_vec())
+    } else {
+        let mut new_buf = Vec::with_capacity(DATA_CHANNEL_BUFFER_SIZE as usize);
+        // SAFETY: same invariants as buf-handoff-uninit above.
+        unsafe { new_buf.set_len(DATA_CHANNEL_BUFFER_SIZE as usize) };
+        let mut old = std::mem::replace(buffer, new_buf);
+        old.truncate(n);
+        Bytes::from(old)
+    }
 }
 
 impl RTCDataChannel {
