@@ -35,6 +35,7 @@ pub const OUTPUT_STAP_AHEADER: u8 = 0x78;
 pub static ANNEXB_NALUSTART_CODE: Bytes = Bytes::from_static(&[0x00, 0x00, 0x00, 0x01]);
 
 impl H264Payloader {
+    #[tracing::instrument(level = "debug", skip(nalu, start))]
     fn next_ind(nalu: &Bytes, start: usize) -> (isize, isize) {
         let mut zero_count = 0;
 
@@ -50,6 +51,7 @@ impl H264Payloader {
         (-1, -1)
     }
 
+    #[tracing::instrument(level = "debug", skip(self, nalu, mtu, payloads))]
     fn emit(&mut self, nalu: &Bytes, mtu: usize, payloads: &mut Vec<Bytes>) {
         if nalu.is_empty() {
             return;
@@ -158,6 +160,7 @@ impl H264Payloader {
 }
 
 impl Payloader for H264Payloader {
+    #[tracing::instrument(level = "debug", skip(self, mtu, payload))]
     /// Payload fragments a H264 packet across one or more byte arrays
     fn payload(&mut self, mtu: usize, payload: &Bytes) -> Result<Vec<Bytes>> {
         if payload.is_empty() || mtu == 0 {
@@ -191,6 +194,7 @@ impl Payloader for H264Payloader {
         Ok(payloads)
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn clone_to(&self) -> Box<dyn Payloader + Send + Sync> {
         Box::new(self.clone())
     }
@@ -204,6 +208,7 @@ pub struct H264Packet {
 }
 
 impl Depacketizer for H264Packet {
+    #[tracing::instrument(level = "debug", skip(self, packet))]
     /// depacketize parses the passed byte slice and stores the result in the H264Packet this method is called upon
     fn depacketize(&mut self, packet: &Bytes) -> Result<Bytes> {
         if packet.len() <= 1 {
@@ -294,6 +299,7 @@ impl Depacketizer for H264Packet {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self, payload))]
     /// is_partition_head checks if this is the head of a packetized nalu stream.
     fn is_partition_head(&self, payload: &Bytes) -> bool {
         if payload.len() < 2 {
@@ -309,6 +315,7 @@ impl Depacketizer for H264Packet {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self, marker, _payload))]
     fn is_partition_tail(&self, marker: bool, _payload: &Bytes) -> bool {
         marker
     }

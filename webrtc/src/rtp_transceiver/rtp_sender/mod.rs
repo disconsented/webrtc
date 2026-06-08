@@ -101,6 +101,7 @@ pub struct RTCRtpSender {
 }
 
 impl std::fmt::Debug for RTCRtpSender {
+    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("RTCRtpSender")
             .field("id", &self.id)
@@ -109,6 +110,7 @@ impl std::fmt::Debug for RTCRtpSender {
 }
 
 impl RTCRtpSender {
+    #[tracing::instrument(level = "debug", skip(track, kind, transport, media_engine, setting_engine, interceptor, start_paused))]
     pub async fn new(
         track: Option<Arc<dyn TrackLocal + Send + Sync>>,
         kind: RTPCodecType,
@@ -180,6 +182,7 @@ impl RTCRtpSender {
         ret
     }
 
+    #[tracing::instrument(level = "debug", skip(self, track))]
     /// AddEncoding adds an encoding to RTPSender. Used by simulcast senders.
     pub async fn add_encoding(&self, track: Arc<dyn TrackLocal + Send + Sync>) -> Result<()> {
         let mut track_encodings = self.track_encodings.lock().await;
@@ -219,6 +222,7 @@ impl RTCRtpSender {
             .await
     }
 
+    #[tracing::instrument(level = "debug", skip(self, track_encodings, track))]
     async fn add_encoding_internal(
         &self,
         track_encodings: &mut Vec<TrackEncoding>,
@@ -297,14 +301,17 @@ impl RTCRtpSender {
         Ok(())
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     pub(crate) fn is_negotiated(&self) -> bool {
         self.negotiated.load(Ordering::SeqCst)
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     pub(crate) fn set_negotiated(&self) {
         self.negotiated.store(true, Ordering::SeqCst);
     }
 
+    #[tracing::instrument(level = "debug", skip(self, rtp_transceiver))]
     pub(crate) fn set_rtp_transceiver(&self, rtp_transceiver: Option<Weak<RTCRtpTransceiver>>) {
         if let Some(t) = rtp_transceiver.as_ref().and_then(|t| t.upgrade()) {
             self.set_paused(!t.direction().has_send());
@@ -313,16 +320,19 @@ impl RTCRtpSender {
         *tr = rtp_transceiver;
     }
 
+    #[tracing::instrument(level = "debug", skip(self, paused))]
     pub(crate) fn set_paused(&self, paused: bool) {
         self.paused.store(paused, Ordering::SeqCst);
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// transport returns the currently-configured DTLSTransport
     /// if one has not yet been configured
     pub fn transport(&self) -> Arc<RTCDtlsTransport> {
         Arc::clone(&self.transport)
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// get_parameters describes the current configuration for the encoding and
     /// transmission of media on the sender's track.
     pub async fn get_parameters(&self) -> RTCRtpSendParameters {
@@ -365,6 +375,7 @@ impl RTCRtpSender {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// track returns the RTCRtpTransceiver track, or nil
     pub async fn track(&self) -> Option<Arc<dyn TrackLocal + Send + Sync>> {
         self.track_encodings
@@ -374,6 +385,7 @@ impl RTCRtpSender {
             .map(|e| Arc::clone(&e.track))
     }
 
+    #[tracing::instrument(level = "debug", skip(self, track))]
     /// replace_track replaces the track currently being used as the sender's source with a new TrackLocal.
     /// The new track must be of the same media kind (audio, video, etc) and switching the track should not
     /// require negotiation.
@@ -449,6 +461,7 @@ impl RTCRtpSender {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self, parameters))]
     /// send Attempts to set the parameters controlling the sending of media.
     pub async fn send(&self, parameters: &RTCRtpSendParameters) -> Result<()> {
         if self.has_sent() {
@@ -530,6 +543,7 @@ impl RTCRtpSender {
         Ok(())
     }
 
+    #[tracing::instrument(level = "debug", skip(self, rtcp_reader))]
     /// starts a routine that reads the rtx rtcp stream
     /// These packets aren't exposed to the user, but we need to process them
     /// for TWCC
@@ -554,6 +568,7 @@ impl RTCRtpSender {
         });
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// stop irreversibly stops the RTPSender
     pub async fn stop(&self) -> Result<()> {
         if self.stop_called_signal.load(Ordering::SeqCst) {
@@ -587,6 +602,7 @@ impl RTCRtpSender {
         Ok(())
     }
 
+    #[tracing::instrument(level = "debug", skip(self, b))]
     /// read reads incoming RTCP for this RTPReceiver
     pub async fn read(
         &self,
@@ -608,6 +624,7 @@ impl RTCRtpSender {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// read_rtcp is a convenience method that wraps Read and unmarshals for you.
     pub async fn read_rtcp(
         &self,
@@ -618,6 +635,7 @@ impl RTCRtpSender {
         Ok((pkts, attributes))
     }
 
+    #[tracing::instrument(level = "debug", skip(self, b, rid))]
     /// ReadSimulcast reads incoming RTCP for this RTPSender for given rid
     pub async fn read_simulcast(
         &self,
@@ -640,6 +658,7 @@ impl RTCRtpSender {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self, rid))]
     /// ReadSimulcastRTCP is a convenience method that wraps ReadSimulcast and unmarshal for you
     pub async fn read_rtcp_simulcast(
         &self,
@@ -651,6 +670,7 @@ impl RTCRtpSender {
         Ok((pkts, attributes))
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// Enables overriding outgoing `RTP` packets' `sequence number`s.
     ///
     /// Must be called once before any data sent or never called at all.
@@ -664,6 +684,7 @@ impl RTCRtpSender {
         self.rtx_seq_trans.enable()
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// Will asynchronously block/wait until send() has been called
     ///
     /// Note that it could return if underlying channel is closed,
@@ -674,22 +695,26 @@ impl RTCRtpSender {
         let _ = watch.wait_for(|r| *r).await;
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// has_sent tells if data has been ever sent for this instance
     pub(crate) fn has_sent(&self) -> bool {
         *self.send_called.borrow()
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// has_stopped tells if stop has been called
     pub(crate) async fn has_stopped(&self) -> bool {
         self.stop_called_signal.load(Ordering::SeqCst)
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     pub(crate) fn initial_track_id(&self) -> Option<String> {
         let lock = self.initial_track_id.lock().unwrap();
 
         lock.clone()
     }
 
+    #[tracing::instrument(level = "debug", skip(self, id))]
     pub(crate) fn set_initial_track_id(&self, id: String) -> Result<()> {
         let mut lock = self.initial_track_id.lock().unwrap();
 
@@ -702,6 +727,7 @@ impl RTCRtpSender {
         Ok(())
     }
 
+    #[tracing::instrument(level = "debug", skip(self, id))]
     pub(crate) fn associate_media_stream_id(&self, id: String) -> bool {
         let mut lock = self.associated_media_stream_ids.lock().unwrap();
 
@@ -714,6 +740,7 @@ impl RTCRtpSender {
         true
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     pub(crate) fn associated_media_stream_ids(&self) -> Vec<String> {
         let lock = self.associated_media_stream_ids.lock().unwrap();
 

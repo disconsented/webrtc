@@ -18,6 +18,7 @@ pub struct CandidatePeerReflexiveConfig {
 }
 
 impl CandidatePeerReflexiveConfig {
+    #[tracing::instrument(level = "debug", skip(self))]
     /// Creates a new peer reflective candidate.
     pub fn new_candidate_peer_reflexive(self) -> Result<CandidateBase> {
         let ip: IpAddr = match self.base_config.address.parse() {

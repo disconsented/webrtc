@@ -43,12 +43,14 @@ pub(crate) struct ChunkHeartbeatAck {
 
 /// makes ChunkHeartbeatAck printable
 impl fmt::Display for ChunkHeartbeatAck {
+    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.header())
     }
 }
 
 impl Chunk for ChunkHeartbeatAck {
+    #[tracing::instrument(level = "debug", skip(self))]
     fn header(&self) -> ChunkHeader {
         ChunkHeader {
             typ: CT_HEARTBEAT_ACK,
@@ -57,6 +59,7 @@ impl Chunk for ChunkHeartbeatAck {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(raw))]
     fn unmarshal(raw: &Bytes) -> Result<Self> {
         let header = ChunkHeader::unmarshal(raw)?;
 
@@ -78,6 +81,7 @@ impl Chunk for ChunkHeartbeatAck {
         Ok(ChunkHeartbeatAck { params })
     }
 
+    #[tracing::instrument(level = "debug", skip(self, buf))]
     fn marshal_to(&self, buf: &mut BytesMut) -> Result<usize> {
         if self.params.len() != 1 {
             return Err(Error::ErrHeartbeatAckParams);
@@ -107,10 +111,12 @@ impl Chunk for ChunkHeartbeatAck {
         Ok(buf.len())
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn check(&self) -> Result<()> {
         Ok(())
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn value_length(&self) -> usize {
         let mut l = 0;
         for (idx, p) in self.params.iter().enumerate() {
@@ -123,6 +129,7 @@ impl Chunk for ChunkHeartbeatAck {
         l
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn as_any(&self) -> &(dyn Any + Send + Sync) {
         self
     }

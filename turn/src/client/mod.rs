@@ -86,27 +86,32 @@ struct ClientInternal {
 
 #[async_trait]
 impl RelayConnObserver for ClientInternal {
+    #[tracing::instrument(level = "debug", skip(self))]
     /// Returns the TURN server address.
     fn turn_server_addr(&self) -> String {
         self.turn_serv_addr.clone()
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// Returns the `username`.
     fn username(&self) -> Username {
         self.username.clone()
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// Return the `realm`.
     fn realm(&self) -> Realm {
         self.realm.clone()
     }
 
+    #[tracing::instrument(level = "debug", skip(self, data, to))]
     /// Sends data to the specified destination using the base socket.
     async fn write_to(&self, data: &[u8], to: &str) -> std::result::Result<usize, util::Error> {
         let n = self.conn.send_to(data, SocketAddr::from_str(to)?).await?;
         Ok(n)
     }
 
+    #[tracing::instrument(level = "debug", skip(self, msg, to, ignore_result))]
     /// Performs STUN transaction.
     async fn perform_transaction(
         &mut self,
@@ -160,6 +165,7 @@ impl RelayConnObserver for ClientInternal {
 }
 
 impl ClientInternal {
+    #[tracing::instrument(level = "debug", skip(config))]
     /// Creates a new [`ClientInternal`].
     async fn new(config: ClientConfig) -> Result<Self> {
         let net = if let Some(vnet) = config.vnet {
@@ -216,11 +222,13 @@ impl ClientInternal {
         })
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// Returns the STUN server address.
     fn stun_server_addr(&self) -> String {
         self.stun_serv_addr.clone()
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// `listen()` will have this client start listening on the `relay_conn` provided via the config.
     /// This is optional. If not used, you will need to call `handle_inbound` method
     /// to supply incoming data, instead.
@@ -282,6 +290,7 @@ impl ClientInternal {
         Ok(())
     }
 
+    #[tracing::instrument(level = "debug", skip(read_ch_tx, data, from, stun_serv_str, tr_map, binding_mgr))]
     /// Handles data received.
     ///
     /// This method handles incoming packet demultiplex it by the source address
@@ -329,6 +338,7 @@ impl ClientInternal {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(tr_map, read_ch_tx, data, from))]
     async fn handle_stun_message(
         tr_map: &Arc<Mutex<TransactionMap>>,
         read_ch_tx: &Arc<Mutex<Option<mpsc::Sender<InboundData>>>>,
@@ -398,6 +408,7 @@ impl ClientInternal {
         Ok(())
     }
 
+    #[tracing::instrument(level = "debug", skip(binding_mgr, read_ch_tx, data))]
     async fn handle_channel_data(
         binding_mgr: &Arc<Mutex<BindingManager>>,
         read_ch_tx: &Arc<Mutex<Option<mpsc::Sender<InboundData>>>>,
@@ -424,6 +435,7 @@ impl ClientInternal {
         Ok(())
     }
 
+    #[tracing::instrument(level = "debug", skip(read_ch_tx, data, from))]
     /// Passes inbound data in RelayConn.
     async fn handle_inbound_relay_conn(
         read_ch_tx: &Arc<Mutex<Option<mpsc::Sender<InboundData>>>>,
@@ -449,6 +461,7 @@ impl ClientInternal {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// Closes this client.
     async fn close(&mut self) {
         self.close_notify.cancel();
@@ -462,6 +475,7 @@ impl ClientInternal {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self, to))]
     /// Sends a new STUN request to the given transport address.
     async fn send_binding_request_to(&mut self, to: &str) -> Result<SocketAddr> {
         let msg = {
@@ -489,6 +503,7 @@ impl ClientInternal {
         Ok(SocketAddr::new(refl_addr.ip, refl_addr.port))
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// Sends a new STUN request to the STUN server.
     async fn send_binding_request(&mut self) -> Result<SocketAddr> {
         if self.stun_serv_addr.is_empty() {
@@ -499,6 +514,7 @@ impl ClientInternal {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(binding_mgr, ch_num))]
     /// Returns a peer address associated with the
     // channel number on this UDPConn
     async fn find_addr_by_channel_number(
@@ -509,6 +525,7 @@ impl ClientInternal {
         bm.find_by_number(ch_num).map(|b| b.addr)
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// Sends a TURN allocation request to the given transport address.
     async fn allocate(&mut self) -> Result<RelayConnConfig> {
         {
@@ -609,6 +626,7 @@ pub struct Client {
 }
 
 impl Client {
+    #[tracing::instrument(level = "debug", skip(config))]
     pub async fn new(config: ClientConfig) -> Result<Self> {
         let ci = ClientInternal::new(config).await?;
         Ok(Client {
@@ -616,11 +634,13 @@ impl Client {
         })
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     pub async fn listen(&self) -> Result<()> {
         let ci = self.client_internal.lock().await;
         ci.listen().await
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     pub async fn allocate(&self) -> Result<impl Conn> {
         let config = {
             let mut ci = self.client_internal.lock().await;
@@ -630,18 +650,21 @@ impl Client {
         Ok(RelayConn::new(Arc::clone(&self.client_internal), config).await)
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     pub async fn close(&self) -> Result<()> {
         let mut ci = self.client_internal.lock().await;
         ci.close().await;
         Ok(())
     }
 
+    #[tracing::instrument(level = "debug", skip(self, to))]
     /// Sends a new STUN request to the given transport address.
     pub async fn send_binding_request_to(&self, to: &str) -> Result<SocketAddr> {
         let mut ci = self.client_internal.lock().await;
         ci.send_binding_request_to(to).await
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// Sends a new STUN request to the STUN server.
     pub async fn send_binding_request(&self) -> Result<SocketAddr> {
         let mut ci = self.client_internal.lock().await;

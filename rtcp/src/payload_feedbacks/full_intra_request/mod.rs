@@ -34,6 +34,7 @@ pub struct FullIntraRequest {
 const FIR_OFFSET: usize = 8;
 
 impl fmt::Display for FullIntraRequest {
+    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut out = format!("FullIntraRequest {} {}", self.sender_ssrc, self.media_ssrc);
         for e in &self.fir {
@@ -44,6 +45,7 @@ impl fmt::Display for FullIntraRequest {
 }
 
 impl Packet for FullIntraRequest {
+    #[tracing::instrument(level = "debug", skip(self))]
     fn header(&self) -> Header {
         Header {
             padding: get_padding_size(self.raw_size()) != 0,
@@ -53,6 +55,7 @@ impl Packet for FullIntraRequest {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// destination_ssrc returns an array of SSRC values that this packet refers to.
     fn destination_ssrc(&self) -> Vec<u32> {
         let mut ssrcs: Vec<u32> = Vec::with_capacity(self.fir.len());
@@ -62,24 +65,29 @@ impl Packet for FullIntraRequest {
         ssrcs
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn raw_size(&self) -> usize {
         HEADER_LENGTH + FIR_OFFSET + self.fir.len() * 8
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn as_any(&self) -> &(dyn Any + Send + Sync) {
         self
     }
 
+    #[tracing::instrument(level = "debug", skip(self, other))]
     fn equal(&self, other: &(dyn Packet + Send + Sync)) -> bool {
         other.as_any().downcast_ref::<FullIntraRequest>() == Some(self)
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn cloned(&self) -> Box<dyn Packet + Send + Sync> {
         Box::new(self.clone())
     }
 }
 
 impl MarshalSize for FullIntraRequest {
+    #[tracing::instrument(level = "debug", skip(self))]
     fn marshal_size(&self) -> usize {
         let l = self.raw_size();
         // align to 32-bit boundary
@@ -88,6 +96,7 @@ impl MarshalSize for FullIntraRequest {
 }
 
 impl Marshal for FullIntraRequest {
+    #[tracing::instrument(level = "debug", skip(self, buf))]
     /// Marshal encodes the FullIntraRequest
     fn marshal_to(&self, mut buf: &mut [u8]) -> Result<usize> {
         if buf.remaining_mut() < self.marshal_size() {
@@ -117,6 +126,7 @@ impl Marshal for FullIntraRequest {
 }
 
 impl Unmarshal for FullIntraRequest {
+    #[tracing::instrument(level = "debug", skip(raw_packet))]
     /// Unmarshal decodes the FullIntraRequest
     fn unmarshal<B>(raw_packet: &mut B) -> Result<Self>
     where

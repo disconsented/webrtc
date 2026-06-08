@@ -17,6 +17,7 @@ pub(crate) enum HmacAlgorithm {
 }
 
 impl fmt::Display for HmacAlgorithm {
+    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let s = match *self {
             HmacAlgorithm::HmacResv1 => "HMAC Reserved (0x00)",
@@ -30,6 +31,7 @@ impl fmt::Display for HmacAlgorithm {
 }
 
 impl From<u16> for HmacAlgorithm {
+    #[tracing::instrument(level = "debug", skip(v))]
     fn from(v: u16) -> HmacAlgorithm {
         match v {
             0 => HmacAlgorithm::HmacResv1,
@@ -47,6 +49,7 @@ pub(crate) struct ParamRequestedHmacAlgorithm {
 }
 
 impl fmt::Display for ParamRequestedHmacAlgorithm {
+    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
@@ -62,6 +65,7 @@ impl fmt::Display for ParamRequestedHmacAlgorithm {
 }
 
 impl Param for ParamRequestedHmacAlgorithm {
+    #[tracing::instrument(level = "debug", skip(self))]
     fn header(&self) -> ParamHeader {
         ParamHeader {
             typ: ParamType::ReqHmacAlgo,
@@ -69,6 +73,7 @@ impl Param for ParamRequestedHmacAlgorithm {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(raw))]
     fn unmarshal(raw: &Bytes) -> Result<Self> {
         let header = ParamHeader::unmarshal(raw)?;
 
@@ -93,6 +98,7 @@ impl Param for ParamRequestedHmacAlgorithm {
         })
     }
 
+    #[tracing::instrument(level = "debug", skip(self, buf))]
     fn marshal_to(&self, buf: &mut BytesMut) -> Result<usize> {
         self.header().marshal_to(buf)?;
         for a in &self.available_algorithms {
@@ -101,14 +107,17 @@ impl Param for ParamRequestedHmacAlgorithm {
         Ok(buf.len())
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn value_length(&self) -> usize {
         2 * self.available_algorithms.len()
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn clone_to(&self) -> Box<dyn Param + Send + Sync> {
         Box::new(self.clone())
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn as_any(&self) -> &(dyn Any + Send + Sync) {
         self
     }

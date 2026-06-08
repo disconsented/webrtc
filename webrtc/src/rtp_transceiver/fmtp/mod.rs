@@ -28,11 +28,13 @@ pub trait Fmtp: fmt::Debug {
 }
 
 impl PartialEq for dyn Fmtp {
+    #[tracing::instrument(level = "debug", skip(self, other))]
     fn eq(&self, other: &Self) -> bool {
         self.equal(other)
     }
 }
 
+#[tracing::instrument(level = "debug", skip(mime_type, line))]
 /// parse parses an fmtp string based on the MimeType
 pub fn parse(mime_type: &str, line: &str) -> Box<dyn Fmtp> {
     let mut parameters = HashMap::new();

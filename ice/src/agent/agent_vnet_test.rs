@@ -17,30 +17,39 @@ pub(crate) struct MockConn;
 
 #[async_trait]
 impl Conn for MockConn {
+    #[tracing::instrument(level = "debug", skip(self, _addr))]
     async fn connect(&self, _addr: SocketAddr) -> Result<(), util::Error> {
         Ok(())
     }
+    #[tracing::instrument(level = "debug", skip(self, _buf))]
     async fn recv(&self, _buf: &mut [u8]) -> Result<usize, util::Error> {
         Ok(0)
     }
+    #[tracing::instrument(level = "debug", skip(self, _buf))]
     async fn recv_from(&self, _buf: &mut [u8]) -> Result<(usize, SocketAddr), util::Error> {
         Ok((0, SocketAddr::new(Ipv4Addr::new(0, 0, 0, 0).into(), 0)))
     }
+    #[tracing::instrument(level = "debug", skip(self, _buf))]
     async fn send(&self, _buf: &[u8]) -> Result<usize, util::Error> {
         Ok(0)
     }
+    #[tracing::instrument(level = "debug", skip(self, _buf, _target))]
     async fn send_to(&self, _buf: &[u8], _target: SocketAddr) -> Result<usize, util::Error> {
         Ok(0)
     }
+    #[tracing::instrument(level = "debug", skip(self))]
     fn local_addr(&self) -> Result<SocketAddr, util::Error> {
         Ok(SocketAddr::new(Ipv4Addr::new(0, 0, 0, 0).into(), 0))
     }
+    #[tracing::instrument(level = "debug", skip(self))]
     fn remote_addr(&self) -> Option<SocketAddr> {
         None
     }
+    #[tracing::instrument(level = "debug", skip(self))]
     async fn close(&self) -> Result<(), util::Error> {
         Ok(())
     }
+    #[tracing::instrument(level = "debug", skip(self))]
     fn as_any(&self) -> &(dyn std::any::Any + Send + Sync) {
         self
     }
@@ -54,6 +63,7 @@ pub(crate) struct VNet {
 }
 
 impl VNet {
+    #[tracing::instrument(level = "debug", skip(self))]
     pub(crate) async fn close(&self) -> Result<(), Error> {
         self.server.close().await?;
         let mut w = self.wan.lock().await;
@@ -71,6 +81,7 @@ pub(crate) const VNET_LOCAL_SUBNET_MASK_B: &str = "24";
 pub(crate) const VNET_STUN_SERVER_IP: &str = "1.2.3.4";
 pub(crate) const VNET_STUN_SERVER_PORT: u16 = 3478;
 
+#[tracing::instrument(level = "debug", skip(_nat_type0, _nat_type1))]
 pub(crate) async fn build_simple_vnet(
     _nat_type0: nat::NatType,
     _nat_type1: nat::NatType,
@@ -120,6 +131,7 @@ pub(crate) async fn build_simple_vnet(
     })
 }
 
+#[tracing::instrument(level = "debug", skip(nat_type0, nat_type1))]
 pub(crate) async fn build_vnet(
     nat_type0: nat::NatType,
     nat_type1: nat::NatType,
@@ -195,6 +207,7 @@ pub(crate) struct TestAuthHandler {
 }
 
 impl TestAuthHandler {
+    #[tracing::instrument(level = "debug", skip())]
     pub(crate) fn new() -> Self {
         let mut cred_map = HashMap::new();
         cred_map.insert(
@@ -207,6 +220,7 @@ impl TestAuthHandler {
 }
 
 impl turn::auth::AuthHandler for TestAuthHandler {
+    #[tracing::instrument(level = "debug", skip(self, username, _realm, _src_addr))]
     fn auth_handle(
         &self,
         username: &str,
@@ -221,6 +235,7 @@ impl turn::auth::AuthHandler for TestAuthHandler {
     }
 }
 
+#[tracing::instrument(level = "debug", skip(wan_net))]
 pub(crate) async fn add_vnet_stun(wan_net: Arc<net::Net>) -> Result<turn::server::Server, Error> {
     // Run TURN(STUN) server
     let conn = wan_net
@@ -250,6 +265,7 @@ pub(crate) async fn add_vnet_stun(wan_net: Arc<net::Net>) -> Result<turn::server
     Ok(server)
 }
 
+#[tracing::instrument(level = "debug", skip(a_agent, b_agent))]
 pub(crate) async fn connect_with_vnet(
     a_agent: &Arc<Agent>,
     b_agent: &Arc<Agent>,
@@ -289,6 +305,7 @@ pub(crate) struct AgentTestConfig {
     pub(crate) nat_1to1_ip_candidate_type: CandidateType,
 }
 
+#[tracing::instrument(level = "debug", skip(v, a0test_config, a1test_config))]
 pub(crate) async fn pipe_with_vnet(
     v: &VNet,
     a0test_config: AgentTestConfig,
@@ -344,6 +361,7 @@ pub(crate) async fn pipe_with_vnet(
     Ok((a_conn, b_conn))
 }
 
+#[tracing::instrument(level = "debug", skip())]
 pub(crate) fn on_connected() -> (OnConnectionStateChangeHdlrFn, mpsc::Receiver<()>) {
     let (done_tx, done_rx) = mpsc::channel::<()>(1);
     let done_tx = Arc::new(Mutex::new(Some(done_tx)));
@@ -359,6 +377,7 @@ pub(crate) fn on_connected() -> (OnConnectionStateChangeHdlrFn, mpsc::Receiver<(
     (hdlr_fn, done_rx)
 }
 
+#[tracing::instrument(level = "debug", skip(a_agent, b_agent))]
 pub(crate) async fn gather_and_exchange_candidates(
     a_agent: &Arc<Agent>,
     b_agent: &Arc<Agent>,
@@ -412,11 +431,13 @@ pub(crate) async fn gather_and_exchange_candidates(
     Ok(())
 }
 
+#[tracing::instrument(level = "debug", skip(router))]
 pub(crate) async fn start_router(router: &Arc<Mutex<router::Router>>) -> Result<(), Error> {
     let mut w = router.lock().await;
     Ok(w.start().await?)
 }
 
+#[tracing::instrument(level = "debug", skip(net, router))]
 pub(crate) async fn connect_net2router(
     net: &Arc<net::Net>,
     router: &Arc<Mutex<router::Router>>,
@@ -435,6 +456,7 @@ pub(crate) async fn connect_net2router(
     Ok(())
 }
 
+#[tracing::instrument(level = "debug", skip(child, parent))]
 pub(crate) async fn connect_router2router(
     child: &Arc<Mutex<router::Router>>,
     parent: &Arc<Mutex<router::Router>>,
@@ -735,6 +757,7 @@ async fn test_connectivity_vnet_1to1_nat_with_srflx_candidate_vs_symmetric_nats(
     Ok(())
 }
 
+#[tracing::instrument(level = "debug", skip(expected_state, state_queue))]
 async fn block_until_state_seen(
     expected_state: ConnectionState,
     state_queue: &mut mpsc::Receiver<ConnectionState>,

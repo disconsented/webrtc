@@ -43,12 +43,14 @@ pub(crate) struct PendingQueue {
 }
 
 impl Default for PendingQueue {
+    #[tracing::instrument(level = "debug", skip())]
     fn default() -> Self {
         PendingQueue::new()
     }
 }
 
 impl PendingQueue {
+    #[tracing::instrument(level = "debug", skip())]
     pub(crate) fn new() -> Self {
         Self {
             semaphore_lock: Mutex::default(),
@@ -62,6 +64,7 @@ impl PendingQueue {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self, c))]
     /// Appends a chunk to the back of the pending queue.
     pub(crate) async fn push(&self, c: ChunkPayloadData) {
         let user_data_len = c.user_data.len();
@@ -85,6 +88,7 @@ impl PendingQueue {
         self.queue_len.fetch_add(1, Ordering::SeqCst);
     }
 
+    #[tracing::instrument(level = "debug", skip(self, chunks))]
     /// Appends chunks to the back of the pending queue.
     ///
     /// # Panics
@@ -112,6 +116,7 @@ impl PendingQueue {
     }
 
     // If this is a very large message we append chunks one by one to allow progress while we are appending
+    #[tracing::instrument(level = "debug", skip(self, chunks))]
     async fn append_large(&self, chunks: Vec<ChunkPayloadData>) {
         // lock this for the whole duration
         let _sem_lock = self.semaphore_lock.lock().await;
@@ -134,6 +139,7 @@ impl PendingQueue {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self, chunks, total_user_data_len))]
     /// Assumes that A) enough permits have been acquired and forget from the semaphore and that the semaphore_lock is held
     fn append_unlimited(&self, chunks: Vec<ChunkPayloadData>, total_user_data_len: usize) {
         let chunks_len = chunks.len();
@@ -162,6 +168,7 @@ impl PendingQueue {
         self.queue_len.fetch_add(chunks_len, Ordering::SeqCst);
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     pub(crate) fn peek(&self) -> Option<ChunkPayloadData> {
         if self.selected.load(Ordering::SeqCst) {
             if self.unordered_is_selected.load(Ordering::SeqCst) {
@@ -186,6 +193,7 @@ impl PendingQueue {
         ordered_queue.front().cloned()
     }
 
+    #[tracing::instrument(level = "debug", skip(self, beginning_fragment, unordered))]
     pub(crate) fn pop(
         &self,
         beginning_fragment: bool,
@@ -246,14 +254,17 @@ impl PendingQueue {
         popped
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     pub(crate) fn get_num_bytes(&self) -> usize {
         self.n_bytes.load(Ordering::SeqCst)
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     pub(crate) fn len(&self) -> usize {
         self.queue_len.load(Ordering::SeqCst)
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     pub(crate) fn is_empty(&self) -> bool {
         self.len() == 0
     }

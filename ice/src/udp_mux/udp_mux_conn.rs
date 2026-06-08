@@ -47,6 +47,7 @@ pub struct UDPMuxConn {
 }
 
 impl UDPMuxConn {
+    #[tracing::instrument(level = "debug", skip(params))]
     /// Creates a new [`UDPMuxConn`].
     pub fn new(params: UDPMuxConnParams) -> Self {
         let (closed_watch_tx, closed_watch_rx) = watch::channel(false);
@@ -62,11 +63,13 @@ impl UDPMuxConn {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// Returns a key identifying this connection.
     pub fn key(&self) -> &str {
         &self.inner.params.key
     }
 
+    #[tracing::instrument(level = "debug", skip(self, data, addr))]
     /// Writes data to the given address. Returns an error if the buffer is too short or there's an
     /// encoding error.
     pub async fn write_packet(&self, data: &[u8], addr: SocketAddr) -> ConnResult<()> {
@@ -98,27 +101,32 @@ impl UDPMuxConn {
         Ok(())
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// Returns true if this connection is closed.
     pub fn is_closed(&self) -> bool {
         self.inner.is_closed()
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// Gets a copy of the close [`tokio::sync::watch::Receiver`] that fires when this
     /// connection is closed.
     pub fn close_rx(&self) -> watch::Receiver<bool> {
         self.closed_watch_rx.clone()
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// Closes this connection.
     pub fn close(&self) {
         self.inner.close();
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// Gets the list of the addresses associated with this connection.
     pub fn get_addresses(&self) -> Vec<SocketAddr> {
         self.inner.get_addresses()
     }
 
+    #[tracing::instrument(level = "debug", skip(self, addr))]
     /// Registers a new address for this connection.
     pub async fn add_address(&self, addr: SocketAddr) {
         self.inner.add_address(addr);
@@ -127,11 +135,13 @@ impl UDPMuxConn {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self, addr))]
     /// Deregisters an address.
     pub fn remove_address(&self, addr: &SocketAddr) {
         self.inner.remove_address(addr)
     }
 
+    #[tracing::instrument(level = "debug", skip(self, addr))]
     /// Returns true if the given address is associated with this connection.
     pub fn contains_address(&self, addr: &SocketAddr) -> bool {
         self.inner.contains_address(addr)
@@ -152,6 +162,7 @@ struct UDPMuxConnInner {
 
 impl UDPMuxConnInner {
     // Sending/Recieving
+    #[tracing::instrument(level = "debug", skip(self, buf))]
     async fn recv_from(&self, buf: &mut [u8]) -> ConnResult<(usize, SocketAddr)> {
         // NOTE: Pion/ice uses Sync.Pool to optimise this.
         let mut buffer = make_buffer();
@@ -194,6 +205,7 @@ impl UDPMuxConnInner {
         Ok((data_len, addr))
     }
 
+    #[tracing::instrument(level = "debug", skip(self, buf, target))]
     async fn send_to(&self, buf: &[u8], target: &SocketAddr) -> ConnResult<usize> {
         if let Some(mux) = self.params.udp_mux.upgrade() {
             mux.send_to(buf, target).await
@@ -206,10 +218,12 @@ impl UDPMuxConnInner {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn is_closed(&self) -> bool {
         self.closed_watch_tx.lock().is_none()
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn close(self: &Arc<Self>) {
         let mut closed_tx = self.closed_watch_tx.lock();
 
@@ -232,17 +246,20 @@ impl UDPMuxConnInner {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn local_addr(&self) -> SocketAddr {
         self.params.local_addr
     }
 
     // Address related methods
+    #[tracing::instrument(level = "debug", skip(self))]
     pub(super) fn get_addresses(&self) -> Vec<SocketAddr> {
         let addresses = self.addresses.lock();
 
         addresses.iter().copied().collect()
     }
 
+    #[tracing::instrument(level = "debug", skip(self, addr))]
     pub(super) fn add_address(self: &Arc<Self>, addr: SocketAddr) {
         {
             let mut addresses = self.addresses.lock();
@@ -250,6 +267,7 @@ impl UDPMuxConnInner {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self, addr))]
     pub(super) fn remove_address(&self, addr: &SocketAddr) {
         {
             let mut addresses = self.addresses.lock();
@@ -257,6 +275,7 @@ impl UDPMuxConnInner {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self, addr))]
     pub(super) fn contains_address(&self, addr: &SocketAddr) -> bool {
         let addresses = self.addresses.lock();
 
@@ -266,22 +285,27 @@ impl UDPMuxConnInner {
 
 #[async_trait]
 impl Conn for UDPMuxConn {
+    #[tracing::instrument(level = "debug", skip(self, _addr))]
     async fn connect(&self, _addr: SocketAddr) -> ConnResult<()> {
         Err(io::Error::other("Not applicable").into())
     }
 
+    #[tracing::instrument(level = "debug", skip(self, _buf))]
     async fn recv(&self, _buf: &mut [u8]) -> ConnResult<usize> {
         Err(io::Error::other("Not applicable").into())
     }
 
+    #[tracing::instrument(level = "debug", skip(self, buf))]
     async fn recv_from(&self, buf: &mut [u8]) -> ConnResult<(usize, SocketAddr)> {
         self.inner.recv_from(buf).await
     }
 
+    #[tracing::instrument(level = "debug", skip(self, _buf))]
     async fn send(&self, _buf: &[u8]) -> ConnResult<usize> {
         Err(io::Error::other("Not applicable").into())
     }
 
+    #[tracing::instrument(level = "debug", skip(self, buf, target))]
     async fn send_to(&self, buf: &[u8], target: SocketAddr) -> ConnResult<usize> {
         let normalized_target = normalize_socket_addr(&target, &self.inner.params.local_addr);
 
@@ -292,24 +316,29 @@ impl Conn for UDPMuxConn {
         self.inner.send_to(buf, &normalized_target).await
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn local_addr(&self) -> ConnResult<SocketAddr> {
         Ok(self.inner.local_addr())
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn remote_addr(&self) -> Option<SocketAddr> {
         None
     }
+    #[tracing::instrument(level = "debug", skip(self))]
     async fn close(&self) -> ConnResult<()> {
         self.inner.close();
 
         Ok(())
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn as_any(&self) -> &(dyn std::any::Any + Send + Sync) {
         self
     }
 }
 
+#[tracing::instrument(level = "debug", skip())]
 #[inline(always)]
 /// Create a buffer of appropriate size to fit both a packet with max RECEIVE_MTU and the
 /// additional metadata used for muxing.

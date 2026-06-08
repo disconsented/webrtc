@@ -15,15 +15,18 @@ pub struct ExtensionServerName {
 }
 
 impl ExtensionServerName {
+    #[tracing::instrument(level = "debug", skip(self))]
     pub fn extension_value(&self) -> ExtensionValue {
         ExtensionValue::ServerName
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     pub fn size(&self) -> usize {
         //TODO: check how to do cryptobyte?
         2 + 2 + 1 + 2 + self.server_name.len()
     }
 
+    #[tracing::instrument(level = "debug", skip(self, writer))]
     pub fn marshal<W: Write>(&self, writer: &mut W) -> Result<()> {
         //TODO: check how to do cryptobyte?
         writer.write_u16::<BigEndian>(2 + 1 + 2 + self.server_name.len() as u16)?;
@@ -35,6 +38,7 @@ impl ExtensionServerName {
         Ok(writer.flush()?)
     }
 
+    #[tracing::instrument(level = "debug", skip(reader))]
     pub fn unmarshal<R: Read>(reader: &mut R) -> Result<Self> {
         //TODO: check how to do cryptobyte?
         let _ = reader.read_u16::<BigEndian>()? as usize;

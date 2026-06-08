@@ -576,14 +576,17 @@ struct MockPacketConn;
 
 #[async_trait]
 impl Conn for MockPacketConn {
+    #[tracing::instrument(level = "debug", skip(self, _addr))]
     async fn connect(&self, _addr: SocketAddr) -> std::result::Result<(), util::Error> {
         Ok(())
     }
 
+    #[tracing::instrument(level = "debug", skip(self, _buf))]
     async fn recv(&self, _buf: &mut [u8]) -> std::result::Result<usize, util::Error> {
         Ok(0)
     }
 
+    #[tracing::instrument(level = "debug", skip(self, _buf))]
     async fn recv_from(
         &self,
         _buf: &mut [u8],
@@ -591,10 +594,12 @@ impl Conn for MockPacketConn {
         Ok((0, SocketAddr::new(Ipv4Addr::new(0, 0, 0, 0).into(), 0)))
     }
 
+    #[tracing::instrument(level = "debug", skip(self, _buf))]
     async fn send(&self, _buf: &[u8]) -> std::result::Result<usize, util::Error> {
         Ok(0)
     }
 
+    #[tracing::instrument(level = "debug", skip(self, _buf, _target))]
     async fn send_to(
         &self,
         _buf: &[u8],
@@ -603,23 +608,28 @@ impl Conn for MockPacketConn {
         Ok(0)
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn local_addr(&self) -> std::result::Result<SocketAddr, util::Error> {
         Ok(SocketAddr::new(Ipv4Addr::new(0, 0, 0, 0).into(), 0))
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn remote_addr(&self) -> Option<SocketAddr> {
         None
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     async fn close(&self) -> std::result::Result<(), util::Error> {
         Ok(())
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn as_any(&self) -> &(dyn std::any::Any + Send + Sync) {
         self
     }
 }
 
+#[tracing::instrument(level = "debug", skip(c, username, key))]
 fn build_msg(c: MessageClass, username: String, key: String) -> Result<Message> {
     let mut msg = Message::new();
     msg.build(&[

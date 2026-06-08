@@ -33,6 +33,7 @@ const RTCP_MUX_POLICY_NEGOTIATE_STR: &str = "negotiate";
 const RTCP_MUX_POLICY_REQUIRE_STR: &str = "require";
 
 impl From<&str> for RTCRtcpMuxPolicy {
+    #[tracing::instrument(level = "debug", skip(raw))]
     fn from(raw: &str) -> Self {
         match raw {
             RTCP_MUX_POLICY_NEGOTIATE_STR => RTCRtcpMuxPolicy::Negotiate,
@@ -43,6 +44,7 @@ impl From<&str> for RTCRtcpMuxPolicy {
 }
 
 impl fmt::Display for RTCRtcpMuxPolicy {
+    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let s = match *self {
             RTCRtcpMuxPolicy::Negotiate => RTCP_MUX_POLICY_NEGOTIATE_STR,

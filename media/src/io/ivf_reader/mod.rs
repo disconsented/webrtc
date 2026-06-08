@@ -44,6 +44,7 @@ pub struct IVFReader<R: Read> {
 }
 
 impl<R: Read> IVFReader<R> {
+    #[tracing::instrument(level = "debug", skip(reader))]
     /// new returns a new IVF reader and IVF file header
     /// with an io.Reader input
     pub fn new(reader: R) -> Result<(IVFReader<R>, IVFFileHeader)> {
@@ -57,6 +58,7 @@ impl<R: Read> IVFReader<R> {
         Ok((r, header))
     }
 
+    #[tracing::instrument(level = "debug", skip(self, reset))]
     /// reset_reader resets the internal stream of IVFReader. This is useful
     /// for live streams, where the end of the file might be read without the
     /// data being finished.
@@ -64,6 +66,7 @@ impl<R: Read> IVFReader<R> {
         self.reader = reset(self.bytes_read);
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// parse_next_frame reads from stream and returns IVF frame payload, header,
     /// and an error if there is incomplete frame data.
     /// Returns all nil values when no more frames are available.
@@ -84,6 +87,7 @@ impl<R: Read> IVFReader<R> {
         Ok((payload, header))
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// parse_file_header reads 32 bytes from stream and returns
     /// IVF file header. This is always called before parse_next_frame()
     fn parse_file_header(&mut self) -> Result<IVFFileHeader> {

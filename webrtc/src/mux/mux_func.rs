@@ -1,11 +1,13 @@
 /// MatchFunc allows custom logic for mapping packets to an Endpoint
 pub type MatchFunc = Box<dyn (Fn(&[u8]) -> bool) + Send + Sync>;
 
+#[tracing::instrument(level = "debug", skip(_b))]
 /// match_all always returns true
 pub fn match_all(_b: &[u8]) -> bool {
     true
 }
 
+#[tracing::instrument(level = "debug", skip(lower, upper))]
 /// match_range is a MatchFunc that accepts packets with the first byte in [lower..upper]
 pub fn match_range(lower: u8, upper: u8) -> MatchFunc {
     Box::new(move |buf: &[u8]| -> bool {
@@ -17,6 +19,7 @@ pub fn match_range(lower: u8, upper: u8) -> MatchFunc {
     })
 }
 
+#[tracing::instrument(level = "debug", skip(b))]
 /// MatchFuncs as described in RFC7983
 /// <https://tools.ietf.org/html/rfc7983>
 ///              +----------------+
@@ -38,10 +41,12 @@ pub fn match_dtls(b: &[u8]) -> bool {
 
 // match_srtp_or_srtcp is a MatchFunc that accepts packets with the first byte in [128..191]
 // as defined in RFC7983
+#[tracing::instrument(level = "debug", skip(b))]
 pub fn match_srtp_or_srtcp(b: &[u8]) -> bool {
     match_range(128, 191)(b)
 }
 
+#[tracing::instrument(level = "debug", skip(buf))]
 pub(crate) fn is_rtcp(buf: &[u8]) -> bool {
     // Not long enough to determine RTP/RTCP
     if buf.len() < 4 {
@@ -52,11 +57,13 @@ pub(crate) fn is_rtcp(buf: &[u8]) -> bool {
     (192..=223).contains(&rtcp_packet_type)
 }
 
+#[tracing::instrument(level = "debug", skip(buf))]
 /// match_srtp is a MatchFunc that only matches SRTP and not SRTCP
 pub fn match_srtp(buf: &[u8]) -> bool {
     match_srtp_or_srtcp(buf) && !is_rtcp(buf)
 }
 
+#[tracing::instrument(level = "debug", skip(buf))]
 /// match_srtcp is a MatchFunc that only matches SRTCP and not SRTP
 pub fn match_srtcp(buf: &[u8]) -> bool {
     match_srtp_or_srtcp(buf) && is_rtcp(buf)

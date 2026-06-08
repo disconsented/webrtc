@@ -19,6 +19,7 @@ pub struct HandshakeRandom {
 }
 
 impl Default for HandshakeRandom {
+    #[tracing::instrument(level = "debug", skip())]
     fn default() -> Self {
         HandshakeRandom {
             gmt_unix_time: SystemTime::UNIX_EPOCH,
@@ -28,10 +29,12 @@ impl Default for HandshakeRandom {
 }
 
 impl HandshakeRandom {
+    #[tracing::instrument(level = "debug", skip(self))]
     pub fn size(&self) -> usize {
         4 + RANDOM_BYTES_LENGTH
     }
 
+    #[tracing::instrument(level = "debug", skip(self, writer))]
     pub fn marshal<W: Write>(&self, writer: &mut W) -> io::Result<()> {
         let secs = match self.gmt_unix_time.duration_since(SystemTime::UNIX_EPOCH) {
             Ok(d) => d.as_secs() as u32,
@@ -43,6 +46,7 @@ impl HandshakeRandom {
         writer.flush()
     }
 
+    #[tracing::instrument(level = "debug", skip(reader))]
     pub fn unmarshal<R: Read>(reader: &mut R) -> io::Result<Self> {
         let secs = reader.read_u32::<BigEndian>()?;
         let gmt_unix_time = if let Some(unix_time) =
@@ -64,6 +68,7 @@ impl HandshakeRandom {
 
     // populate fills the HandshakeRandom with random values
     // may be called multiple times
+    #[tracing::instrument(level = "debug", skip(self))]
     pub fn populate(&mut self) {
         self.gmt_unix_time = SystemTime::now();
         rand::rng().fill(&mut self.random_bytes);

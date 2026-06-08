@@ -38,6 +38,7 @@ struct TickerCollector {
 }
 
 impl Collector for TickerCollector {
+    #[tracing::instrument(level = "debug", skip(self, rate, client_agent_tx))]
     fn start(
         &mut self,
         rate: Duration,
@@ -64,6 +65,7 @@ impl Collector for TickerCollector {
         Ok(())
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn close(&mut self) -> Result<()> {
         if self.close_tx.is_none() {
             return Err(Error::ErrCollectorClosed);
@@ -89,6 +91,7 @@ pub struct ClientTransaction {
 }
 
 impl ClientTransaction {
+    #[tracing::instrument(level = "debug", skip(self, e))]
     pub(crate) fn handle(&mut self, e: Event) -> Result<()> {
         self.calls += 1;
         if self.calls == 1 {
@@ -99,6 +102,7 @@ impl ClientTransaction {
         Ok(())
     }
 
+    #[tracing::instrument(level = "debug", skip(self, now))]
     pub(crate) fn next_timeout(&self, now: Instant) -> Instant {
         now.add((self.attempt + 1) * self.rto)
     }
@@ -116,6 +120,7 @@ struct ClientSettings {
 }
 
 impl Default for ClientSettings {
+    #[tracing::instrument(level = "debug", skip())]
     fn default() -> Self {
         ClientSettings {
             buffer_size: DEFAULT_MAX_BUFFER_SIZE,
@@ -144,24 +149,28 @@ impl ClientBuilder {
     //    self
     //}
 
+    #[tracing::instrument(level = "debug", skip(self, rto))]
     /// with_rto sets client RTO as defined in STUN RFC.
     pub fn with_rto(mut self, rto: Duration) -> Self {
         self.settings.rto = rto;
         self
     }
 
+    #[tracing::instrument(level = "debug", skip(self, d))]
     /// with_timeout_rate sets RTO timer minimum resolution.
     pub fn with_timeout_rate(mut self, d: Duration) -> Self {
         self.settings.rto_rate = d;
         self
     }
 
+    #[tracing::instrument(level = "debug", skip(self, buffer_size))]
     /// with_buffer_size sets buffer size.
     pub fn with_buffer_size(mut self, buffer_size: usize) -> Self {
         self.settings.buffer_size = buffer_size;
         self
     }
 
+    #[tracing::instrument(level = "debug", skip(self, coll))]
     /// with_collector rests client timeout collector, the implementation
     /// of ticker which calls function on each tick.
     pub fn with_collector(mut self, coll: Box<dyn Collector + Send>) -> Self {
@@ -169,12 +178,14 @@ impl ClientBuilder {
         self
     }
 
+    #[tracing::instrument(level = "debug", skip(self, conn))]
     /// with_conn sets transport connection
     pub fn with_conn(mut self, conn: Arc<dyn Conn + Send + Sync>) -> Self {
         self.settings.c = Some(conn);
         self
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// with_no_retransmit disables retransmissions and sets RTO to
     /// DEFAULT_MAX_ATTEMPTS * DEFAULT_RTO which will be effectively time out
     /// if not set.
@@ -187,12 +198,14 @@ impl ClientBuilder {
         self
     }
 
+    #[tracing::instrument(level = "debug", skip())]
     pub fn new() -> Self {
         ClientBuilder {
             settings: ClientSettings::default(),
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     pub fn build(self) -> Result<Client> {
         if self.settings.c.is_none() {
             return Err(Error::ErrNoConnection);
@@ -218,6 +231,7 @@ pub struct Client {
 }
 
 impl Client {
+    #[tracing::instrument(level = "debug", skip(close_rx, c, client_agent_tx))]
     async fn read_until_closed(
         mut close_rx: mpsc::Receiver<()>,
         c: Arc<dyn Conn + Send + Sync>,
@@ -246,6 +260,7 @@ impl Client {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self, ct))]
     fn insert(&self, ct: ClientTransaction) -> Result<()> {
         if self.settings.closed {
             return Err(Error::ErrClientClosed);
@@ -261,6 +276,7 @@ impl Client {
         Ok(())
     }
 
+    #[tracing::instrument(level = "debug", skip(self, id))]
     fn remove(&self, id: TransactionId) -> Result<()> {
         if self.settings.closed {
             return Err(Error::ErrClientClosed);
@@ -276,6 +292,7 @@ impl Client {
         Ok(())
     }
 
+    #[tracing::instrument(level = "debug", skip(conn, handler_rx, client_agent_tx, t, max_attempts))]
     fn start(
         conn: Option<Arc<dyn Conn + Send + Sync>>,
         mut handler_rx: mpsc::UnboundedReceiver<Event>,
@@ -356,6 +373,7 @@ impl Client {
         });
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// close stops internal connection and agent, returning CloseErr on error.
     pub async fn close(&mut self) -> Result<()> {
         if self.settings.closed {
@@ -382,6 +400,7 @@ impl Client {
         Ok(())
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn run(mut self) -> Result<Self> {
         let (close_tx, close_rx) = mpsc::channel(1);
         let (client_agent_tx, client_agent_rx) = mpsc::channel(self.settings.buffer_size);
@@ -422,6 +441,7 @@ impl Client {
         Ok(self)
     }
 
+    #[tracing::instrument(level = "debug", skip(self, m, handler))]
     pub async fn send(&self, m: &Message, handler: Handler) -> Result<()> {
         if self.settings.closed {
             return Err(Error::ErrClientClosed);

@@ -3,6 +3,7 @@ mod h264_test;
 
 use super::*;
 
+#[tracing::instrument(level = "debug", skip(a, b))]
 fn profile_level_id_matches(a: &str, b: &str) -> bool {
     let aa = match hex::decode(a) {
         Ok(aa) => {
@@ -33,10 +34,12 @@ pub(crate) struct H264Fmtp {
 }
 
 impl Fmtp for H264Fmtp {
+    #[tracing::instrument(level = "debug", skip(self))]
     fn mime_type(&self) -> &str {
         "video/h264"
     }
 
+    #[tracing::instrument(level = "debug", skip(self, f))]
     /// Match returns true if h and b are compatible fmtp descriptions
     /// Based on RFC6184 Section 8.2.2:
     ///   The parameters identifying a media format configuration for H.264
@@ -85,14 +88,17 @@ impl Fmtp for H264Fmtp {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self, key))]
     fn parameter(&self, key: &str) -> Option<&String> {
         self.parameters.get(key)
     }
 
+    #[tracing::instrument(level = "debug", skip(self, other))]
     fn equal(&self, other: &dyn Fmtp) -> bool {
         other.as_any().downcast_ref::<H264Fmtp>() == Some(self)
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn as_any(&self) -> &dyn Any {
         self
     }

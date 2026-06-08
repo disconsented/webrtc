@@ -10,6 +10,7 @@ use crate::relay::relay_static::*;
 use crate::server::config::*;
 use crate::server::*;
 
+#[tracing::instrument(level = "debug", skip(rto_in_ms))]
 async fn create_listening_test_client(rto_in_ms: u16) -> Result<Client> {
     let conn = UdpSocket::bind("0.0.0.0:0").await?;
 
@@ -31,6 +32,7 @@ async fn create_listening_test_client(rto_in_ms: u16) -> Result<Client> {
     Ok(c)
 }
 
+#[tracing::instrument(level = "debug", skip())]
 async fn create_listening_test_client_with_stun_serv() -> Result<Client> {
     let conn = UdpSocket::bind("0.0.0.0:0").await?;
 
@@ -121,6 +123,7 @@ async fn test_client_with_stun_send_binding_request_to_timeout() -> Result<()> {
 
 struct TestAuthHandler;
 impl AuthHandler for TestAuthHandler {
+    #[tracing::instrument(level = "debug", skip(self, username, realm, _src_addr))]
     fn auth_handle(&self, username: &str, realm: &str, _src_addr: SocketAddr) -> Result<Vec<u8>> {
         Ok(generate_auth_key(username, realm, "pass"))
     }

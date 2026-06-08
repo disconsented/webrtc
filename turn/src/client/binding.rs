@@ -30,20 +30,24 @@ pub(crate) struct Binding {
 }
 
 impl Binding {
+    #[tracing::instrument(level = "debug", skip(self, state))]
     pub(crate) fn set_state(&mut self, state: BindingState) {
         //atomic.StoreInt32((*int32)(&b.st), int32(state))
         self.st = state;
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     pub(crate) fn state(&self) -> BindingState {
         //return BindingState(atomic.LoadInt32((*int32)(&b.st)))
         self.st
     }
 
+    #[tracing::instrument(level = "debug", skip(self, at))]
     pub(crate) fn set_refreshed_at(&mut self, at: Instant) {
         self.refreshed_at = at;
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     pub(crate) fn refreshed_at(&self) -> Instant {
         self.refreshed_at
     }
@@ -57,6 +61,7 @@ pub(crate) struct BindingManager {
 }
 
 impl BindingManager {
+    #[tracing::instrument(level = "debug", skip())]
     pub(crate) fn new() -> Self {
         BindingManager {
             chan_map: HashMap::new(),
@@ -65,6 +70,7 @@ impl BindingManager {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     pub(crate) fn assign_channel_number(&mut self) -> u16 {
         let n = self.next;
         if self.next == MAX_CHANNEL_NUMBER {
@@ -75,6 +81,7 @@ impl BindingManager {
         n
     }
 
+    #[tracing::instrument(level = "debug", skip(self, addr))]
     pub(crate) fn create(&mut self, addr: SocketAddr) -> Option<&Binding> {
         let b = Binding {
             number: self.assign_channel_number(),
@@ -88,24 +95,29 @@ impl BindingManager {
         self.addr_map.get(&addr.to_string())
     }
 
+    #[tracing::instrument(level = "debug", skip(self, addr))]
     pub(crate) fn find_by_addr(&self, addr: &SocketAddr) -> Option<&Binding> {
         self.addr_map.get(&addr.to_string())
     }
 
+    #[tracing::instrument(level = "debug", skip(self, addr))]
     pub(crate) fn get_by_addr(&mut self, addr: &SocketAddr) -> Option<&mut Binding> {
         self.addr_map.get_mut(&addr.to_string())
     }
 
+    #[tracing::instrument(level = "debug", skip(self, number))]
     pub(crate) fn find_by_number(&self, number: u16) -> Option<&Binding> {
         let s = self.chan_map.get(&number)?;
         self.addr_map.get(s)
     }
 
+    #[tracing::instrument(level = "debug", skip(self, number))]
     pub(crate) fn get_by_number(&mut self, number: u16) -> Option<&mut Binding> {
         let s = self.chan_map.get(&number)?;
         self.addr_map.get_mut(s)
     }
 
+    #[tracing::instrument(level = "debug", skip(self, addr))]
     pub(crate) fn delete_by_addr(&mut self, addr: &SocketAddr) -> bool {
         if let Some(b) = self.addr_map.remove(&addr.to_string()) {
             self.chan_map.remove(&b.number);
@@ -115,6 +127,7 @@ impl BindingManager {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self, number))]
     pub(crate) fn delete_by_number(&mut self, number: u16) -> bool {
         if let Some(s) = self.chan_map.remove(&number) {
             self.addr_map.remove(&s);
@@ -124,6 +137,7 @@ impl BindingManager {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     pub(crate) fn size(&self) -> usize {
         self.addr_map.len()
     }

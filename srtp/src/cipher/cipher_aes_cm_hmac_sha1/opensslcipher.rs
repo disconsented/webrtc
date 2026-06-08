@@ -19,6 +19,7 @@ pub(crate) struct CipherAesCmHmacSha1 {
 }
 
 impl CipherAesCmHmacSha1 {
+    #[tracing::instrument(level = "debug", skip(profile, master_key, master_salt))]
     pub fn new(profile: ProtectionProfile, master_key: &[u8], master_salt: &[u8]) -> Result<Self> {
         let kdf: Kdf = match profile {
             ProtectionProfile::Aes128CmHmacSha1_32 | ProtectionProfile::Aes128CmHmacSha1_80 => {
@@ -80,25 +81,30 @@ impl CipherAesCmHmacSha1 {
 }
 
 impl Cipher for CipherAesCmHmacSha1 {
+    #[tracing::instrument(level = "debug", skip(self))]
     /// Get RTP authenticated tag length.
     fn rtp_auth_tag_len(&self) -> usize {
         self.inner.profile.rtp_auth_tag_len()
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// Get RTCP authenticated tag length.
     fn rtcp_auth_tag_len(&self) -> usize {
         self.inner.profile.rtcp_auth_tag_len()
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// Get AEAD auth key length of the cipher.
     fn aead_auth_tag_len(&self) -> usize {
         self.inner.profile.aead_auth_tag_len()
     }
 
+    #[tracing::instrument(level = "debug", skip(self, input))]
     fn get_rtcp_index(&self, input: &[u8]) -> usize {
         self.inner.get_rtcp_index(input)
     }
 
+    #[tracing::instrument(level = "debug", skip(self, plaintext, header, roc))]
     fn encrypt_rtp(
         &mut self,
         plaintext: &[u8],
@@ -135,6 +141,7 @@ impl Cipher for CipherAesCmHmacSha1 {
         Ok(Bytes::from(writer))
     }
 
+    #[tracing::instrument(level = "debug", skip(self, encrypted, header, roc))]
     fn decrypt_rtp(
         &mut self,
         encrypted: &[u8],
@@ -187,6 +194,7 @@ impl Cipher for CipherAesCmHmacSha1 {
         Ok(Bytes::from(writer))
     }
 
+    #[tracing::instrument(level = "debug", skip(self, decrypted, srtcp_index, ssrc))]
     fn encrypt_rtcp(&mut self, decrypted: &[u8], srtcp_index: usize, ssrc: u32) -> Result<Bytes> {
         let decrypted_len = decrypted.len();
 
@@ -229,6 +237,7 @@ impl Cipher for CipherAesCmHmacSha1 {
         Ok(Bytes::from(writer))
     }
 
+    #[tracing::instrument(level = "debug", skip(self, encrypted, srtcp_index, ssrc))]
     fn decrypt_rtcp(&mut self, encrypted: &[u8], srtcp_index: usize, ssrc: u32) -> Result<Bytes> {
         let encrypted_len = encrypted.len();
 

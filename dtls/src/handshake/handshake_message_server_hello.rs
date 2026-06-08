@@ -31,6 +31,7 @@ pub struct HandshakeMessageServerHello {
 }
 
 impl PartialEq for HandshakeMessageServerHello {
+    #[tracing::instrument(level = "debug", skip(self, other))]
     fn eq(&self, other: &Self) -> bool {
         self.version == other.version
             && self.random == other.random
@@ -41,6 +42,7 @@ impl PartialEq for HandshakeMessageServerHello {
 }
 
 impl fmt::Debug for HandshakeMessageServerHello {
+    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let s = [
             format!("version: {:?} random: {:?}", self.version, self.random),
@@ -53,10 +55,12 @@ impl fmt::Debug for HandshakeMessageServerHello {
 }
 
 impl HandshakeMessageServerHello {
+    #[tracing::instrument(level = "debug", skip(self))]
     pub fn handshake_type(&self) -> HandshakeType {
         HandshakeType::ServerHello
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     pub fn size(&self) -> usize {
         let mut len = 2 + self.random.size();
 
@@ -75,6 +79,7 @@ impl HandshakeMessageServerHello {
         len
     }
 
+    #[tracing::instrument(level = "debug", skip(self, writer))]
     pub fn marshal<W: Write>(&self, writer: &mut W) -> Result<()> {
         writer.write_u8(self.version.major)?;
         writer.write_u8(self.version.minor)?;
@@ -101,6 +106,7 @@ impl HandshakeMessageServerHello {
         Ok(writer.flush()?)
     }
 
+    #[tracing::instrument(level = "debug", skip(reader))]
     pub fn unmarshal<R: Read>(reader: &mut R) -> Result<Self> {
         let major = reader.read_u8()?;
         let minor = reader.read_u8()?;

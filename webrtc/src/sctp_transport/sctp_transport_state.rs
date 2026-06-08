@@ -34,6 +34,7 @@ const SCTP_TRANSPORT_STATE_CONNECTED_STR: &str = "connected";
 const SCTP_TRANSPORT_STATE_CLOSED_STR: &str = "closed";
 
 impl From<&str> for RTCSctpTransportState {
+    #[tracing::instrument(level = "debug", skip(raw))]
     fn from(raw: &str) -> Self {
         match raw {
             SCTP_TRANSPORT_STATE_CONNECTING_STR => RTCSctpTransportState::Connecting,
@@ -45,6 +46,7 @@ impl From<&str> for RTCSctpTransportState {
 }
 
 impl From<u8> for RTCSctpTransportState {
+    #[tracing::instrument(level = "debug", skip(v))]
     fn from(v: u8) -> Self {
         match v {
             1 => RTCSctpTransportState::Connecting,
@@ -56,6 +58,7 @@ impl From<u8> for RTCSctpTransportState {
 }
 
 impl fmt::Display for RTCSctpTransportState {
+    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let s = match *self {
             RTCSctpTransportState::Connecting => SCTP_TRANSPORT_STATE_CONNECTING_STR,

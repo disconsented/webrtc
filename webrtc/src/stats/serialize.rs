@@ -9,6 +9,7 @@ pub mod instant_to_epoch_seconds {
     use std::time::{Duration, SystemTime, UNIX_EPOCH};
     use tokio::time::Instant;
 
+    #[tracing::instrument(level = "debug", skip(instant, serializer))]
     pub fn serialize<S>(instant: &Instant, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
@@ -25,6 +26,7 @@ pub mod instant_to_epoch_seconds {
         epoch_s.serialize(serializer)
     }
 
+    #[tracing::instrument(level = "debug", skip(deserializer))]
     pub fn deserialize<'de, D>(deserializer: D) -> Result<Instant, D::Error>
     where
         D: Deserializer<'de>,

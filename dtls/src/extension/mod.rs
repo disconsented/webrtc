@@ -33,6 +33,7 @@ pub enum ExtensionValue {
 }
 
 impl From<u16> for ExtensionValue {
+    #[tracing::instrument(level = "debug", skip(val))]
     fn from(val: u16) -> Self {
         match val {
             0 => ExtensionValue::ServerName,
@@ -59,6 +60,7 @@ pub enum Extension {
 }
 
 impl Extension {
+    #[tracing::instrument(level = "debug", skip(self))]
     pub fn extension_value(&self) -> ExtensionValue {
         match self {
             Extension::ServerName(ext) => ext.extension_value(),
@@ -71,6 +73,7 @@ impl Extension {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     pub fn size(&self) -> usize {
         let mut len = 2;
 
@@ -87,6 +90,7 @@ impl Extension {
         len
     }
 
+    #[tracing::instrument(level = "debug", skip(self, writer))]
     pub fn marshal<W: Write>(&self, writer: &mut W) -> Result<()> {
         writer.write_u16::<BigEndian>(self.extension_value() as u16)?;
         match self {
@@ -100,6 +104,7 @@ impl Extension {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(reader))]
     pub fn unmarshal<R: Read>(reader: &mut R) -> Result<Self> {
         let extension_value: ExtensionValue = reader.read_u16::<BigEndian>()?.into();
         match extension_value {

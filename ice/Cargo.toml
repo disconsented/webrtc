@@ -39,6 +39,7 @@ url = "2"
 uuid = { version = "1", features = ["v4"] }
 waitgroup = "0.1"
 portable-atomic = "1.6"
+tracing.workspace = true
 
 [dev-dependencies]
 regex = "1.9.5"
@@ -49,6 +50,7 @@ clap = "3"
 lazy_static = "1"
 hyper = { version = "0.14.27", features = ["full"] }
 sha1 = "0.10"
+
 
 [[example]]
 name = "ping_pong"

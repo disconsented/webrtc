@@ -18,6 +18,7 @@ pub struct AbsSendTimeExtension {
 }
 
 impl Unmarshal for AbsSendTimeExtension {
+    #[tracing::instrument(level = "debug", skip(raw_packet))]
     /// Unmarshal parses the passed byte slice and stores the result in the members.
     fn unmarshal<B>(raw_packet: &mut B) -> Result<Self, util::Error>
     where
@@ -38,6 +39,7 @@ impl Unmarshal for AbsSendTimeExtension {
 }
 
 impl MarshalSize for AbsSendTimeExtension {
+    #[tracing::instrument(level = "debug", skip(self))]
     /// MarshalSize returns the size of the AbsSendTimeExtension once marshaled.
     fn marshal_size(&self) -> usize {
         ABS_SEND_TIME_EXTENSION_SIZE
@@ -45,6 +47,7 @@ impl MarshalSize for AbsSendTimeExtension {
 }
 
 impl Marshal for AbsSendTimeExtension {
+    #[tracing::instrument(level = "debug", skip(self, buf))]
     /// MarshalTo serializes the members to buffer.
     fn marshal_to(&self, mut buf: &mut [u8]) -> Result<usize, util::Error> {
         if buf.remaining_mut() < ABS_SEND_TIME_EXTENSION_SIZE {
@@ -60,6 +63,7 @@ impl Marshal for AbsSendTimeExtension {
 }
 
 impl AbsSendTimeExtension {
+    #[tracing::instrument(level = "debug", skip(self, receive))]
     /// Estimate absolute send time according to the receive time.
     /// Note that if the transmission delay is larger than 64 seconds, estimated time will be wrong.
     pub fn estimate(&self, receive: SystemTime) -> SystemTime {
@@ -73,6 +77,7 @@ impl AbsSendTimeExtension {
         ntp2unix(ntp)
     }
 
+    #[tracing::instrument(level = "debug", skip(send_time))]
     /// NewAbsSendTimeExtension makes new AbsSendTimeExtension from time.Time.
     pub fn new(send_time: SystemTime) -> Self {
         AbsSendTimeExtension {
@@ -81,6 +86,7 @@ impl AbsSendTimeExtension {
     }
 }
 
+#[tracing::instrument(level = "debug", skip(st))]
 pub fn unix2ntp(st: SystemTime) -> u64 {
     let u = st
         .duration_since(UNIX_EPOCH)
@@ -96,6 +102,7 @@ pub fn unix2ntp(st: SystemTime) -> u64 {
     s | f
 }
 
+#[tracing::instrument(level = "debug", skip(t))]
 pub fn ntp2unix(t: u64) -> SystemTime {
     let mut s = t >> 32;
     let mut f = t & 0xFFFFFFFF;

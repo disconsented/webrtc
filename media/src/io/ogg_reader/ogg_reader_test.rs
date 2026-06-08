@@ -3,6 +3,7 @@ use bytes::Bytes;
 use super::*;
 
 // generates a valid ogg file that can be used for tests
+#[tracing::instrument(level = "debug", skip())]
 fn build_ogg_container() -> Vec<u8> {
     vec![
         0x4f, 0x67, 0x67, 0x53, 0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x8e,

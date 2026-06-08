@@ -25,6 +25,7 @@ pub enum HeaderExtension {
 }
 
 impl HeaderExtension {
+    #[tracing::instrument(level = "debug", skip(self))]
     pub fn uri(&self) -> Cow<'static, str> {
         use HeaderExtension::*;
 
@@ -40,6 +41,7 @@ impl HeaderExtension {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self, other))]
     pub fn is_same(&self, other: &Self) -> bool {
         use HeaderExtension::*;
         match (self, other) {
@@ -54,6 +56,7 @@ impl HeaderExtension {
 }
 
 impl MarshalSize for HeaderExtension {
+    #[tracing::instrument(level = "debug", skip(self))]
     fn marshal_size(&self) -> usize {
         use HeaderExtension::*;
         match self {
@@ -68,6 +71,7 @@ impl MarshalSize for HeaderExtension {
 }
 
 impl Marshal for HeaderExtension {
+    #[tracing::instrument(level = "debug", skip(self, buf))]
     fn marshal_to(&self, buf: &mut [u8]) -> util::Result<usize> {
         use HeaderExtension::*;
         match self {
@@ -82,6 +86,7 @@ impl Marshal for HeaderExtension {
 }
 
 impl fmt::Debug for HeaderExtension {
+    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         use HeaderExtension::*;
 

@@ -33,16 +33,19 @@ type Result<T> = std::result::Result<T, util::Error>;
 pub struct CompoundPacket(pub Vec<Box<dyn Packet + Send + Sync>>);
 
 impl fmt::Display for CompoundPacket {
+    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{self:?}")
     }
 }
 
 impl Packet for CompoundPacket {
+    #[tracing::instrument(level = "debug", skip(self))]
     fn header(&self) -> Header {
         Header::default()
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// destination_ssrc returns the synchronization sources associated with this
     /// CompoundPacket's reception report.
     fn destination_ssrc(&self) -> Vec<u32> {
@@ -53,6 +56,7 @@ impl Packet for CompoundPacket {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn raw_size(&self) -> usize {
         let mut l = 0;
         for packet in &self.0 {
@@ -61,20 +65,24 @@ impl Packet for CompoundPacket {
         l
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn as_any(&self) -> &(dyn Any + Send + Sync) {
         self
     }
 
+    #[tracing::instrument(level = "debug", skip(self, other))]
     fn equal(&self, other: &(dyn Packet + Send + Sync)) -> bool {
         other.as_any().downcast_ref::<CompoundPacket>() == Some(self)
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn cloned(&self) -> Box<dyn Packet + Send + Sync> {
         Box::new(self.clone())
     }
 }
 
 impl MarshalSize for CompoundPacket {
+    #[tracing::instrument(level = "debug", skip(self))]
     fn marshal_size(&self) -> usize {
         let l = self.raw_size();
         // align to 32-bit boundary
@@ -83,6 +91,7 @@ impl MarshalSize for CompoundPacket {
 }
 
 impl Marshal for CompoundPacket {
+    #[tracing::instrument(level = "debug", skip(self, buf))]
     /// Marshal encodes the CompoundPacket as binary.
     fn marshal_to(&self, mut buf: &mut [u8]) -> Result<usize> {
         self.validate()?;
@@ -97,6 +106,7 @@ impl Marshal for CompoundPacket {
 }
 
 impl Unmarshal for CompoundPacket {
+    #[tracing::instrument(level = "debug", skip(raw_packet))]
     fn unmarshal<B>(raw_packet: &mut B) -> Result<Self>
     where
         Self: Sized,
@@ -117,6 +127,7 @@ impl Unmarshal for CompoundPacket {
 }
 
 impl CompoundPacket {
+    #[tracing::instrument(level = "debug", skip(self))]
     /// Validate returns an error if this is not an RFC-compliant CompoundPacket.
     pub fn validate(&self) -> Result<()> {
         if self.0.is_empty() {
@@ -167,6 +178,7 @@ impl CompoundPacket {
         Err(Error::MissingCname.into())
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// CNAME returns the CNAME that *must* be present in every CompoundPacket
     pub fn cname(&self) -> Result<Bytes> {
         if self.0.is_empty() {

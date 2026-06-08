@@ -5,6 +5,7 @@ use super::*;
 use crate::error::Result;
 
 impl Context {
+    #[tracing::instrument(level = "debug", skip(self, encrypted))]
     /// DecryptRTCP decrypts a RTCP packet with an encrypted payload
     pub fn decrypt_rtcp(&mut self, encrypted: &[u8]) -> Result<Bytes> {
         let mut buf = encrypted;
@@ -28,6 +29,7 @@ impl Context {
         Ok(dst)
     }
 
+    #[tracing::instrument(level = "debug", skip(self, decrypted))]
     /// EncryptRTCP marshals and encrypts an RTCP packet, writing to the dst buffer provided.
     /// If the dst buffer does not have the capacity to hold `len(plaintext) + 14` bytes, a new one will be allocated and returned.
     pub fn encrypt_rtcp(&mut self, decrypted: &[u8]) -> Result<Bytes> {

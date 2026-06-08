@@ -19,6 +19,7 @@ pub(crate) struct Resolver {
 }
 
 impl Resolver {
+    #[tracing::instrument(level = "debug", skip())]
     pub(crate) fn new() -> Self {
         let mut r = Resolver {
             parent: None,
@@ -31,10 +32,12 @@ impl Resolver {
         r
     }
 
+    #[tracing::instrument(level = "debug", skip(self, p))]
     pub(crate) fn set_parent(&mut self, p: Weak<Mutex<Resolver>>) {
         self.parent = Some(p);
     }
 
+    #[tracing::instrument(level = "debug", skip(self, name, ip_addr))]
     pub(crate) fn add_host(&mut self, name: String, ip_addr: String) -> Result<()> {
         if name.is_empty() {
             return Err(Error::ErrHostnameEmpty);
@@ -45,6 +48,7 @@ impl Resolver {
         Ok(())
     }
 
+    #[tracing::instrument(level = "debug", skip(self, host_name))]
     pub(crate) fn lookup(
         &self,
         host_name: String,

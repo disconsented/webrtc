@@ -26,6 +26,7 @@ pub struct OggWriter<W: Write> {
 }
 
 impl<W: Write> OggWriter<W> {
+    #[tracing::instrument(level = "debug", skip(writer, sample_rate, channel_count))]
     /// new initialize a new OGG Opus writer with an io.Writer output
     pub fn new(writer: W, sample_rate: u32, channel_count: u8) -> Result<Self> {
         let mut w = OggWriter {
@@ -72,6 +73,7 @@ impl<W: Write> OggWriter<W> {
        Figure 1: Example Packet Organization for a Logical Ogg Opus Stream
     */
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn write_headers(&mut self) -> Result<()> {
         // ID Header
         let mut ogg_id_header = Vec::with_capacity(19);
@@ -118,6 +120,7 @@ impl<W: Write> OggWriter<W> {
         Ok(())
     }
 
+    #[tracing::instrument(level = "debug", skip(self, payload, header_type, granule_pos, page_index))]
     fn write_page(
         &mut self,
         payload: &Bytes,
@@ -167,6 +170,7 @@ impl<W: Write> OggWriter<W> {
 }
 
 impl<W: Write> Writer for OggWriter<W> {
+    #[tracing::instrument(level = "debug", skip(self, packet))]
     /// write_rtp adds a new packet and writes the appropriate headers for it
     fn write_rtp(&mut self, packet: &rtp::packet::Packet) -> Result<()> {
         if packet.payload.is_empty() {
@@ -194,6 +198,7 @@ impl<W: Write> Writer for OggWriter<W> {
         Ok(())
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// close stops the recording
     fn close(&mut self) -> Result<()> {
         let payload = self.last_payload.clone();

@@ -572,6 +572,7 @@ fn test_have_application_media_section() -> Result<()> {
     Ok(())
 }
 
+#[tracing::instrument(level = "debug", skip(certificate, engine, media, sdpmedia_description_fingerprints, expected_fingerprint_count))]
 async fn fingerprint_test(
     certificate: &RTCCertificate,
     engine: &Arc<MediaEngine>,

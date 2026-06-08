@@ -41,6 +41,7 @@ pub struct TextAttribute {
 }
 
 impl fmt::Display for TextAttribute {
+    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.text)
     }
@@ -49,6 +50,7 @@ impl fmt::Display for TextAttribute {
 impl Setter for TextAttribute {
     // add_to_as adds attribute with type t to m, checking maximum length. If max_len
     // is less than 0, no check is performed.
+    #[tracing::instrument(level = "debug", skip(self, m))]
     fn add_to(&self, m: &mut Message) -> Result<()> {
         let text = self.text.as_bytes();
         let max_len = match self.attr {
@@ -66,6 +68,7 @@ impl Setter for TextAttribute {
 }
 
 impl Getter for TextAttribute {
+    #[tracing::instrument(level = "debug", skip(self, m))]
     fn get_from(&mut self, m: &Message) -> Result<()> {
         let attr = self.attr;
         *self = TextAttribute::get_from_as(m, attr)?;
@@ -74,11 +77,13 @@ impl Getter for TextAttribute {
 }
 
 impl TextAttribute {
+    #[tracing::instrument(level = "debug", skip(attr, text))]
     pub fn new(attr: AttrType, text: String) -> Self {
         TextAttribute { attr, text }
     }
 
     // get_from_as gets t attribute from m and appends its value to reset v.
+    #[tracing::instrument(level = "debug", skip(m, attr))]
     pub fn get_from_as(m: &Message, attr: AttrType) -> Result<Self> {
         match attr {
             ATTR_USERNAME => {}

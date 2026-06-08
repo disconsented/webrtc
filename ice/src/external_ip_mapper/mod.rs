@@ -7,6 +7,7 @@ use std::net::IpAddr;
 use crate::candidate::*;
 use crate::error::*;
 
+#[tracing::instrument(level = "debug", skip(ip_str))]
 pub(crate) fn validate_ip_string(ip_str: &str) -> Result<IpAddr> {
     match ip_str.parse() {
         Ok(ip) => Ok(ip),
@@ -22,6 +23,7 @@ pub(crate) struct IpMapping {
 }
 
 impl IpMapping {
+    #[tracing::instrument(level = "debug", skip(self, ip))]
     pub(crate) fn set_sole_ip(&mut self, ip: IpAddr) -> Result<()> {
         if self.ip_sole.is_some() || !self.ip_map.is_empty() {
             return Err(Error::ErrInvalidNat1to1IpMapping);
@@ -32,6 +34,7 @@ impl IpMapping {
         Ok(())
     }
 
+    #[tracing::instrument(level = "debug", skip(self, loc_ip, ext_ip))]
     pub(crate) fn add_ip_mapping(&mut self, loc_ip: IpAddr, ext_ip: IpAddr) -> Result<()> {
         if self.ip_sole.is_some() {
             return Err(Error::ErrInvalidNat1to1IpMapping);
@@ -49,6 +52,7 @@ impl IpMapping {
         Ok(())
     }
 
+    #[tracing::instrument(level = "debug", skip(self, loc_ip))]
     pub(crate) fn find_external_ip(&self, loc_ip: IpAddr) -> Result<IpAddr> {
         if let Some(ip_sole) = &self.ip_sole {
             return Ok(*ip_sole);
@@ -69,6 +73,7 @@ pub(crate) struct ExternalIpMapper {
 }
 
 impl ExternalIpMapper {
+    #[tracing::instrument(level = "debug", skip(candidate_type, ips))]
     pub(crate) fn new(mut candidate_type: CandidateType, ips: &[String]) -> Result<Option<Self>> {
         if ips.is_empty() {
             return Ok(None);
@@ -121,6 +126,7 @@ impl ExternalIpMapper {
         Ok(Some(m))
     }
 
+    #[tracing::instrument(level = "debug", skip(self, local_ip_str))]
     pub(crate) fn find_external_ip(&self, local_ip_str: &str) -> Result<IpAddr> {
         let loc_ip = validate_ip_string(local_ip_str)?;
 

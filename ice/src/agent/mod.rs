@@ -60,6 +60,7 @@ pub(crate) struct BindingRequest {
 }
 
 impl Default for BindingRequest {
+    #[tracing::instrument(level = "debug", skip())]
     fn default() -> Self {
         Self {
             timestamp: Instant::now(),
@@ -122,6 +123,7 @@ pub struct Agent {
 }
 
 impl Agent {
+    #[tracing::instrument(level = "debug", skip(config))]
     /// Creates a new Agent.
     pub async fn new(config: AgentConfig) -> Result<Self> {
         let mut mdns_name = config.multicast_dns_host_name.clone();
@@ -232,14 +234,17 @@ impl Agent {
         Ok(agent)
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     pub fn get_bytes_received(&self) -> usize {
         self.internal.agent_conn.bytes_received()
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     pub fn get_bytes_sent(&self) -> usize {
         self.internal.agent_conn.bytes_sent()
     }
 
+    #[tracing::instrument(level = "debug", skip(self, f))]
     /// Sets a handler that is fired when the connection state changes.
     pub fn on_connection_state_change(&self, f: OnConnectionStateChangeHdlrFn) {
         self.internal
@@ -247,6 +252,7 @@ impl Agent {
             .store(Some(Arc::new(Mutex::new(f))))
     }
 
+    #[tracing::instrument(level = "debug", skip(self, f))]
     /// Sets a handler that is fired when the final candidate pair is selected.
     pub fn on_selected_candidate_pair_change(&self, f: OnSelectedCandidatePairChangeHdlrFn) {
         self.internal
@@ -254,6 +260,7 @@ impl Agent {
             .store(Some(Arc::new(Mutex::new(f))))
     }
 
+    #[tracing::instrument(level = "debug", skip(self, f))]
     /// Sets a handler that is fired when new candidates gathered. When the gathering process
     /// complete the last candidate is nil.
     pub fn on_candidate(&self, f: OnCandidateHdlrFn) {
@@ -262,6 +269,7 @@ impl Agent {
             .store(Some(Arc::new(Mutex::new(f))));
     }
 
+    #[tracing::instrument(level = "debug", skip(self, c))]
     /// Adds a new remote candidate.
     pub fn add_remote_candidate(&self, c: &Arc<dyn Candidate + Send + Sync>) -> Result<()> {
         // cannot check for network yet because it might not be applied
@@ -310,6 +318,7 @@ impl Agent {
         Ok(())
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// Returns the local candidates.
     pub async fn get_local_candidates(&self) -> Result<Vec<Arc<dyn Candidate + Send + Sync>>> {
         let mut res = vec![];
@@ -326,18 +335,21 @@ impl Agent {
         Ok(res)
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// Returns the local user credentials.
     pub async fn get_local_user_credentials(&self) -> (String, String) {
         let ufrag_pwd = self.internal.ufrag_pwd.lock().await;
         (ufrag_pwd.local_ufrag.clone(), ufrag_pwd.local_pwd.clone())
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// Returns the remote user credentials.
     pub async fn get_remote_user_credentials(&self) -> (String, String) {
         let ufrag_pwd = self.internal.ufrag_pwd.lock().await;
         (ufrag_pwd.remote_ufrag.clone(), ufrag_pwd.remote_pwd.clone())
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// Cleans up the Agent.
     pub async fn close(&self) -> Result<()> {
         if let Some(gather_candidate_cancel) = &self.gather_candidate_cancel {
@@ -355,11 +367,13 @@ impl Agent {
         self.internal.close().await
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// Returns the selected pair or nil if there is none
     pub fn get_selected_candidate_pair(&self) -> Option<Arc<CandidatePair>> {
         self.internal.agent_conn.get_selected_pair()
     }
 
+    #[tracing::instrument(level = "debug", skip(self, remote_ufrag, remote_pwd))]
     /// Sets the credentials of the remote agent.
     pub async fn set_remote_credentials(
         &self,
@@ -371,6 +385,7 @@ impl Agent {
             .await
     }
 
+    #[tracing::instrument(level = "debug", skip(self, ufrag, pwd))]
     /// Restarts the ICE Agent with the provided ufrag/pwd
     /// If no ufrag/pwd is provided the Agent will generate one itself.
     ///
@@ -439,6 +454,7 @@ impl Agent {
         Ok(())
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// Initiates the trickle based gathering process.
     pub fn gather_candidates(&self) -> Result<()> {
         if self.gathering_state.load(Ordering::SeqCst) != GatheringState::New as u8 {
@@ -478,21 +494,25 @@ impl Agent {
         Ok(())
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// Returns a list of candidate pair stats.
     pub async fn get_candidate_pairs_stats(&self) -> Vec<CandidatePairStats> {
         self.internal.get_candidate_pairs_stats().await
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// Returns a list of local candidates stats.
     pub async fn get_local_candidates_stats(&self) -> Vec<CandidateStats> {
         self.internal.get_local_candidates_stats().await
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// Returns a list of remote candidates stats.
     pub async fn get_remote_candidates_stats(&self) -> Vec<CandidateStats> {
         self.internal.get_remote_candidates_stats().await
     }
 
+    #[tracing::instrument(level = "debug", skip(mdns_conn, c))]
     async fn resolve_and_add_multicast_candidate(
         mdns_conn: Arc<DnsConn>,
         c: Arc<dyn Candidate + Send + Sync>,
@@ -512,6 +532,7 @@ impl Agent {
         Ok(c)
     }
 
+    #[tracing::instrument(level = "debug", skip(mdns_conn))]
     async fn close_multicast_conn(mdns_conn: &Option<Arc<DnsConn>>) {
         if let Some(conn) = mdns_conn {
             if let Err(err) = conn.close().await {

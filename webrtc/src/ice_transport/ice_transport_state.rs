@@ -62,6 +62,7 @@ const ICE_TRANSPORT_STATE_DISCONNECTED_STR: &str = "disconnected";
 const ICE_TRANSPORT_STATE_CLOSED_STR: &str = "closed";
 
 impl From<&str> for RTCIceTransportState {
+    #[tracing::instrument(level = "debug", skip(raw))]
     fn from(raw: &str) -> Self {
         match raw {
             ICE_TRANSPORT_STATE_NEW_STR => RTCIceTransportState::New,
@@ -77,6 +78,7 @@ impl From<&str> for RTCIceTransportState {
 }
 
 impl From<u8> for RTCIceTransportState {
+    #[tracing::instrument(level = "debug", skip(v))]
     fn from(v: u8) -> Self {
         match v {
             1 => Self::New,
@@ -92,6 +94,7 @@ impl From<u8> for RTCIceTransportState {
 }
 
 impl fmt::Display for RTCIceTransportState {
+    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match *self {
             RTCIceTransportState::New => write!(f, "{ICE_TRANSPORT_STATE_NEW_STR}"),
@@ -115,6 +118,7 @@ impl fmt::Display for RTCIceTransportState {
 }
 
 impl From<ConnectionState> for RTCIceTransportState {
+    #[tracing::instrument(level = "debug", skip(raw))]
     fn from(raw: ConnectionState) -> Self {
         match raw {
             ConnectionState::New => RTCIceTransportState::New,
@@ -130,6 +134,7 @@ impl From<ConnectionState> for RTCIceTransportState {
 }
 
 impl RTCIceTransportState {
+    #[tracing::instrument(level = "debug", skip(self))]
     pub(crate) fn to_ice(self) -> ConnectionState {
         match self {
             RTCIceTransportState::New => ConnectionState::New,

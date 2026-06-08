@@ -45,6 +45,7 @@ const DATA_CHANNEL_STATE_CLOSING_STR: &str = "closing";
 const DATA_CHANNEL_STATE_CLOSED_STR: &str = "closed";
 
 impl From<u8> for RTCDataChannelState {
+    #[tracing::instrument(level = "debug", skip(v))]
     fn from(v: u8) -> Self {
         match v {
             1 => RTCDataChannelState::Connecting,
@@ -57,6 +58,7 @@ impl From<u8> for RTCDataChannelState {
 }
 
 impl From<&str> for RTCDataChannelState {
+    #[tracing::instrument(level = "debug", skip(raw))]
     fn from(raw: &str) -> Self {
         match raw {
             DATA_CHANNEL_STATE_CONNECTING_STR => RTCDataChannelState::Connecting,
@@ -69,6 +71,7 @@ impl From<&str> for RTCDataChannelState {
 }
 
 impl fmt::Display for RTCDataChannelState {
+    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let s = match *self {
             RTCDataChannelState::Connecting => DATA_CHANNEL_STATE_CONNECTING_STR,

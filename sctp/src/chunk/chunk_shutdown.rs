@@ -24,12 +24,14 @@ pub(crate) const CUMULATIVE_TSN_ACK_LENGTH: usize = 4;
 
 /// makes chunkShutdown printable
 impl fmt::Display for ChunkShutdown {
+    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.header())
     }
 }
 
 impl Chunk for ChunkShutdown {
+    #[tracing::instrument(level = "debug", skip(self))]
     fn header(&self) -> ChunkHeader {
         ChunkHeader {
             typ: CT_SHUTDOWN,
@@ -38,6 +40,7 @@ impl Chunk for ChunkShutdown {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(raw))]
     fn unmarshal(raw: &Bytes) -> Result<Self> {
         let header = ChunkHeader::unmarshal(raw)?;
 
@@ -56,20 +59,24 @@ impl Chunk for ChunkShutdown {
         Ok(ChunkShutdown { cumulative_tsn_ack })
     }
 
+    #[tracing::instrument(level = "debug", skip(self, writer))]
     fn marshal_to(&self, writer: &mut BytesMut) -> Result<usize> {
         self.header().marshal_to(writer)?;
         writer.put_u32(self.cumulative_tsn_ack);
         Ok(writer.len())
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn check(&self) -> Result<()> {
         Ok(())
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn value_length(&self) -> usize {
         CUMULATIVE_TSN_ACK_LENGTH
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn as_any(&self) -> &(dyn Any + Send + Sync) {
         self
     }

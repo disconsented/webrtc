@@ -11,6 +11,7 @@ pub(crate) enum StateChangeOp {
 }
 
 impl fmt::Display for StateChangeOp {
+    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match *self {
             StateChangeOp::SetLocal => write!(f, "SetLocal"),
@@ -69,6 +70,7 @@ const SIGNALING_STATE_HAVE_REMOTE_PRANSWER_STR: &str = "have-remote-pranswer";
 const SIGNALING_STATE_CLOSED_STR: &str = "closed";
 
 impl From<&str> for RTCSignalingState {
+    #[tracing::instrument(level = "debug", skip(raw))]
     fn from(raw: &str) -> Self {
         match raw {
             SIGNALING_STATE_STABLE_STR => RTCSignalingState::Stable,
@@ -83,6 +85,7 @@ impl From<&str> for RTCSignalingState {
 }
 
 impl fmt::Display for RTCSignalingState {
+    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match *self {
             RTCSignalingState::Stable => write!(f, "{SIGNALING_STATE_STABLE_STR}"),
@@ -105,6 +108,7 @@ impl fmt::Display for RTCSignalingState {
 }
 
 impl From<u8> for RTCSignalingState {
+    #[tracing::instrument(level = "debug", skip(v))]
     fn from(v: u8) -> Self {
         match v {
             1 => RTCSignalingState::Stable,
@@ -118,6 +122,7 @@ impl From<u8> for RTCSignalingState {
     }
 }
 
+#[tracing::instrument(level = "debug", skip(cur, next, op, sdp_type))]
 pub(crate) fn check_next_signaling_state(
     cur: RTCSignalingState,
     next: RTCSignalingState,

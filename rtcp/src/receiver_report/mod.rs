@@ -34,6 +34,7 @@ pub struct ReceiverReport {
 }
 
 impl fmt::Display for ReceiverReport {
+    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut out = format!("ReceiverReport from {}\n", self.ssrc);
         out += "\tSSRC    \tLost\tLastSequence\n";
@@ -51,6 +52,7 @@ impl fmt::Display for ReceiverReport {
 }
 
 impl Packet for ReceiverReport {
+    #[tracing::instrument(level = "debug", skip(self))]
     /// Header returns the Header associated with this packet.
     fn header(&self) -> Header {
         Header {
@@ -61,11 +63,13 @@ impl Packet for ReceiverReport {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// destination_ssrc returns an array of SSRC values that this packet refers to.
     fn destination_ssrc(&self) -> Vec<u32> {
         self.reports.iter().map(|x| x.ssrc).collect()
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn raw_size(&self) -> usize {
         let mut reps_length = 0;
         for rep in &self.reports {
@@ -75,20 +79,24 @@ impl Packet for ReceiverReport {
         HEADER_LENGTH + SSRC_LENGTH + reps_length + self.profile_extensions.len()
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn as_any(&self) -> &(dyn Any + Send + Sync) {
         self
     }
 
+    #[tracing::instrument(level = "debug", skip(self, other))]
     fn equal(&self, other: &(dyn Packet + Send + Sync)) -> bool {
         other.as_any().downcast_ref::<ReceiverReport>() == Some(self)
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn cloned(&self) -> Box<dyn Packet + Send + Sync> {
         Box::new(self.clone())
     }
 }
 
 impl MarshalSize for ReceiverReport {
+    #[tracing::instrument(level = "debug", skip(self))]
     fn marshal_size(&self) -> usize {
         let l = self.raw_size();
         // align to 32-bit boundary
@@ -97,6 +105,7 @@ impl MarshalSize for ReceiverReport {
 }
 
 impl Marshal for ReceiverReport {
+    #[tracing::instrument(level = "debug", skip(self, buf))]
     /// marshal_to encodes the packet in binary.
     fn marshal_to(&self, mut buf: &mut [u8]) -> Result<usize> {
         if self.reports.len() > COUNT_MAX {
@@ -156,6 +165,7 @@ impl Marshal for ReceiverReport {
 }
 
 impl Unmarshal for ReceiverReport {
+    #[tracing::instrument(level = "debug", skip(raw_packet))]
     /// Unmarshal decodes the ReceiverReport from binary
     fn unmarshal<B>(raw_packet: &mut B) -> Result<Self>
     where

@@ -79,6 +79,7 @@ pub(crate) struct ChunkInit {
 }
 
 impl Clone for ChunkInit {
+    #[tracing::instrument(level = "debug", skip(self))]
     fn clone(&self) -> Self {
         ChunkInit {
             is_ack: self.is_ack,
@@ -97,6 +98,7 @@ pub(crate) const INIT_OPTIONAL_VAR_HEADER_LENGTH: usize = 4;
 
 /// makes chunkInitCommon printable
 impl fmt::Display for ChunkInit {
+    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut res = format!(
             "is_ack: {}
@@ -121,6 +123,7 @@ impl fmt::Display for ChunkInit {
 }
 
 impl Chunk for ChunkInit {
+    #[tracing::instrument(level = "debug", skip(self))]
     fn header(&self) -> ChunkHeader {
         ChunkHeader {
             typ: if self.is_ack { CT_INIT_ACK } else { CT_INIT },
@@ -129,6 +132,7 @@ impl Chunk for ChunkInit {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(raw))]
     /// Chunk values of SCTP control chunks consist of a chunk-type-specific
     /// header of required fields, followed by zero or more parameters.  The
     /// optional and variable-length parameters contained in a chunk are
@@ -197,6 +201,7 @@ impl Chunk for ChunkInit {
         })
     }
 
+    #[tracing::instrument(level = "debug", skip(self, writer))]
     fn marshal_to(&self, writer: &mut BytesMut) -> Result<usize> {
         self.header().marshal_to(writer)?;
 
@@ -226,6 +231,7 @@ impl Chunk for ChunkInit {
         Ok(writer.len())
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn check(&self) -> Result<()> {
         // The receiver of the INIT (the responding end) records the value of
         // the Initiate Tag parameter.  This value MUST be placed into the
@@ -278,6 +284,7 @@ impl Chunk for ChunkInit {
         Ok(())
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn value_length(&self) -> usize {
         let mut l = 4 + 4 + 2 + 2 + 4;
         for (idx, p) in self.params.iter().enumerate() {
@@ -290,12 +297,14 @@ impl Chunk for ChunkInit {
         l
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn as_any(&self) -> &(dyn Any + Send + Sync) {
         self
     }
 }
 
 impl ChunkInit {
+    #[tracing::instrument(level = "debug", skip(self))]
     pub(crate) fn set_supported_extensions(&mut self) {
         // TODO RFC5061 https://tools.ietf.org/html/rfc6525#section-5.2
         // An implementation supporting this (Supported Extensions Parameter)

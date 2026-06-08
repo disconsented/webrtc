@@ -40,6 +40,7 @@ pub struct Mux {
 }
 
 impl Mux {
+    #[tracing::instrument(level = "debug", skip(config))]
     pub fn new(config: Config) -> Self {
         let (closed_ch_tx, closed_ch_rx) = mpsc::channel(1);
         let m = Mux {
@@ -60,6 +61,7 @@ impl Mux {
         m
     }
 
+    #[tracing::instrument(level = "debug", skip(self, f))]
     /// creates a new Endpoint
     pub async fn new_endpoint(&self, f: MatchFunc) -> Arc<Endpoint> {
         let mut endpoints = self.endpoints.lock().await;
@@ -79,12 +81,14 @@ impl Mux {
         e
     }
 
+    #[tracing::instrument(level = "debug", skip(self, e))]
     /// remove_endpoint removes an endpoint from the Mux
     pub async fn remove_endpoint(&mut self, e: &Endpoint) {
         let mut endpoints = self.endpoints.lock().await;
         endpoints.remove(&e.id);
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// Close closes the Mux and all associated Endpoints.
     pub async fn close(&mut self) {
         self.closed_ch_tx.take();
@@ -93,6 +97,7 @@ impl Mux {
         endpoints.clear();
     }
 
+    #[tracing::instrument(level = "debug", skip(buffer_size, next_conn, closed_ch_rx, endpoints))]
     async fn read_loop(
         buffer_size: usize,
         next_conn: Arc<dyn Conn + Send + Sync>,
@@ -118,6 +123,7 @@ impl Mux {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(buf, endpoints))]
     async fn dispatch(
         buf: &[u8],
         endpoints: &Arc<Mutex<HashMap<usize, Arc<Endpoint>>>>,

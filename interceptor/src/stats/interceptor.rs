@@ -94,6 +94,7 @@ pub struct StatsInterceptor {
 }
 
 impl StatsInterceptor {
+    #[tracing::instrument(level = "debug", skip(id))]
     pub fn new(id: String) -> Self {
         let (tx, rx) = mpsc::channel(100);
 
@@ -108,6 +109,7 @@ impl StatsInterceptor {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(id, now_gen))]
     fn with_time_gen<F>(id: String, now_gen: F) -> Self
     where
         F: Fn() -> SystemTime + Send + Sync + 'static,
@@ -124,6 +126,7 @@ impl StatsInterceptor {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self, ssrcs))]
     pub async fn fetch_inbound_stats(
         &self,
         ssrcs: Vec<u32>,
@@ -143,6 +146,7 @@ impl StatsInterceptor {
         rx.await.unwrap_or_default()
     }
 
+    #[tracing::instrument(level = "debug", skip(self, ssrcs))]
     pub async fn fetch_outbound_stats(
         &self,
         ssrcs: Vec<u32>,
@@ -165,6 +169,7 @@ impl StatsInterceptor {
     }
 }
 
+#[tracing::instrument(level = "debug", skip(rx))]
 async fn run_stats_reducer(mut rx: mpsc::Receiver<Message>) {
     let mut ssrc_stats: StatsContainer = Default::default();
     let mut cleanup_ticker = tokio::time::interval(Duration::from_secs(10));
@@ -208,6 +213,7 @@ async fn run_stats_reducer(mut rx: mpsc::Receiver<Message>) {
     }
 }
 
+#[tracing::instrument(level = "debug", skip(ssrc_stats, ssrc, update))]
 fn handle_stats_update(ssrc_stats: &mut StatsContainer, ssrc: u32, update: StatsUpdate) {
     match update {
         StatsUpdate::InboundRTP {
@@ -294,6 +300,7 @@ fn handle_stats_update(ssrc_stats: &mut StatsContainer, ssrc: u32, update: Stats
 
 #[async_trait]
 impl Interceptor for StatsInterceptor {
+    #[tracing::instrument(level = "debug", skip(self, info, reader))]
     /// bind_remote_stream lets you modify any incoming RTP packets. It is called once for per RemoteStream. The returned method
     /// will be called once per rtp packet.
     async fn bind_remote_stream(
@@ -310,6 +317,7 @@ impl Interceptor for StatsInterceptor {
         e.clone()
     }
 
+    #[tracing::instrument(level = "debug", skip(self, info))]
     /// unbind_remote_stream is called when the Stream is removed. It can be used to clean up any data related to that track.
     async fn unbind_remote_stream(&self, info: &StreamInfo) {
         let mut lock = self.recv_streams.lock();
@@ -317,6 +325,7 @@ impl Interceptor for StatsInterceptor {
         lock.remove(&info.ssrc);
     }
 
+    #[tracing::instrument(level = "debug", skip(self, info, writer))]
     /// bind_local_stream lets you modify any outgoing RTP packets. It is called once for per LocalStream. The returned method
     /// will be called once per rtp packet.
     async fn bind_local_stream(
@@ -333,6 +342,7 @@ impl Interceptor for StatsInterceptor {
         e.clone()
     }
 
+    #[tracing::instrument(level = "debug", skip(self, info))]
     /// unbind_local_stream is called when the Stream is removed. It can be used to clean up any data related to that track.
     async fn unbind_local_stream(&self, info: &StreamInfo) {
         let mut lock = self.send_streams.lock();
@@ -340,10 +350,12 @@ impl Interceptor for StatsInterceptor {
         lock.remove(&info.ssrc);
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     async fn close(&self) -> Result<()> {
         Ok(())
     }
 
+    #[tracing::instrument(level = "debug", skip(self, writer))]
     /// bind_rtcp_writer lets you modify any outgoing RTCP packets. It is called once per PeerConnection. The returned method
     /// will be called once per packet batch.
     async fn bind_rtcp_writer(
@@ -359,6 +371,7 @@ impl Interceptor for StatsInterceptor {
         })
     }
 
+    #[tracing::instrument(level = "debug", skip(self, reader))]
     /// bind_rtcp_reader lets you modify any incoming RTCP packets. It is called once per sender/receiver, however this might
     /// change in the future. The returned method will be called once per packet batch.
     async fn bind_rtcp_reader(
@@ -386,6 +399,7 @@ impl<F> RTCPReader for RTCPReadInterceptor<F>
 where
     F: Fn() -> SystemTime + Send + Sync,
 {
+    #[tracing::instrument(level = "debug", skip(self, buf, attributes))]
     /// read a batch of rtcp packets
     async fn read(
         &self,
@@ -610,6 +624,7 @@ impl<F> RTCPWriter for RTCPWriteInterceptor<F>
 where
     F: Fn() -> SystemTime + Send + Sync,
 {
+    #[tracing::instrument(level = "debug", skip(self, pkts, attributes))]
     async fn write(
         &self,
         pkts: &[Box<dyn rtcp::packet::Packet + Send + Sync>],
@@ -701,12 +716,14 @@ pub struct RTPReadRecorder {
 }
 
 impl RTPReadRecorder {
+    #[tracing::instrument(level = "debug", skip(rtp_reader, tx))]
     fn new(rtp_reader: Arc<dyn RTPReader + Send + Sync>, tx: mpsc::Sender<Message>) -> Self {
         Self { rtp_reader, tx }
     }
 }
 
 impl fmt::Debug for RTPReadRecorder {
+    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("RTPReadRecorder").finish()
     }
@@ -714,6 +731,7 @@ impl fmt::Debug for RTPReadRecorder {
 
 #[async_trait]
 impl RTPReader for RTPReadRecorder {
+    #[tracing::instrument(level = "debug", skip(self, buf, attributes))]
     async fn read(
         &self,
         buf: &mut [u8],
@@ -744,12 +762,14 @@ pub struct RTPWriteRecorder {
 }
 
 impl RTPWriteRecorder {
+    #[tracing::instrument(level = "debug", skip(rtp_writer, tx))]
     fn new(rtp_writer: Arc<dyn RTPWriter + Send + Sync>, tx: mpsc::Sender<Message>) -> Self {
         Self { rtp_writer, tx }
     }
 }
 
 impl fmt::Debug for RTPWriteRecorder {
+    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("RTPWriteRecorder").finish()
     }
@@ -757,6 +777,7 @@ impl fmt::Debug for RTPWriteRecorder {
 
 #[async_trait]
 impl RTPWriter for RTPWriteRecorder {
+    #[tracing::instrument(level = "debug", skip(self, pkt, attributes))]
     /// write a rtp packet
     async fn write(&self, pkt: &rtp::packet::Packet, attributes: &Attributes) -> Result<usize> {
         let n = self.rtp_writer.write(pkt, attributes).await?;
@@ -778,6 +799,7 @@ impl RTPWriter for RTPWriteRecorder {
     }
 }
 
+#[tracing::instrument(level = "debug", skip(now, delay, last_report))]
 /// Calculate the round trip time for a given peer as described in
 /// [RFC3550 6.4.1](https://datatracker.ietf.org/doc/html/rfc3550#section-6.4.1).
 ///

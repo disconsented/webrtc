@@ -8,6 +8,7 @@ use super::*;
 use crate::allocation::*;
 use crate::error::Result;
 
+#[tracing::instrument(level = "debug", skip(lifetime))]
 async fn create_channel_bind(lifetime: Duration) -> Result<Allocation> {
     let turn_socket = Arc::new(UdpSocket::bind("0.0.0.0:0").await?);
     let relay_socket = Arc::clone(&turn_socket);
@@ -45,6 +46,7 @@ async fn test_channel_bind() -> Result<()> {
     Ok(())
 }
 
+#[tracing::instrument(level = "debug", skip())]
 async fn test_channel_bind_start() -> Result<()> {
     let a = create_channel_bind(Duration::from_millis(20)).await?;
     tokio::time::sleep(Duration::from_millis(30)).await;
@@ -57,6 +59,7 @@ async fn test_channel_bind_start() -> Result<()> {
     Ok(())
 }
 
+#[tracing::instrument(level = "debug", skip())]
 async fn test_channel_bind_reset() -> Result<()> {
     let a = create_channel_bind(Duration::from_millis(30)).await?;
 

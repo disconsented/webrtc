@@ -35,6 +35,7 @@ pub struct NackIterator {
 impl Iterator for NackIterator {
     type Item = u16;
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn next(&mut self) -> Option<Self::Item> {
         if !self.has_yielded_packet_id {
             self.has_yielded_packet_id = true;
@@ -59,6 +60,7 @@ impl Iterator for NackIterator {
 }
 
 impl NackPair {
+    #[tracing::instrument(level = "debug", skip(seq))]
     pub fn new(seq: u16) -> Self {
         Self {
             packet_id: seq,
@@ -66,11 +68,13 @@ impl NackPair {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// PacketList returns a list of Nack'd packets that's referenced by a NackPair
     pub fn packet_list(&self) -> Vec<u16> {
         self.into_iter().collect()
     }
 
+    #[tracing::instrument(level = "debug", skip(self, f))]
     pub fn range<F>(&self, f: F)
     where
         F: Fn(u16) -> bool,
@@ -89,6 +93,7 @@ impl IntoIterator for NackPair {
 
     type IntoIter = NackIterator;
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn into_iter(self) -> Self::IntoIter {
         NackIterator {
             packet_id: self.packet_id,
@@ -118,6 +123,7 @@ pub struct TransportLayerNack {
 }
 
 impl fmt::Display for TransportLayerNack {
+    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut out = format!("TransportLayerNack from {:x}\n", self.sender_ssrc);
         out += format!("\tMedia Ssrc {:x}\n", self.media_ssrc).as_str();
@@ -130,6 +136,7 @@ impl fmt::Display for TransportLayerNack {
 }
 
 impl Packet for TransportLayerNack {
+    #[tracing::instrument(level = "debug", skip(self))]
     /// returns the Header associated with this packet.
     fn header(&self) -> Header {
         Header {
@@ -140,29 +147,35 @@ impl Packet for TransportLayerNack {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// destination_ssrc returns an array of SSRC values that this packet refers to.
     fn destination_ssrc(&self) -> Vec<u32> {
         vec![self.media_ssrc]
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn raw_size(&self) -> usize {
         HEADER_LENGTH + NACK_OFFSET + self.nacks.len() * 4
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn as_any(&self) -> &(dyn Any + Send + Sync) {
         self
     }
 
+    #[tracing::instrument(level = "debug", skip(self, other))]
     fn equal(&self, other: &(dyn Packet + Send + Sync)) -> bool {
         other.as_any().downcast_ref::<TransportLayerNack>() == Some(self)
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn cloned(&self) -> Box<dyn Packet + Send + Sync> {
         Box::new(self.clone())
     }
 }
 
 impl MarshalSize for TransportLayerNack {
+    #[tracing::instrument(level = "debug", skip(self))]
     fn marshal_size(&self) -> usize {
         let l = self.raw_size();
         // align to 32-bit boundary
@@ -171,6 +184,7 @@ impl MarshalSize for TransportLayerNack {
 }
 
 impl Marshal for TransportLayerNack {
+    #[tracing::instrument(level = "debug", skip(self, buf))]
     /// Marshal encodes the packet in binary.
     fn marshal_to(&self, mut buf: &mut [u8]) -> Result<usize, util::Error> {
         if self.nacks.len() + TLN_LENGTH > u8::MAX as usize {
@@ -201,6 +215,7 @@ impl Marshal for TransportLayerNack {
 }
 
 impl Unmarshal for TransportLayerNack {
+    #[tracing::instrument(level = "debug", skip(raw_packet))]
     /// Unmarshal decodes the ReceptionReport from binary
     fn unmarshal<B>(raw_packet: &mut B) -> Result<Self, util::Error>
     where
@@ -247,6 +262,7 @@ impl Unmarshal for TransportLayerNack {
     }
 }
 
+#[tracing::instrument(level = "debug", skip(seq_nos))]
 pub fn nack_pairs_from_sequence_numbers(seq_nos: &[u16]) -> Vec<NackPair> {
     if seq_nos.is_empty() {
         return vec![];

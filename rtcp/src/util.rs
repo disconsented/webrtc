@@ -3,6 +3,7 @@ use bytes::BufMut;
 use crate::error::{Error, Result};
 
 // returns the padding required to make the length a multiple of 4
+#[tracing::instrument(level = "debug", skip(len))]
 pub(crate) fn get_padding_size(len: usize) -> usize {
     if len.is_multiple_of(4) {
         0
@@ -11,6 +12,7 @@ pub(crate) fn get_padding_size(len: usize) -> usize {
     }
 }
 
+#[tracing::instrument(level = "debug", skip(buf, len))]
 pub(crate) fn put_padding(mut buf: &mut [u8], len: usize) {
     let padding_size = get_padding_size(len);
     for i in 0..padding_size {
@@ -23,6 +25,7 @@ pub(crate) fn put_padding(mut buf: &mut [u8], len: usize) {
 }
 
 // set_nbits_of_uint16 will truncate the value to size, left-shift to start_index position and set
+#[tracing::instrument(level = "debug", skip(src, size, start_index, val))]
 pub(crate) fn set_nbits_of_uint16(
     src: u16,
     size: u16,
@@ -40,11 +43,13 @@ pub(crate) fn set_nbits_of_uint16(
 }
 
 // appendBit32 will left-shift and append n bits of val
+#[tracing::instrument(level = "debug", skip(src, n, val))]
 pub(crate) fn append_nbits_to_uint32(src: u32, n: u32, val: u32) -> u32 {
     (src << n) | (val & (0xFFFFFFFF >> (32 - n)))
 }
 
 // getNBit get n bits from 1 byte, begin with a position
+#[tracing::instrument(level = "debug", skip(b, begin, n))]
 pub(crate) fn get_nbits_from_byte(b: u8, begin: u16, n: u16) -> u16 {
     let end_shift = 8 - (begin + n);
     let mask = (0xFF >> begin) & (0xFF << end_shift) as u8;
@@ -52,6 +57,7 @@ pub(crate) fn get_nbits_from_byte(b: u8, begin: u16, n: u16) -> u16 {
 }
 
 // get24BitFromBytes get 24bits from `[3]byte` slice
+#[tracing::instrument(level = "debug", skip(b))]
 pub(crate) fn get_24bits_from_bytes(b: &[u8]) -> u32 {
     ((b[0] as u32) << 16) + ((b[1] as u32) << 8) + (b[2] as u32)
 }

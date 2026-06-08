@@ -220,18 +220,21 @@ pub struct IoError(#[from] pub io::Error);
 
 // Workaround for wanting PartialEq for io::Error.
 impl PartialEq for IoError {
+    #[tracing::instrument(level = "debug", skip(self, other))]
     fn eq(&self, other: &Self) -> bool {
         self.0.kind() == other.0.kind()
     }
 }
 
 impl From<io::Error> for Error {
+    #[tracing::instrument(level = "debug", skip(e))]
     fn from(e: io::Error) -> Self {
         Error::Io(IoError(e))
     }
 }
 
 impl From<SystemTimeError> for Error {
+    #[tracing::instrument(level = "debug", skip(e))]
     fn from(e: SystemTimeError) -> Self {
         Error::Other(e.to_string())
     }

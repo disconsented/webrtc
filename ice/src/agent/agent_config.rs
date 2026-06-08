@@ -43,6 +43,7 @@ pub(crate) const MAX_BUFFER_SIZE: usize = 1000 * 1000; // 1MB
 /// Wait time before binding requests can be deleted.
 pub(crate) const MAX_BINDING_REQUEST_TIMEOUT: Duration = Duration::from_millis(4000);
 
+#[tracing::instrument(level = "debug", skip())]
 pub(crate) fn default_candidate_types() -> Vec<CandidateType> {
     vec![
         CandidateType::Host,
@@ -158,6 +159,7 @@ pub struct AgentConfig {
 }
 
 impl AgentConfig {
+    #[tracing::instrument(level = "debug", skip(self, a))]
     /// Populates an agent and falls back to defaults if fields are unset.
     pub(crate) fn init_with_defaults(&self, a: &mut AgentInternal) {
         if let Some(max_binding_requests) = self.max_binding_requests {
@@ -215,6 +217,7 @@ impl AgentConfig {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self, mdns_mode, candidate_types))]
     pub(crate) fn init_ext_ip_mapping(
         &self,
         mdns_mode: MulticastDnsMode,

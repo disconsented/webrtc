@@ -56,6 +56,7 @@ pub struct RTCConfiguration {
 }
 
 impl RTCConfiguration {
+    #[tracing::instrument(level = "debug", skip(self))]
     /// get_iceservers side-steps the strict parsing mode of the ice package
     /// (as defined in https://tools.ietf.org/html/rfc7064) by copying and then
     /// stripping any erroneous queries from "stun(s):" URLs before parsing.

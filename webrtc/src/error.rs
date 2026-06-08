@@ -445,12 +445,14 @@ pub type OnErrorHdlrFn =
 
 // Because Tokio SendError is parameterized, we sadly lose the backtrace.
 impl<T> From<MpscSendError<T>> for Error {
+    #[tracing::instrument(level = "debug", skip(e))]
     fn from(e: MpscSendError<T>) -> Self {
         Error::MpscSend(e.to_string())
     }
 }
 
 impl From<Error> for interceptor::Error {
+    #[tracing::instrument(level = "debug", skip(e))]
     fn from(e: Error) -> Self {
         // this is a bit lol, but we do preserve the stack trace
         interceptor::Error::Util(util::Error::from_std(e))
@@ -458,6 +460,7 @@ impl From<Error> for interceptor::Error {
 }
 
 impl PartialEq<ice::Error> for Error {
+    #[tracing::instrument(level = "debug", skip(self, other))]
     fn eq(&self, other: &ice::Error) -> bool {
         if let Error::Ice(e) = self {
             return e == other;
@@ -466,6 +469,7 @@ impl PartialEq<ice::Error> for Error {
     }
 }
 
+#[tracing::instrument(level = "debug", skip(errs))]
 /// flatten_errs flattens multiple errors into one
 pub fn flatten_errs(errs: Vec<impl Into<Error>>) -> Result<()> {
     if errs.is_empty() {

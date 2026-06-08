@@ -21,6 +21,7 @@ pub struct Permission {
 }
 
 impl Permission {
+    #[tracing::instrument(level = "debug", skip(addr))]
     /// Creates a new [`Permission`].
     pub fn new(addr: SocketAddr) -> Self {
         Permission {
@@ -31,6 +32,7 @@ impl Permission {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self, lifetime))]
     pub(crate) async fn start(&mut self, lifetime: Duration) {
         let (reset_tx, mut reset_rx) = mpsc::channel(1);
         self.reset_tx = Some(reset_tx);
@@ -67,12 +69,14 @@ impl Permission {
         });
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     pub(crate) fn stop(&mut self) -> bool {
         let expired = self.reset_tx.is_none() || self.timer_expired.load(Ordering::SeqCst);
         self.reset_tx.take();
         expired
     }
 
+    #[tracing::instrument(level = "debug", skip(self, lifetime))]
     pub(crate) async fn refresh(&self, lifetime: Duration) {
         if let Some(tx) = &self.reset_tx {
             let _ = tx.send(lifetime).await;

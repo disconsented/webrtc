@@ -33,6 +33,7 @@ struct ListenerImpl {
 
 #[async_trait]
 impl Listener for ListenerImpl {
+    #[tracing::instrument(level = "debug", skip(self))]
     /// accept waits for and returns the next connection to the listener.
     async fn accept(&self) -> Result<(Arc<dyn Conn + Send + Sync>, SocketAddr)> {
         let (accept_ch_rx, done_ch_rx) = &mut *self.ch_rx.lock().await;
@@ -50,6 +51,7 @@ impl Listener for ListenerImpl {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// close closes the listener.
     /// Any blocked Accept operations will be unblocked and return errors.
     async fn close(&self) -> Result<()> {
@@ -68,6 +70,7 @@ impl Listener for ListenerImpl {
         Ok(())
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// Addr returns the listener's network address.
     async fn addr(&self) -> Result<SocketAddr> {
         self.pconn.local_addr()
@@ -90,11 +93,13 @@ pub struct ListenConfig {
     pub accept_filter: Option<AcceptFilterFn>,
 }
 
+#[tracing::instrument(level = "debug", skip(laddr))]
 pub async fn listen<A: ToSocketAddrs>(laddr: A) -> Result<impl Listener> {
     ListenConfig::default().listen(laddr).await
 }
 
 impl ListenConfig {
+    #[tracing::instrument(level = "debug", skip(self, laddr))]
     /// Listen creates a new listener based on the ListenConfig.
     pub async fn listen<A: ToSocketAddrs>(&mut self, laddr: A) -> Result<impl Listener> {
         if self.backlog == 0 {
@@ -134,6 +139,7 @@ impl ListenConfig {
         Ok(l)
     }
 
+    #[tracing::instrument(level = "debug", skip(done_ch_rx, pconn, accepting, accept_filter, accept_ch_tx, conns))]
     /// read_loop has to tasks:
     /// 1. Dispatching incoming packets to the correct Conn.
     ///    It can therefore not be ended until all Conns are closed.
@@ -185,6 +191,7 @@ impl ListenConfig {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(pconn, accepting, accept_filter, accept_ch_tx, conns, raddr, buf))]
     async fn get_udp_conn(
         pconn: &Arc<dyn Conn + Send + Sync>,
         accepting: &Arc<AtomicBool>,
@@ -240,6 +247,7 @@ pub struct UdpConn {
 }
 
 impl UdpConn {
+    #[tracing::instrument(level = "debug", skip(pconn, raddr))]
     fn new(pconn: Arc<dyn Conn + Send + Sync>, raddr: SocketAddr) -> Self {
         UdpConn {
             pconn,
@@ -251,39 +259,48 @@ impl UdpConn {
 
 #[async_trait]
 impl Conn for UdpConn {
+    #[tracing::instrument(level = "debug", skip(self, addr))]
     async fn connect(&self, addr: SocketAddr) -> Result<()> {
         self.pconn.connect(addr).await
     }
 
+    #[tracing::instrument(level = "debug", skip(self, buf))]
     async fn recv(&self, buf: &mut [u8]) -> Result<usize> {
         Ok(self.buffer.read(buf, None).await?)
     }
 
+    #[tracing::instrument(level = "debug", skip(self, buf))]
     async fn recv_from(&self, buf: &mut [u8]) -> Result<(usize, SocketAddr)> {
         let n = self.buffer.read(buf, None).await?;
         Ok((n, self.raddr))
     }
 
+    #[tracing::instrument(level = "debug", skip(self, buf))]
     async fn send(&self, buf: &[u8]) -> Result<usize> {
         self.pconn.send_to(buf, self.raddr).await
     }
 
+    #[tracing::instrument(level = "debug", skip(self, buf, target))]
     async fn send_to(&self, buf: &[u8], target: SocketAddr) -> Result<usize> {
         self.pconn.send_to(buf, target).await
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn local_addr(&self) -> Result<SocketAddr> {
         self.pconn.local_addr()
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn remote_addr(&self) -> Option<SocketAddr> {
         Some(self.raddr)
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     async fn close(&self) -> Result<()> {
         Ok(())
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn as_any(&self) -> &(dyn std::any::Any + Send + Sync) {
         self
     }

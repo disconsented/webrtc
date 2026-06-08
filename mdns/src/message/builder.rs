@@ -46,6 +46,7 @@ impl Builder {
     // nil) as it is built. The final message is returned by the (*Builder).Finish
     // method, which may return the same underlying array if there was sufficient
     // capacity in the slice.
+    #[tracing::instrument(level = "debug", skip(h))]
     pub fn new(h: &Header) -> Self {
         let (id, bits) = h.pack();
 
@@ -77,10 +78,12 @@ impl Builder {
     // messages.
     //
     // Compression should be enabled before any sections are added for best results.
+    #[tracing::instrument(level = "debug", skip(self))]
     pub fn enable_compression(&mut self) {
         self.compression = Some(HashMap::new());
     }
 
+    #[tracing::instrument(level = "debug", skip(self, section))]
     fn start_check(&self, section: Section) -> Result<()> {
         if self.section <= Section::NotStarted {
             return Err(Error::ErrNotStarted);
@@ -93,6 +96,7 @@ impl Builder {
     }
 
     // start_questions prepares the builder for packing Questions.
+    #[tracing::instrument(level = "debug", skip(self))]
     pub fn start_questions(&mut self) -> Result<()> {
         self.start_check(Section::Questions)?;
         self.section = Section::Questions;
@@ -100,6 +104,7 @@ impl Builder {
     }
 
     // start_answers prepares the builder for packing Answers.
+    #[tracing::instrument(level = "debug", skip(self))]
     pub fn start_answers(&mut self) -> Result<()> {
         self.start_check(Section::Answers)?;
         self.section = Section::Answers;
@@ -107,6 +112,7 @@ impl Builder {
     }
 
     // start_authorities prepares the builder for packing Authorities.
+    #[tracing::instrument(level = "debug", skip(self))]
     pub fn start_authorities(&mut self) -> Result<()> {
         self.start_check(Section::Authorities)?;
         self.section = Section::Authorities;
@@ -114,12 +120,14 @@ impl Builder {
     }
 
     // start_additionals prepares the builder for packing Additionals.
+    #[tracing::instrument(level = "debug", skip(self))]
     pub fn start_additionals(&mut self) -> Result<()> {
         self.start_check(Section::Additionals)?;
         self.section = Section::Additionals;
         Ok(())
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn increment_section_count(&mut self) -> Result<()> {
         let section = self.section;
         let (count, err) = match section {
@@ -141,6 +149,7 @@ impl Builder {
     }
 
     // question adds a single question.
+    #[tracing::instrument(level = "debug", skip(self, q))]
     pub fn add_question(&mut self, q: &Question) -> Result<()> {
         if self.section < Section::Questions {
             return Err(Error::ErrNotStarted);
@@ -158,6 +167,7 @@ impl Builder {
         Ok(())
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn check_resource_section(&self) -> Result<()> {
         if self.section < Section::Answers {
             return Err(Error::ErrNotStarted);
@@ -169,6 +179,7 @@ impl Builder {
     }
 
     // Resource adds a single resource.
+    #[tracing::instrument(level = "debug", skip(self, r))]
     pub fn add_resource(&mut self, r: &mut Resource) -> Result<()> {
         self.check_resource_section()?;
 
@@ -193,6 +204,7 @@ impl Builder {
     }
 
     // Finish ends message building and generates a binary message.
+    #[tracing::instrument(level = "debug", skip(self))]
     pub fn finish(&mut self) -> Result<Vec<u8>> {
         if self.section < Section::Header {
             return Err(Error::ErrNotStarted);

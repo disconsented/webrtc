@@ -94,6 +94,7 @@ pub struct RTPWriterFn(pub RTPWriterBoxFn);
 
 #[async_trait]
 impl RTPWriter for RTPWriterFn {
+    #[tracing::instrument(level = "debug", skip(self, pkt, attributes))]
     /// write a rtp packet
     async fn write(&self, pkt: &rtp::packet::Packet, attributes: &Attributes) -> Result<usize> {
         self.0(pkt, attributes).await
@@ -124,6 +125,7 @@ pub struct RTPReaderFn(pub RTPReaderBoxFn);
 
 #[async_trait]
 impl RTPReader for RTPReaderFn {
+    #[tracing::instrument(level = "debug", skip(self, buf, attributes))]
     /// read a rtp packet
     async fn read(
         &self,
@@ -158,6 +160,7 @@ pub struct RTCPWriterFn(pub RTCPWriterBoxFn);
 
 #[async_trait]
 impl RTCPWriter for RTCPWriterFn {
+    #[tracing::instrument(level = "debug", skip(self, pkts, attributes))]
     /// write a batch of rtcp packets
     async fn write(
         &self,
@@ -201,6 +204,7 @@ pub struct RTCPReaderFn(pub RTCPReaderBoxFn);
 
 #[async_trait]
 impl RTCPReader for RTCPReaderFn {
+    #[tracing::instrument(level = "debug", skip(self, buf, attributes))]
     /// read a batch of rtcp packets
     async fn read(
         &self,
@@ -217,6 +221,7 @@ mod test {
     use std::future::Future;
     use std::time::Duration;
 
+    #[tracing::instrument(level = "debug", skip(duration, future))]
     pub async fn timeout_or_fail<T>(duration: Duration, future: T) -> T::Output
     where
         T: Future,

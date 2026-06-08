@@ -26,6 +26,7 @@ pub(crate) struct FragmentBuffer {
 }
 
 impl FragmentBuffer {
+    #[tracing::instrument(level = "debug", skip())]
     pub fn new() -> Self {
         FragmentBuffer {
             cache: HashMap::new(),
@@ -36,6 +37,7 @@ impl FragmentBuffer {
     // Attempts to push a DTLS packet to the FragmentBuffer
     // when it returns true it means the FragmentBuffer has inserted and the buffer shouldn't be handled
     // when an error returns it is fatal, and the DTLS connection should be stopped
+    #[tracing::instrument(level = "debug", skip(self, buf))]
     pub fn push(&mut self, mut buf: &[u8]) -> Result<bool> {
         let current_size = self.size();
         if current_size + buf.len() >= FRAGMENT_BUFFER_MAX_SIZE {
@@ -85,6 +87,7 @@ impl FragmentBuffer {
         Ok(true)
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     pub fn pop(&mut self) -> Result<(Vec<u8>, u16)> {
         let seq_num = self.current_message_sequence_number;
         if !self.cache.contains_key(&seq_num) {
@@ -125,6 +128,7 @@ impl FragmentBuffer {
         Ok((content, epoch))
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn size(&self) -> usize {
         self.cache
             .values()
@@ -133,6 +137,7 @@ impl FragmentBuffer {
     }
 }
 
+#[tracing::instrument(level = "debug", skip(target_offset, frags, raw_message))]
 fn append_message(target_offset: u32, frags: &[Fragment], raw_message: &mut Vec<u8>) -> bool {
     for f in frags {
         if f.handshake_header.fragment_offset == target_offset {

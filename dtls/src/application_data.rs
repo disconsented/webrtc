@@ -18,20 +18,24 @@ pub struct ApplicationData {
 }
 
 impl ApplicationData {
+    #[tracing::instrument(level = "debug", skip(self))]
     pub fn content_type(&self) -> ContentType {
         ContentType::ApplicationData
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     pub fn size(&self) -> usize {
         self.data.len()
     }
 
+    #[tracing::instrument(level = "debug", skip(self, writer))]
     pub fn marshal<W: Write>(&self, writer: &mut W) -> Result<()> {
         writer.write_all(&self.data)?;
 
         Ok(writer.flush()?)
     }
 
+    #[tracing::instrument(level = "debug", skip(reader))]
     pub fn unmarshal<R: Read>(reader: &mut R) -> Result<Self> {
         let mut data: Vec<u8> = vec![];
         reader.read_to_end(&mut data)?;

@@ -8,6 +8,7 @@ use stun::xoraddr::*;
 use stun::Error;
 use tokio::net::UdpSocket;
 
+#[tracing::instrument(level = "debug", skip())]
 #[tokio::main]
 async fn main() -> Result<(), Error> {
     let mut app = App::new("STUN Client")

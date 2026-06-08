@@ -62,6 +62,7 @@ pub enum SctpMaxMessageSize {
 
 impl SctpMaxMessageSize {
     pub const DEFAULT_MESSAGE_SIZE: u32 = 65536;
+    #[tracing::instrument(level = "debug", skip(self))]
     pub fn as_u32(&self) -> u32 {
         match self {
             Self::Bounded(result) => *result,
@@ -71,6 +72,7 @@ impl SctpMaxMessageSize {
 }
 
 impl Default for SctpMaxMessageSize {
+    #[tracing::instrument(level = "debug", skip())]
     fn default() -> Self {
         // https://datatracker.ietf.org/doc/html/rfc8841#section-6.1-4
         // > If the SDP "max-message-size" attribute is not present, the default value is 64K.
@@ -109,6 +111,7 @@ pub struct SettingEngine {
 }
 
 impl SettingEngine {
+    #[tracing::instrument(level = "debug", skip(self))]
     /// get_receive_mtu returns the configured MTU. If SettingEngine's MTU is configured to 0 it returns the default
     pub(crate) fn get_receive_mtu(&self) -> usize {
         if self.receive_mtu != 0 {
@@ -117,6 +120,7 @@ impl SettingEngine {
             RECEIVE_MTU
         }
     }
+    #[tracing::instrument(level = "debug", skip(self))]
     /// detach_data_channels enables detaching data channels. When enabled
     /// data channels have to be detached in the OnOpen callback using the
     /// DataChannel.Detach method.
@@ -124,12 +128,14 @@ impl SettingEngine {
         self.detach.data_channels = true;
     }
 
+    #[tracing::instrument(level = "debug", skip(self, profiles))]
     /// set_srtp_protection_profiles allows the user to override the default srtp Protection Profiles
     /// The default srtp protection profiles are provided by the function `defaultSrtpProtectionProfiles`
     pub fn set_srtp_protection_profiles(&mut self, profiles: Vec<SrtpProtectionProfile>) {
         self.srtp_protection_profiles = profiles
     }
 
+    #[tracing::instrument(level = "debug", skip(self, disconnected_timeout, failed_timeout, keep_alive_interval))]
     /// set_ice_timeouts sets the behavior around ICE Timeouts
     /// * disconnected_timeout is the duration without network activity before a Agent is considered disconnected. Default is 5 Seconds
     /// * failed_timeout is the duration without network activity before a Agent is considered failed after disconnected. Default is 25 Seconds
@@ -145,26 +151,31 @@ impl SettingEngine {
         self.timeout.ice_keepalive_interval = keep_alive_interval;
     }
 
+    #[tracing::instrument(level = "debug", skip(self, t))]
     /// set_host_acceptance_min_wait sets the icehost_acceptance_min_wait
     pub fn set_host_acceptance_min_wait(&mut self, t: Option<Duration>) {
         self.timeout.ice_host_acceptance_min_wait = t;
     }
 
+    #[tracing::instrument(level = "debug", skip(self, t))]
     /// set_srflx_acceptance_min_wait sets the icesrflx_acceptance_min_wait
     pub fn set_srflx_acceptance_min_wait(&mut self, t: Option<Duration>) {
         self.timeout.ice_srflx_acceptance_min_wait = t;
     }
 
+    #[tracing::instrument(level = "debug", skip(self, t))]
     /// set_prflx_acceptance_min_wait sets the iceprflx_acceptance_min_wait
     pub fn set_prflx_acceptance_min_wait(&mut self, t: Option<Duration>) {
         self.timeout.ice_prflx_acceptance_min_wait = t;
     }
 
+    #[tracing::instrument(level = "debug", skip(self, t))]
     /// set_relay_acceptance_min_wait sets the icerelay_acceptance_min_wait
     pub fn set_relay_acceptance_min_wait(&mut self, t: Option<Duration>) {
         self.timeout.ice_relay_acceptance_min_wait = t;
     }
 
+    #[tracing::instrument(level = "debug", skip(self, udp_network))]
     /// set_udp_network allows ICE traffic to come through Ephemeral or UDPMux.
     /// UDPMux drastically simplifying deployments where ports will need to be opened/forwarded.
     /// UDPMux should be started prior to creating PeerConnections.
@@ -172,17 +183,20 @@ impl SettingEngine {
         self.udp_network = udp_network;
     }
 
+    #[tracing::instrument(level = "debug", skip(self, lite))]
     /// set_lite configures whether or not the ice agent should be a lite agent
     pub fn set_lite(&mut self, lite: bool) {
         self.candidates.ice_lite = lite;
     }
 
+    #[tracing::instrument(level = "debug", skip(self, candidate_types))]
     /// set_network_types configures what types of candidate networks are supported
     /// during local and server reflexive gathering.
     pub fn set_network_types(&mut self, candidate_types: Vec<NetworkType>) {
         self.candidates.ice_network_types = candidate_types;
     }
 
+    #[tracing::instrument(level = "debug", skip(self, filter))]
     /// set_interface_filter sets the filtering functions when gathering ICE candidates
     /// This can be used to exclude certain network interfaces from ICE. Which may be
     /// useful if you know a certain interface will never succeed, or if you wish to reduce
@@ -191,6 +205,7 @@ impl SettingEngine {
         self.candidates.interface_filter = Arc::new(Some(filter));
     }
 
+    #[tracing::instrument(level = "debug", skip(self, filter))]
     /// set_ip_filter sets the filtering functions when gathering ICE candidates
     /// This can be used to exclude certain ip from ICE. Which may be
     /// useful if you know a certain ip will never succeed, or if you wish to reduce
@@ -199,6 +214,7 @@ impl SettingEngine {
         self.candidates.ip_filter = Arc::new(Some(filter));
     }
 
+    #[tracing::instrument(level = "debug", skip(self, ips, candidate_type))]
     /// set_nat_1to1_ips sets a list of external IP addresses of 1:1 (D)NAT
     /// and a candidate type for which the external IP address is used.
     /// This is useful when you are host a server using Pion on an AWS EC2 instance
@@ -227,6 +243,7 @@ impl SettingEngine {
         self.candidates.nat_1to1_ip_candidate_type = candidate_type;
     }
 
+    #[tracing::instrument(level = "debug", skip(self, role))]
     /// set_answering_dtls_role sets the dtls_transport role that is selected when offering
     /// The dtls_transport role controls if the WebRTC Client as a client or server. This
     /// may be useful when interacting with non-compliant clients or debugging issues.
@@ -244,6 +261,7 @@ impl SettingEngine {
         Ok(())
     }
 
+    #[tracing::instrument(level = "debug", skip(self, vnet))]
     /// set_vnet sets the VNet instance that is passed to ice
     /// VNet is a virtual network layer, allowing users to simulate
     /// different topologies, latency, loss and jitter. This can be useful for
@@ -252,11 +270,13 @@ impl SettingEngine {
         self.vnet = vnet;
     }
 
+    #[tracing::instrument(level = "debug", skip(self, multicast_dns_mode))]
     /// set_ice_multicast_dns_mode controls if ice queries and generates mDNS ICE Candidates
     pub fn set_ice_multicast_dns_mode(&mut self, multicast_dns_mode: ice::mdns::MulticastDnsMode) {
         self.candidates.multicast_dns_mode = multicast_dns_mode
     }
 
+    #[tracing::instrument(level = "debug", skip(self, host_name))]
     /// set_multicast_dns_host_name sets a static HostName to be used by ice instead of generating one on startup
     /// This should only be used for a single PeerConnection. Having multiple PeerConnections with the same HostName will cause
     /// undefined behavior
@@ -264,6 +284,7 @@ impl SettingEngine {
         self.candidates.multicast_dns_host_name = host_name;
     }
 
+    #[tracing::instrument(level = "debug", skip(self, username_fragment, password))]
     /// set_ice_credentials sets a staic uFrag/uPwd to be used by ice
     /// This is useful if you want to do signalless WebRTC session, or having a reproducible environment with static credentials
     pub fn set_ice_credentials(&mut self, username_fragment: String, password: String) {
@@ -271,43 +292,51 @@ impl SettingEngine {
         self.candidates.password = password;
     }
 
+    #[tracing::instrument(level = "debug", skip(self, is_disabled))]
     /// disable_certificate_fingerprint_verification disables fingerprint verification after dtls_transport Handshake has finished
     pub fn disable_certificate_fingerprint_verification(&mut self, is_disabled: bool) {
         self.disable_certificate_fingerprint_verification = is_disabled;
     }
 
+    #[tracing::instrument(level = "debug", skip(self, is_allowed))]
     /// allow_insecure_verification_algorithm allows the usage of certain signature verification
     /// algorithm that are known to be vulnerable or deprecated.
     pub fn allow_insecure_verification_algorithm(&mut self, is_allowed: bool) {
         self.allow_insecure_verification_algorithm = is_allowed;
     }
+    #[tracing::instrument(level = "debug", skip(self, n))]
     /// set_dtls_replay_protection_window sets a replay attack protection window size of dtls_transport connection.
     pub fn set_dtls_replay_protection_window(&mut self, n: usize) {
         self.replay_protection.dtls = n;
     }
 
+    #[tracing::instrument(level = "debug", skip(self, n))]
     /// set_srtp_replay_protection_window sets a replay attack protection window size of srtp session.
     pub fn set_srtp_replay_protection_window(&mut self, n: usize) {
         self.disable_srtp_replay_protection = false;
         self.replay_protection.srtp = n;
     }
 
+    #[tracing::instrument(level = "debug", skip(self, n))]
     /// set_srtcp_replay_protection_window sets a replay attack protection window size of srtcp session.
     pub fn set_srtcp_replay_protection_window(&mut self, n: usize) {
         self.disable_srtcp_replay_protection = false;
         self.replay_protection.srtcp = n;
     }
 
+    #[tracing::instrument(level = "debug", skip(self, is_disabled))]
     /// disable_srtp_replay_protection disables srtp replay protection.
     pub fn disable_srtp_replay_protection(&mut self, is_disabled: bool) {
         self.disable_srtp_replay_protection = is_disabled;
     }
 
+    #[tracing::instrument(level = "debug", skip(self, is_disabled))]
     /// disable_srtcp_replay_protection disables srtcp replay protection.
     pub fn disable_srtcp_replay_protection(&mut self, is_disabled: bool) {
         self.disable_srtcp_replay_protection = is_disabled;
     }
 
+    #[tracing::instrument(level = "debug", skip(self, allow_loopback))]
     /// set_include_loopback_candidate enables webrtc-rs to gather loopback candidates, it is
     /// useful for, e.g., some VMs that have public IP mapped to loopback interface.
     /// Note that allowing loopback candidates to be gathered is technically inconsistent with the
@@ -317,6 +346,7 @@ impl SettingEngine {
         self.candidates.include_loopback_candidate = allow_loopback;
     }
 
+    #[tracing::instrument(level = "debug", skip(self, sdp_media_level_fingerprints))]
     /// set_sdp_media_level_fingerprints configures the logic for dtls_transport Fingerprint insertion
     /// If true, fingerprints will be inserted in the sdp at the fingerprint
     /// level, instead of the session level. This helps with compatibility with
@@ -336,6 +366,7 @@ impl SettingEngine {
     //    self.iceProxyDialer = d
     //}
 
+    #[tracing::instrument(level = "debug", skip(self, is_disabled))]
     /// disable_media_engine_copy stops the MediaEngine from being copied. This allows a user to modify
     /// the MediaEngine after the PeerConnection has been constructed. This is useful if you wish to
     /// modify codecs after signaling. Make sure not to share MediaEngines between PeerConnections.
@@ -343,6 +374,7 @@ impl SettingEngine {
         self.disable_media_engine_copy = is_disabled;
     }
 
+    #[tracing::instrument(level = "debug", skip(self, is_disabled))]
     /// disable_media_engine_multiple_codecs disables the MediaEngine negotiating different codecs.
     /// With the default value multiple media sections in the SDP can each negotiate different
     /// codecs. This is the new default behvior, because it makes Pion more spec compliant.
@@ -353,12 +385,14 @@ impl SettingEngine {
         self.disable_media_engine_multiple_codecs = is_disabled;
     }
 
+    #[tracing::instrument(level = "debug", skip(self, receive_mtu))]
     /// set_receive_mtu sets the size of read buffer that copies incoming packets. This is optional.
     /// Leave this 0 for the default receive_mtu
     pub fn set_receive_mtu(&mut self, receive_mtu: usize) {
         self.receive_mtu = receive_mtu;
     }
 
+    #[tracing::instrument(level = "debug", skip(self, f))]
     /// Sets a callback used to generate mid for transceivers created by this side of the RTCPeerconnection.
     /// By having separate "naming schemes" for mids generated by either side of a connection, it's
     /// possible to reduce complexity when handling SDP offers/answers clashing.
@@ -373,6 +407,7 @@ impl SettingEngine {
         self.mid_generator = Some(Arc::new(f));
     }
 
+    #[tracing::instrument(level = "debug", skip(self, is_enabled))]
     /// enable_sender_rtx allows outgoing rtx streams to be created where applicable.
     /// RTPSender will create an RTP retransmission stream for each source stream where a retransmission
     /// codec is configured.
@@ -380,6 +415,7 @@ impl SettingEngine {
         self.enable_sender_rtx = is_enabled;
     }
 
+    #[tracing::instrument(level = "debug", skip(self, max_message_size_can_send))]
     pub fn set_sctp_max_message_size_can_send(
         &mut self,
         max_message_size_can_send: SctpMaxMessageSize,

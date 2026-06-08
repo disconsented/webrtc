@@ -5,6 +5,7 @@ struct DummyPeriodicTimerTimeoutHandler;
 
 #[async_trait]
 impl PeriodicTimerTimeoutHandler for DummyPeriodicTimerTimeoutHandler {
+    #[tracing::instrument(level = "debug", skip(self, id))]
     async fn on_timeout(&mut self, id: TimerIdRefresh) {
         assert_eq!(id, TimerIdRefresh::Perms);
     }

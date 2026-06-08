@@ -9,6 +9,7 @@ use stun::message::*;
 pub struct DontFragmentAttr;
 
 impl Setter for DontFragmentAttr {
+    #[tracing::instrument(level = "debug", skip(self, m))]
     /// Adds `DONT-FRAGMENT` attribute to message.
     fn add_to(&self, m: &mut Message) -> Result<(), stun::Error> {
         m.add(ATTR_DONT_FRAGMENT, &[]);
@@ -17,6 +18,7 @@ impl Setter for DontFragmentAttr {
 }
 
 impl Getter for DontFragmentAttr {
+    #[tracing::instrument(level = "debug", skip(self, m))]
     /// Returns true if `DONT-FRAGMENT` attribute is set.
     fn get_from(&mut self, m: &Message) -> Result<(), stun::Error> {
         let _ = m.get(ATTR_DONT_FRAGMENT)?;

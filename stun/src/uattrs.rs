@@ -13,6 +13,7 @@ use crate::message::*;
 pub struct UnknownAttributes(pub Vec<AttrType>);
 
 impl fmt::Display for UnknownAttributes {
+    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         if self.0.is_empty() {
             write!(f, "<nil>")
@@ -33,6 +34,7 @@ const ATTR_TYPE_SIZE: usize = 2;
 
 impl Setter for UnknownAttributes {
     // add_to adds UNKNOWN-ATTRIBUTES attribute to message.
+    #[tracing::instrument(level = "debug", skip(self, m))]
     fn add_to(&self, m: &mut Message) -> Result<()> {
         let mut v = Vec::with_capacity(ATTR_TYPE_SIZE * 20); // 20 should be enough
                                                              // If len(a.Types) > 20, there will be allocations.
@@ -46,6 +48,7 @@ impl Setter for UnknownAttributes {
 
 impl Getter for UnknownAttributes {
     // GetFrom parses UNKNOWN-ATTRIBUTES from message.
+    #[tracing::instrument(level = "debug", skip(self, m))]
     fn get_from(&mut self, m: &Message) -> Result<()> {
         let v = m.get(ATTR_UNKNOWN_ATTRIBUTES)?;
         if v.len() % ATTR_TYPE_SIZE != 0 {

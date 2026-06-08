@@ -26,6 +26,7 @@ pub struct ResponderBuilder {
 }
 
 impl ResponderBuilder {
+    #[tracing::instrument(level = "debug", skip(self, log2_size))]
     /// with_log2_size sets the size of the interceptor.
     /// Size must be one of: 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768
     pub fn with_log2_size(mut self, log2_size: u8) -> ResponderBuilder {
@@ -35,6 +36,7 @@ impl ResponderBuilder {
 }
 
 impl InterceptorBuilder for ResponderBuilder {
+    #[tracing::instrument(level = "debug", skip(self, _id))]
     fn build(&self, _id: &str) -> Result<Arc<dyn Interceptor + Send + Sync>> {
         Ok(Arc::new(Responder {
             internal: Arc::new(ResponderInternal {
@@ -51,6 +53,7 @@ pub struct ResponderInternal {
 }
 
 impl ResponderInternal {
+    #[tracing::instrument(level = "debug", skip(streams, nack))]
     async fn resend_packets(
         streams: Arc<Mutex<HashMap<u32, Arc<ResponderStream>>>>,
         nack: TransportLayerNack,
@@ -98,6 +101,7 @@ pub struct ResponderRtcpReader {
 
 #[async_trait]
 impl RTCPReader for ResponderRtcpReader {
+    #[tracing::instrument(level = "debug", skip(self, buf, a))]
     async fn read(
         &self,
         buf: &mut [u8],
@@ -124,6 +128,7 @@ pub struct Responder {
 }
 
 impl Responder {
+    #[tracing::instrument(level = "debug", skip())]
     /// builder returns a new ResponderBuilder.
     pub fn builder() -> ResponderBuilder {
         ResponderBuilder::default()
@@ -132,6 +137,7 @@ impl Responder {
 
 #[async_trait]
 impl Interceptor for Responder {
+    #[tracing::instrument(level = "debug", skip(self, reader))]
     /// bind_rtcp_reader lets you modify any incoming RTCP packets. It is called once per sender/receiver, however this might
     /// change in the future. The returned method will be called once per packet batch.
     async fn bind_rtcp_reader(
@@ -144,6 +150,7 @@ impl Interceptor for Responder {
         }) as Arc<dyn RTCPReader + Send + Sync>
     }
 
+    #[tracing::instrument(level = "debug", skip(self, writer))]
     /// bind_rtcp_writer lets you modify any outgoing RTCP packets. It is called once per PeerConnection. The returned method
     /// will be called once per packet batch.
     async fn bind_rtcp_writer(
@@ -153,6 +160,7 @@ impl Interceptor for Responder {
         writer
     }
 
+    #[tracing::instrument(level = "debug", skip(self, info, writer))]
     /// bind_local_stream lets you modify any outgoing RTP packets. It is called once for per LocalStream. The returned method
     /// will be called once per rtp packet.
     async fn bind_local_stream(
@@ -173,12 +181,14 @@ impl Interceptor for Responder {
         stream
     }
 
+    #[tracing::instrument(level = "debug", skip(self, info))]
     /// unbind_local_stream is called when the Stream is removed. It can be used to clean up any data related to that track.
     async fn unbind_local_stream(&self, info: &StreamInfo) {
         let mut streams = self.internal.streams.lock().await;
         streams.remove(&info.ssrc);
     }
 
+    #[tracing::instrument(level = "debug", skip(self, _info, reader))]
     /// bind_remote_stream lets you modify any incoming RTP packets. It is called once for per RemoteStream. The returned method
     /// will be called once per rtp packet.
     async fn bind_remote_stream(
@@ -189,9 +199,11 @@ impl Interceptor for Responder {
         reader
     }
 
+    #[tracing::instrument(level = "debug", skip(self, _info))]
     /// unbind_remote_stream is called when the Stream is removed. It can be used to clean up any data related to that track.
     async fn unbind_remote_stream(&self, _info: &StreamInfo) {}
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// close closes the Interceptor, cleaning up any data if necessary.
     async fn close(&self) -> Result<()> {
         Ok(())

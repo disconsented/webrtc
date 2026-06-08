@@ -11,6 +11,7 @@ pub(crate) struct FixedBigInt {
 }
 
 impl fmt::Display for FixedBigInt {
+    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut out = String::new();
         for i in (0..self.bits.len()).rev() {
@@ -22,6 +23,7 @@ impl fmt::Display for FixedBigInt {
 }
 
 impl FixedBigInt {
+    #[tracing::instrument(level = "debug", skip(n))]
     pub(crate) fn new(n: usize) -> Self {
         let mut chunk_size = n.div_ceil(64);
         if chunk_size == 0 {
@@ -40,6 +42,7 @@ impl FixedBigInt {
     }
 
     // lsh is the left shift operation.
+    #[tracing::instrument(level = "debug", skip(self, n))]
     pub(crate) fn lsh(&mut self, n: usize) {
         if n == 0 {
             return;
@@ -75,6 +78,7 @@ impl FixedBigInt {
     }
 
     // bit returns i-th bit of the fixedBigInt.
+    #[tracing::instrument(level = "debug", skip(self, i))]
     pub(crate) fn bit(&self, i: usize) -> usize {
         if i >= self.n {
             return 0;
@@ -85,6 +89,7 @@ impl FixedBigInt {
     }
 
     // set_bit sets i-th bit to 1.
+    #[tracing::instrument(level = "debug", skip(self, i))]
     pub(crate) fn set_bit(&mut self, i: usize) {
         if i >= self.n {
             return;

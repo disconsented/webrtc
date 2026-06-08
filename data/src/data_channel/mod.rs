@@ -16,6 +16,7 @@ use sctp::association::Association;
 use sctp::chunk::chunk_payload_data::PayloadProtocolIdentifier;
 use sctp::stream::*;
 use tokio::io::{AsyncRead, AsyncWrite, ReadBuf};
+use tracing::Instrument as _;
 use util::marshal::*;
 
 use crate::error::{Error, Result};
@@ -51,6 +52,7 @@ pub struct DataChannel {
 }
 
 impl DataChannel {
+    #[tracing::instrument(level = "debug", skip(stream, config))]
     pub fn new(stream: Arc<Stream>, config: Config) -> Self {
         Self {
             config,
@@ -63,6 +65,7 @@ impl DataChannel {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(association, identifier, config))]
     /// Dial opens a data channels over SCTP
     pub async fn dial(
         association: &Arc<Association>,
@@ -71,11 +74,15 @@ impl DataChannel {
     ) -> Result<Self> {
         let stream = association
             .open_stream(identifier, PayloadProtocolIdentifier::Binary)
+            .instrument(tracing::debug_span!("open_stream"))
             .await?;
 
-        Self::client(stream, config).await
+        Self::client(stream, config)
+            .instrument(tracing::debug_span!("client"))
+            .await
     }
 
+    #[tracing::instrument(level = "debug", skip(association, config, existing_channels))]
     /// Accept is used to accept incoming data channels over SCTP
     pub async fn accept<T>(
         association: &Arc<Association>,
@@ -87,6 +94,7 @@ impl DataChannel {
     {
         let stream = association
             .accept_stream()
+            .instrument(tracing::debug_span!("accept_stream"))
             .await
             .ok_or(Error::ErrStreamClosed)?;
 
@@ -101,9 +109,12 @@ impl DataChannel {
 
         stream.set_default_payload_type(PayloadProtocolIdentifier::Binary);
 
-        Self::server(stream, config).await
+        Self::server(stream, config)
+            .instrument(tracing::debug_span!("server"))
+            .await
     }
 
+    #[tracing::instrument(level = "debug", skip(stream, config))]
     /// Client opens a data channel over an SCTP stream
     pub async fn client(stream: Arc<Stream>, config: Config) -> Result<Self> {
         if !config.negotiated {
@@ -118,16 +129,21 @@ impl DataChannel {
 
             stream
                 .write_sctp(&msg, PayloadProtocolIdentifier::Dcep)
+                .instrument(tracing::debug_span!("write_sctp"))
                 .await?;
         }
         Ok(DataChannel::new(stream, config))
     }
 
+    #[tracing::instrument(level = "debug", skip(stream, config))]
     /// Server accepts a data channel over an SCTP stream
     pub async fn server(stream: Arc<Stream>, mut config: Config) -> Result<Self> {
         let mut buf = vec![0u8; RECEIVE_MTU];
 
-        let (n, ppi) = stream.read_sctp(&mut buf).await?;
+        let (n, ppi) = stream
+            .read_sctp(&mut buf)
+            .instrument(tracing::debug_span!("read_sctp"))
+            .await?;
 
         if ppi != PayloadProtocolIdentifier::Dcep {
             return Err(Error::InvalidPayloadProtocolIdentifier(ppi as u8));
@@ -148,19 +164,27 @@ impl DataChannel {
 
         let data_channel = DataChannel::new(stream, config);
 
-        data_channel.write_data_channel_ack().await?;
+        data_channel
+            .write_data_channel_ack()
+            .instrument(tracing::debug_span!("write_data_channel_ack"))
+            .await?;
         data_channel.commit_reliability_params();
 
         Ok(data_channel)
     }
 
+    #[tracing::instrument(level = "debug", skip(self, buf))]
     /// Read reads a packet of len(p) bytes as binary data.
     ///
     /// See [`sctp::stream::Stream::read_sctp`].
     pub async fn read(&self, buf: &mut [u8]) -> Result<usize> {
-        self.read_data_channel(buf).await.map(|(n, _)| n)
+        self.read_data_channel(buf)
+            .instrument(tracing::debug_span!("read_data_channel"))
+            .await
+            .map(|(n, _)| n)
     }
 
+    #[tracing::instrument(level = "debug", skip(self, buf))]
     /// ReadDataChannel reads a packet of len(p) bytes. It returns the number of bytes read and
     /// `true` if the data read is a string.
     ///
@@ -168,7 +192,12 @@ impl DataChannel {
     pub async fn read_data_channel(&self, buf: &mut [u8]) -> Result<(usize, bool)> {
         loop {
             //TODO: add handling of cancel read_data_channel
-            let (mut n, ppi) = match self.stream.read_sctp(buf).await {
+            let (mut n, ppi) = match self
+                .stream
+                .read_sctp(buf)
+                .instrument(tracing::debug_span!("read_sctp"))
+                .await
+            {
                 Ok((0, PayloadProtocolIdentifier::Unknown)) => {
                     // The incoming stream was reset or the reading half was shutdown
                     return Ok((0, false));
@@ -176,7 +205,9 @@ impl DataChannel {
                 Ok((n, ppi)) => (n, ppi),
                 Err(err) => {
                     // Shutdown the stream and send the reset request to the remote.
-                    self.close().await?;
+                    self.close()
+                        .instrument(tracing::debug_span!("close"))
+                        .await?;
                     return Err(err.into());
                 }
             };
@@ -185,7 +216,11 @@ impl DataChannel {
             match ppi {
                 PayloadProtocolIdentifier::Dcep => {
                     let mut data = &buf[..n];
-                    match self.handle_dcep(&mut data).await {
+                    match self
+                        .handle_dcep(&mut data)
+                        .instrument(tracing::debug_span!("handle_dcep"))
+                        .await
+                    {
                         Ok(()) => {}
                         Err(err) => {
                             log::error!("Failed to handle DCEP: {err:?}");
@@ -213,31 +248,37 @@ impl DataChannel {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// MessagesSent returns the number of messages sent
     pub fn messages_sent(&self) -> usize {
         self.messages_sent.load(Ordering::SeqCst)
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// MessagesReceived returns the number of messages received
     pub fn messages_received(&self) -> usize {
         self.messages_received.load(Ordering::SeqCst)
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// BytesSent returns the number of bytes sent
     pub fn bytes_sent(&self) -> usize {
         self.bytes_sent.load(Ordering::SeqCst)
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// BytesReceived returns the number of bytes received
     pub fn bytes_received(&self) -> usize {
         self.bytes_received.load(Ordering::SeqCst)
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// StreamIdentifier returns the Stream identifier associated to the stream.
     pub fn stream_identifier(&self) -> u16 {
         self.stream.stream_identifier()
     }
 
+    #[tracing::instrument(level = "debug", skip(self, data))]
     async fn handle_dcep<B>(&self, data: &mut B) -> Result<()>
     where
         B: Buf,
@@ -249,7 +290,10 @@ impl DataChannel {
                 // Note: DATA_CHANNEL_OPEN message is handled inside Server() method.
                 // Therefore, the message will not reach here.
                 log::debug!("Received DATA_CHANNEL_OPEN");
-                let _ = self.write_data_channel_ack().await?;
+                let _ = self
+                    .write_data_channel_ack()
+                    .instrument(tracing::debug_span!("write_data_channel_ack"))
+                    .await?;
             }
             Message::DataChannelAck(_) => {
                 log::debug!("Received DATA_CHANNEL_ACK");
@@ -260,11 +304,15 @@ impl DataChannel {
         Ok(())
     }
 
+    #[tracing::instrument(level = "debug", skip(self, data))]
     /// Write writes len(p) bytes from p as binary data
     pub async fn write(&self, data: &Bytes) -> Result<usize> {
-        self.write_data_channel(data, false).await
+        self.write_data_channel(data, false)
+            .instrument(tracing::debug_span!("write_data_channel"))
+            .await
     }
 
+    #[tracing::instrument(level = "debug", skip(self, data, is_string))]
     /// WriteDataChannel writes len(p) bytes from p
     pub async fn write_data_channel(&self, data: &Bytes, is_string: bool) -> Result<usize> {
         let data_len = data.len();
@@ -287,10 +335,15 @@ impl DataChannel {
             let _ = self
                 .stream
                 .write_sctp(&Bytes::from_static(&[0]), ppi)
+                .instrument(tracing::debug_span!("write_sctp"))
                 .await?;
             0
         } else {
-            let n = self.stream.write_sctp(data, ppi).await?;
+            let n = self
+                .stream
+                .write_sctp(data, ppi)
+                .instrument(tracing::debug_span!("write_sctp"))
+                .await?;
             self.bytes_sent.fetch_add(n, Ordering::SeqCst);
             n
         };
@@ -299,14 +352,17 @@ impl DataChannel {
         Ok(n)
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     async fn write_data_channel_ack(&self) -> Result<usize> {
         let ack = Message::DataChannelAck(DataChannelAck {}).marshal()?;
         Ok(self
             .stream
             .write_sctp(&ack, PayloadProtocolIdentifier::Dcep)
+            .instrument(tracing::debug_span!("write_sctp"))
             .await?)
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// Close closes the DataChannel and the underlying SCTP stream.
     pub async fn close(&self) -> Result<()> {
         // https://tools.ietf.org/html/draft-ietf-rtcweb-data-channel-13#section-6.7
@@ -320,33 +376,42 @@ impl DataChannel {
         // a corresponding notification to the application layer that the reset
         // has been performed.  Streams are available for reuse after a reset
         // has been performed.
-        Ok(self.stream.shutdown(Shutdown::Both).await?)
+        Ok(self
+            .stream
+            .shutdown(Shutdown::Both)
+            .instrument(tracing::debug_span!("shutdown"))
+            .await?)
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// BufferedAmount returns the number of bytes of data currently queued to be
     /// sent over this stream.
     pub fn buffered_amount(&self) -> usize {
         self.stream.buffered_amount()
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// BufferedAmountLowThreshold returns the number of bytes of buffered outgoing
     /// data that is considered "low." Defaults to 0.
     pub fn buffered_amount_low_threshold(&self) -> usize {
         self.stream.buffered_amount_low_threshold()
     }
 
+    #[tracing::instrument(level = "debug", skip(self, threshold))]
     /// SetBufferedAmountLowThreshold is used to update the threshold.
     /// See BufferedAmountLowThreshold().
     pub fn set_buffered_amount_low_threshold(&self, threshold: usize) {
         self.stream.set_buffered_amount_low_threshold(threshold)
     }
 
+    #[tracing::instrument(level = "debug", skip(self, f))]
     /// OnBufferedAmountLow sets the callback handler which would be called when the
     /// number of bytes of outgoing data buffered is lower than the threshold.
     pub fn on_buffered_amount_low(&self, f: OnBufferedAmountLowFn) {
         self.stream.on_buffered_amount_low(f)
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn commit_reliability_params(&self) {
         let (unordered, reliability_type) = match self.config.channel_type {
             ChannelType::Reliable => (false, ReliabilityType::Reliable),
@@ -379,6 +444,7 @@ enum ReadFut {
 }
 
 impl ReadFut {
+    #[tracing::instrument(level = "debug", skip(self))]
     /// Gets a mutable reference to the future stored inside `Reading(future)`.
     ///
     /// # Panics
@@ -408,6 +474,7 @@ pub struct PollDataChannel {
 }
 
 impl PollDataChannel {
+    #[tracing::instrument(level = "debug", skip(data_channel))]
     /// Constructs a new `PollDataChannel`.
     pub fn new(data_channel: Arc<DataChannel>) -> Self {
         Self {
@@ -419,53 +486,63 @@ impl PollDataChannel {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// Get back the inner data_channel.
     pub fn into_inner(self) -> Arc<DataChannel> {
         self.data_channel
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// Obtain a clone of the inner data_channel.
     pub fn clone_inner(&self) -> Arc<DataChannel> {
         self.data_channel.clone()
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// MessagesSent returns the number of messages sent
     pub fn messages_sent(&self) -> usize {
         self.data_channel.messages_sent()
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// MessagesReceived returns the number of messages received
     pub fn messages_received(&self) -> usize {
         self.data_channel.messages_received()
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// BytesSent returns the number of bytes sent
     pub fn bytes_sent(&self) -> usize {
         self.data_channel.bytes_sent()
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// BytesReceived returns the number of bytes received
     pub fn bytes_received(&self) -> usize {
         self.data_channel.bytes_received()
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// StreamIdentifier returns the Stream identifier associated to the stream.
     pub fn stream_identifier(&self) -> u16 {
         self.data_channel.stream_identifier()
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// BufferedAmount returns the number of bytes of data currently queued to be
     /// sent over this stream.
     pub fn buffered_amount(&self) -> usize {
         self.data_channel.buffered_amount()
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// BufferedAmountLowThreshold returns the number of bytes of buffered outgoing
     /// data that is considered "low." Defaults to 0.
     pub fn buffered_amount_low_threshold(&self) -> usize {
         self.data_channel.buffered_amount_low_threshold()
     }
 
+    #[tracing::instrument(level = "debug", skip(self, capacity))]
     /// Set the capacity of the temporary read buffer (default: 8192).
     pub fn set_read_buf_capacity(&mut self, capacity: usize) {
         self.read_buf_cap = capacity
@@ -473,6 +550,7 @@ impl PollDataChannel {
 }
 
 impl AsyncRead for PollDataChannel {
+    #[tracing::instrument(level = "debug", skip(self, cx, buf))]
     fn poll_read(
         mut self: Pin<&mut Self>,
         cx: &mut Context<'_>,
@@ -488,12 +566,15 @@ impl AsyncRead for PollDataChannel {
                 // be shorter than the lifetime of `read_fut`.
                 let data_channel = self.data_channel.clone();
                 let mut temp_buf = vec![0; self.read_buf_cap];
-                self.read_fut = ReadFut::Reading(Box::pin(async move {
-                    data_channel.read(temp_buf.as_mut_slice()).await.map(|n| {
-                        temp_buf.truncate(n);
-                        temp_buf
-                    })
-                }));
+                self.read_fut = ReadFut::Reading(Box::pin(
+                    async move {
+                        data_channel.read(temp_buf.as_mut_slice()).await.map(|n| {
+                            temp_buf.truncate(n);
+                            temp_buf
+                        })
+                    }
+                    .instrument(tracing::debug_span!("read")),
+                ));
                 self.read_fut.get_reading_mut()
             }
             ReadFut::Reading(ref mut fut) => fut,
@@ -544,6 +625,7 @@ impl AsyncRead for PollDataChannel {
 }
 
 impl AsyncWrite for PollDataChannel {
+    #[tracing::instrument(level = "debug", skip(self, cx, buf))]
     fn poll_write(
         mut self: Pin<&mut Self>,
         cx: &mut Context<'_>,
@@ -559,8 +641,10 @@ impl AsyncWrite for PollDataChannel {
                 Poll::Ready(Err(e)) => {
                     let data_channel = self.data_channel.clone();
                     let bytes = Bytes::copy_from_slice(buf);
-                    self.write_fut =
-                        Some(Box::pin(async move { data_channel.write(&bytes).await }));
+                    self.write_fut = Some(Box::pin(
+                        async move { data_channel.write(&bytes).await }
+                            .instrument(tracing::debug_span!("write")),
+                    ));
                     Poll::Ready(Err(e.into()))
                 }
                 // Given the data is buffered, it's okay to ignore the number of written bytes.
@@ -570,17 +654,20 @@ impl AsyncWrite for PollDataChannel {
                 Poll::Ready(Ok(_)) => {
                     let data_channel = self.data_channel.clone();
                     let bytes = Bytes::copy_from_slice(buf);
-                    self.write_fut =
-                        Some(Box::pin(async move { data_channel.write(&bytes).await }));
+                    self.write_fut = Some(Box::pin(
+                        async move { data_channel.write(&bytes).await }
+                            .instrument(tracing::debug_span!("write")),
+                    ));
                     Poll::Ready(Ok(buf.len()))
                 }
             }
         } else {
             let data_channel = self.data_channel.clone();
             let bytes = Bytes::copy_from_slice(buf);
-            let fut = self
-                .write_fut
-                .insert(Box::pin(async move { data_channel.write(&bytes).await }));
+            let fut = self.write_fut.insert(Box::pin(
+                async move { data_channel.write(&bytes).await }
+                    .instrument(tracing::debug_span!("write")),
+            ));
 
             match fut.as_mut().poll(cx) {
                 // If it's the first time we're polling the future, `Poll::Pending` can't be
@@ -603,6 +690,7 @@ impl AsyncWrite for PollDataChannel {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self, cx))]
     fn poll_flush(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<io::Result<()>> {
         match self.write_fut.as_mut() {
             Some(fut) => match fut.as_mut().poll(cx) {
@@ -620,6 +708,7 @@ impl AsyncWrite for PollDataChannel {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self, cx))]
     fn poll_shutdown(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<io::Result<()>> {
         match self.as_mut().poll_flush(cx) {
             Poll::Pending => return Poll::Pending,
@@ -630,13 +719,16 @@ impl AsyncWrite for PollDataChannel {
             Some(fut) => fut,
             None => {
                 let data_channel = self.data_channel.clone();
-                self.shutdown_fut.get_or_insert(Box::pin(async move {
-                    data_channel
-                        .stream
-                        .shutdown(Shutdown::Write)
-                        .await
-                        .map_err(Error::Sctp)
-                }))
+                self.shutdown_fut.get_or_insert(Box::pin(
+                    async move {
+                        data_channel
+                            .stream
+                            .shutdown(Shutdown::Write)
+                            .await
+                            .map_err(Error::Sctp)
+                    }
+                    .instrument(tracing::debug_span!("shutdown")),
+                ))
             }
         };
 
@@ -655,12 +747,14 @@ impl AsyncWrite for PollDataChannel {
 }
 
 impl Clone for PollDataChannel {
+    #[tracing::instrument(level = "debug", skip(self))]
     fn clone(&self) -> PollDataChannel {
         PollDataChannel::new(self.clone_inner())
     }
 }
 
 impl fmt::Debug for PollDataChannel {
+    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("PollDataChannel")
             .field("data_channel", &self.data_channel)
@@ -670,6 +764,7 @@ impl fmt::Debug for PollDataChannel {
 }
 
 impl AsRef<DataChannel> for PollDataChannel {
+    #[tracing::instrument(level = "debug", skip(self))]
     fn as_ref(&self) -> &DataChannel {
         &self.data_channel
     }

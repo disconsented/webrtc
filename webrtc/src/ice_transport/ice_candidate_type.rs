@@ -55,6 +55,7 @@ const ICE_CANDIDATE_TYPE_RELAY_STR: &str = "relay";
 
 ///  takes a string and converts it into ICECandidateType
 impl From<&str> for RTCIceCandidateType {
+    #[tracing::instrument(level = "debug", skip(raw))]
     fn from(raw: &str) -> Self {
         match raw {
             ICE_CANDIDATE_TYPE_HOST_STR => RTCIceCandidateType::Host,
@@ -67,6 +68,7 @@ impl From<&str> for RTCIceCandidateType {
 }
 
 impl From<CandidateType> for RTCIceCandidateType {
+    #[tracing::instrument(level = "debug", skip(candidate_type))]
     fn from(candidate_type: CandidateType) -> Self {
         match candidate_type {
             CandidateType::Host => RTCIceCandidateType::Host,
@@ -79,6 +81,7 @@ impl From<CandidateType> for RTCIceCandidateType {
 }
 
 impl fmt::Display for RTCIceCandidateType {
+    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match *self {
             RTCIceCandidateType::Host => write!(f, "{ICE_CANDIDATE_TYPE_HOST_STR}"),

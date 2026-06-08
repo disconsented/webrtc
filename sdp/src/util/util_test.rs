@@ -3,6 +3,7 @@ use crate::description::common::*;
 use crate::description::media::*;
 use crate::description::session::*;
 
+#[tracing::instrument(level = "debug", skip())]
 fn get_test_session_description() -> SessionDescription {
     SessionDescription{
         media_descriptions: vec![

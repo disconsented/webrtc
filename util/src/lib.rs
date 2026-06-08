@@ -54,6 +54,7 @@ pub enum KeyingMaterialExporterError {
 }
 
 impl From<io::Error> for KeyingMaterialExporterError {
+    #[tracing::instrument(level = "debug", skip(e))]
     fn from(e: io::Error) -> Self {
         KeyingMaterialExporterError::Io(error::IoError(e))
     }

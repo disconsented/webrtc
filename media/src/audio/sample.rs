@@ -9,6 +9,7 @@ use nearly_eq::NearlyEq;
 pub struct Sample<Raw>(Raw);
 
 impl From<i16> for Sample<i16> {
+    #[tracing::instrument(level = "debug", skip(raw))]
     #[inline]
     fn from(raw: i16) -> Self {
         Self(raw)
@@ -16,6 +17,7 @@ impl From<i16> for Sample<i16> {
 }
 
 impl From<f32> for Sample<f32> {
+    #[tracing::instrument(level = "debug", skip(raw))]
     #[inline]
     fn from(raw: f32) -> Self {
         Self(raw.clamp(-1.0, 1.0))
@@ -57,6 +59,7 @@ impl_from_sample_for_raw!(f32);
 // }
 
 impl From<Sample<i16>> for Sample<f32> {
+    #[tracing::instrument(level = "debug", skip(sample))]
     #[inline]
     fn from(sample: Sample<i16>) -> Self {
         let divisor = if sample.0 < 0 {
@@ -70,6 +73,7 @@ impl From<Sample<i16>> for Sample<f32> {
 }
 
 impl From<Sample<f32>> for Sample<i16> {
+    #[tracing::instrument(level = "debug", skip(sample))]
     #[inline]
     fn from(sample: Sample<f32>) -> Self {
         let multiplier = if sample.0 < 0.0 {
@@ -92,12 +96,14 @@ trait FromBytes: Sized {
 }
 
 impl FromBytes for Sample<i16> {
+    #[tracing::instrument(level = "debug", skip(reader))]
     fn from_reader<B: ByteOrder, R: Read>(reader: &mut R) -> Result<Self, std::io::Error> {
         reader.read_i16::<B>().map(Self::from)
     }
 }
 
 impl FromBytes for Sample<f32> {
+    #[tracing::instrument(level = "debug", skip(reader))]
     fn from_reader<B: ByteOrder, R: Read>(reader: &mut R) -> Result<Self, std::io::Error> {
         reader.read_f32::<B>().map(Self::from)
     }
@@ -108,10 +114,12 @@ impl<Raw> NearlyEq<Self, Raw> for Sample<Raw>
 where
     Raw: NearlyEq<Raw, Raw>,
 {
+    #[tracing::instrument(level = "debug", skip())]
     fn eps() -> Raw {
         Raw::eps()
     }
 
+    #[tracing::instrument(level = "debug", skip(self, other, eps))]
     fn eq(&self, other: &Self, eps: &Raw) -> bool {
         NearlyEq::eq(&self.0, &other.0, eps)
     }

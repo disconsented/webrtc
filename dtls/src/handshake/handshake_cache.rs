@@ -34,12 +34,14 @@ pub(crate) struct HandshakeCache {
 }
 
 impl HandshakeCache {
+    #[tracing::instrument(level = "debug", skip())]
     pub(crate) fn new() -> Self {
         HandshakeCache {
             cache: Arc::new(Mutex::new(vec![])),
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self, data, epoch, message_sequence, typ, is_client))]
     pub(crate) async fn push(
         &mut self,
         data: Vec<u8>,
@@ -70,6 +72,7 @@ impl HandshakeCache {
     // returns a list handshakes that match the requested rules
     // the list will contain null entries for rules that can't be satisfied
     // multiple entries may match a rule, but only the last match is returned (ie ClientHello with cookies)
+    #[tracing::instrument(level = "debug", skip(self, rules))]
     pub(crate) async fn pull(&self, rules: &[HandshakeCachePullRule]) -> Vec<HandshakeCacheItem> {
         let cache = self.cache.lock().await;
 
@@ -97,6 +100,7 @@ impl HandshakeCache {
     }
 
     // full_pull_map pulls all handshakes between rules[0] to rules[len(rules)-1] as map.
+    #[tracing::instrument(level = "debug", skip(self, start_seq, rules))]
     pub(crate) async fn full_pull_map(
         &self,
         start_seq: isize,
@@ -150,6 +154,7 @@ impl HandshakeCache {
     }
 
     // pull_and_merge calls pull and then merges the results, ignoring any null entries
+    #[tracing::instrument(level = "debug", skip(self, rules))]
     pub(crate) async fn pull_and_merge(&self, rules: &[HandshakeCachePullRule]) -> Vec<u8> {
         let mut merged = vec![];
 
@@ -162,6 +167,7 @@ impl HandshakeCache {
 
     // session_hash returns the session hash for Extended Master Secret support
     // https://tools.ietf.org/html/draft-ietf-tls-session-hash-06#section-4
+    #[tracing::instrument(level = "debug", skip(self, hf, epoch, additional))]
     pub(crate) async fn session_hash(
         &self,
         hf: CipherSuiteHash,

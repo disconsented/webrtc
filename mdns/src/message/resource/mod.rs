@@ -43,6 +43,7 @@ pub struct Resource {
 }
 
 impl fmt::Display for Resource {
+    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
@@ -59,6 +60,7 @@ impl fmt::Display for Resource {
 
 impl Resource {
     // pack appends the wire format of the Resource to msg.
+    #[tracing::instrument(level = "debug", skip(self, msg, compression, compression_off))]
     pub fn pack(
         &mut self,
         msg: Vec<u8>,
@@ -79,6 +81,7 @@ impl Resource {
         Ok(msg)
     }
 
+    #[tracing::instrument(level = "debug", skip(self, msg, off))]
     pub fn unpack(&mut self, msg: &[u8], mut off: usize) -> Result<usize> {
         off = self.header.unpack(msg, off, 0)?;
         let (rb, off) =
@@ -87,6 +90,7 @@ impl Resource {
         Ok(off)
     }
 
+    #[tracing::instrument(level = "debug", skip(msg, off))]
     pub(crate) fn skip(msg: &[u8], off: usize) -> Result<usize> {
         let mut new_off = Name::skip(msg, off)?;
         new_off = DnsType::skip(msg, new_off)?;
@@ -129,6 +133,7 @@ pub struct ResourceHeader {
 }
 
 impl fmt::Display for ResourceHeader {
+    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
@@ -142,6 +147,7 @@ impl ResourceHeader {
     // pack appends the wire format of the ResourceHeader to oldMsg.
     //
     // lenOff is the offset in msg where the Length field was packed.
+    #[tracing::instrument(level = "debug", skip(self, msg, compression, compression_off))]
     pub fn pack(
         &self,
         mut msg: Vec<u8>,
@@ -157,6 +163,7 @@ impl ResourceHeader {
         Ok((msg, len_off))
     }
 
+    #[tracing::instrument(level = "debug", skip(self, msg, off, _length))]
     pub fn unpack(&mut self, msg: &[u8], off: usize, _length: usize) -> Result<usize> {
         let mut new_off = off;
         new_off = self.name.unpack(msg, new_off)?;
@@ -176,6 +183,7 @@ impl ResourceHeader {
     // lenOff is the offset of the ResourceHeader.Length field in msg.
     //
     // preLen is the length that msg was before the ResourceBody was packed.
+    #[tracing::instrument(level = "debug", skip(self, msg, len_off, pre_len))]
     pub fn fix_len(&mut self, msg: &mut [u8], len_off: usize, pre_len: usize) -> Result<()> {
         if msg.len() < pre_len || msg.len() > pre_len + u16::MAX as usize {
             return Err(Error::ErrResTooLong);
@@ -194,6 +202,7 @@ impl ResourceHeader {
     // set_edns0 configures h for EDNS(0).
     //
     // The provided ext_rcode must be an extended RCode.
+    #[tracing::instrument(level = "debug", skip(self, udp_payload_len, ext_rcode, dnssec_ok))]
     pub fn set_edns0(
         &mut self,
         udp_payload_len: u16,
@@ -213,6 +222,7 @@ impl ResourceHeader {
     }
 
     // dnssec_allowed reports whether the DNSSEC OK bit is set.
+    #[tracing::instrument(level = "debug", skip(self))]
     pub fn dnssec_allowed(&self) -> bool {
         self.ttl & EDNS0_DNSSEC_OK_MASK == EDNS0_DNSSEC_OK // RFC 6891 section 6.1.3
     }
@@ -220,6 +230,7 @@ impl ResourceHeader {
     // extended_rcode returns an extended RCode.
     //
     // The provided rcode must be the RCode in DNS message header.
+    #[tracing::instrument(level = "debug", skip(self, rcode))]
     pub fn extended_rcode(&self, rcode: RCode) -> RCode {
         if self.ttl & EDNS_VERSION_MASK == EDNS0_VERSION {
             // RFC 6891 section 6.1.3
@@ -247,6 +258,7 @@ pub trait ResourceBody: fmt::Display + fmt::Debug {
     fn unpack(&mut self, msg: &[u8], off: usize, length: usize) -> Result<usize>;
 }
 
+#[tracing::instrument(level = "debug", skip(typ, msg, off, length))]
 pub fn unpack_resource_body(
     typ: DnsType,
     msg: &[u8],

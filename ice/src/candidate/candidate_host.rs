@@ -13,6 +13,7 @@ pub struct CandidateHostConfig {
 }
 
 impl CandidateHostConfig {
+    #[tracing::instrument(level = "debug", skip(self))]
     /// Creates a new host candidate.
     pub fn new_candidate_host(self) -> Result<CandidateBase> {
         let mut candidate_id = self.base_config.candidate_id;

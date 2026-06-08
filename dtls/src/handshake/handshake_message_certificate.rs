@@ -15,10 +15,12 @@ pub struct HandshakeMessageCertificate {
 }
 
 impl HandshakeMessageCertificate {
+    #[tracing::instrument(level = "debug", skip(self))]
     pub fn handshake_type(&self) -> HandshakeType {
         HandshakeType::Certificate
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     pub fn size(&self) -> usize {
         let mut len = 3;
 
@@ -29,6 +31,7 @@ impl HandshakeMessageCertificate {
         len
     }
 
+    #[tracing::instrument(level = "debug", skip(self, writer))]
     pub fn marshal<W: Write>(&self, writer: &mut W) -> Result<()> {
         let mut payload_size = 0;
         for r in &self.certificate {
@@ -49,6 +52,7 @@ impl HandshakeMessageCertificate {
         Ok(writer.flush()?)
     }
 
+    #[tracing::instrument(level = "debug", skip(reader))]
     pub fn unmarshal<R: Read>(reader: &mut R) -> Result<Self> {
         let mut certificate: Vec<Vec<u8>> = vec![];
 

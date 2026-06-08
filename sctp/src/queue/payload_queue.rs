@@ -18,6 +18,7 @@ pub(crate) struct PayloadQueue {
 }
 
 impl PayloadQueue {
+    #[tracing::instrument(level = "debug", skip(length))]
     pub(crate) fn new(length: Arc<AtomicUsize>) -> Self {
         length.store(0, Ordering::SeqCst);
         PayloadQueue {
@@ -26,10 +27,12 @@ impl PayloadQueue {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self, p, cumulative_tsn))]
     pub(crate) fn can_push(&self, p: &ChunkPayloadData, cumulative_tsn: u32) -> bool {
         !(self.chunk_map.contains_key(&p.tsn) || sna32lte(p.tsn, cumulative_tsn))
     }
 
+    #[tracing::instrument(level = "debug", skip(self, p))]
     pub(crate) fn push_no_check(&mut self, p: ChunkPayloadData) {
         let tsn = p.tsn;
         self.n_bytes += p.user_data.len();
@@ -41,6 +44,7 @@ impl PayloadQueue {
         } else if sna32lt(tsn, *self.sorted.front().unwrap()) {
             self.sorted.push_front(tsn);
         } else {
+            #[tracing::instrument(level = "debug", skip(a, b))]
             fn compare_tsn(a: u32, b: u32) -> std::cmp::Ordering {
                 if sna32lt(a, b) {
                     std::cmp::Ordering::Less
@@ -59,6 +63,7 @@ impl PayloadQueue {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self, p, cumulative_tsn))]
     /// push pushes a payload data. If the payload data is already in our queue or
     /// older than our cumulative_tsn marker, it will be recorded as duplications,
     /// which can later be retrieved using popDuplicates.
@@ -74,6 +79,7 @@ impl PayloadQueue {
         true
     }
 
+    #[tracing::instrument(level = "debug", skip(self, tsn))]
     /// pop pops only if the oldest chunk's TSN matches the given TSN.
     pub(crate) fn pop(&mut self, tsn: u32) -> Option<ChunkPayloadData> {
         if Some(&tsn) == self.sorted.front() {
@@ -88,19 +94,23 @@ impl PayloadQueue {
         None
     }
 
+    #[tracing::instrument(level = "debug", skip(self, tsn))]
     /// get returns reference to chunkPayloadData with the given TSN value.
     pub(crate) fn get(&self, tsn: u32) -> Option<&ChunkPayloadData> {
         self.chunk_map.get(&tsn)
     }
+    #[tracing::instrument(level = "debug", skip(self, tsn))]
     pub(crate) fn get_mut(&mut self, tsn: u32) -> Option<&mut ChunkPayloadData> {
         self.chunk_map.get_mut(&tsn)
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// popDuplicates returns an array of TSN values that were found duplicate.
     pub(crate) fn pop_duplicates(&mut self) -> Vec<u32> {
         self.dup_tsn.drain(..).collect()
     }
 
+    #[tracing::instrument(level = "debug", skip(self, cumulative_tsn))]
     pub(crate) fn get_gap_ack_blocks(&self, cumulative_tsn: u32) -> Vec<GapAckBlock> {
         if self.chunk_map.is_empty() {
             return vec![];
@@ -133,6 +143,7 @@ impl PayloadQueue {
         gap_ack_blocks
     }
 
+    #[tracing::instrument(level = "debug", skip(self, cumulative_tsn))]
     pub(crate) fn get_gap_ack_blocks_string(&self, cumulative_tsn: u32) -> String {
         let mut s = format!("cumTSN={cumulative_tsn}");
         for b in self.get_gap_ack_blocks(cumulative_tsn) {
@@ -141,6 +152,7 @@ impl PayloadQueue {
         s
     }
 
+    #[tracing::instrument(level = "debug", skip(self, tsn))]
     pub(crate) fn mark_as_acked(&mut self, tsn: u32) -> usize {
         let n_bytes_acked = if let Some(c) = self.chunk_map.get_mut(&tsn) {
             c.acked = true;
@@ -156,10 +168,12 @@ impl PayloadQueue {
         n_bytes_acked
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     pub(crate) fn get_last_tsn_received(&self) -> Option<&u32> {
         self.sorted.back()
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     pub(crate) fn mark_all_to_retrasmit(&mut self) {
         for c in self.chunk_map.values_mut() {
             if c.acked || c.abandoned() {
@@ -169,15 +183,18 @@ impl PayloadQueue {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     pub(crate) fn get_num_bytes(&self) -> usize {
         self.n_bytes
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     pub(crate) fn len(&self) -> usize {
         assert_eq!(self.chunk_map.len(), self.length.load(Ordering::SeqCst));
         self.chunk_map.len()
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     pub(crate) fn is_empty(&self) -> bool {
         self.len() == 0
     }

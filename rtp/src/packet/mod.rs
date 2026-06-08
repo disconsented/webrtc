@@ -18,6 +18,7 @@ pub struct Packet {
 }
 
 impl fmt::Display for Packet {
+    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut out = "RTP PACKET:\n".to_string();
 
@@ -34,6 +35,7 @@ impl fmt::Display for Packet {
 }
 
 impl Unmarshal for Packet {
+    #[tracing::instrument(level = "debug", skip(raw_packet))]
     /// Unmarshal parses the passed byte slice and stores the result in the Header this method is called upon
     fn unmarshal<B>(raw_packet: &mut B) -> Result<Self, util::Error>
     where
@@ -64,6 +66,7 @@ impl Unmarshal for Packet {
 }
 
 impl MarshalSize for Packet {
+    #[tracing::instrument(level = "debug", skip(self))]
     /// MarshalSize returns the size of the packet once marshaled.
     fn marshal_size(&self) -> usize {
         let payload_len = self.payload.len();
@@ -82,6 +85,7 @@ impl MarshalSize for Packet {
 }
 
 impl Marshal for Packet {
+    #[tracing::instrument(level = "debug", skip(self, buf))]
     /// MarshalTo serializes the packet and writes to the buffer.
     fn marshal_to(&self, mut buf: &mut [u8]) -> Result<usize, util::Error> {
         if buf.remaining_mut() < self.marshal_size() {
@@ -112,6 +116,7 @@ impl Marshal for Packet {
     }
 }
 
+#[tracing::instrument(level = "debug", skip(len))]
 /// getPadding Returns the padding required to make the length a multiple of 4
 fn get_padding(len: usize) -> usize {
     if len.is_multiple_of(4) {

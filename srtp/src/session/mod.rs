@@ -37,6 +37,7 @@ pub struct Session {
 }
 
 impl Session {
+    #[tracing::instrument(level = "debug", skip(conn, config, is_rtp))]
     pub async fn new(
         conn: Arc<dyn Conn + Send + Sync>,
         config: Config,
@@ -119,11 +120,13 @@ impl Session {
         })
     }
 
+    #[tracing::instrument(level = "debug", skip(streams_map, ssrc))]
     async fn close_stream(streams_map: &Arc<Mutex<HashMap<u32, Arc<Stream>>>>, ssrc: u32) {
         let mut streams = streams_map.lock().await;
         streams.remove(&ssrc);
     }
 
+    #[tracing::instrument(level = "debug", skip(udp_rx, buf, streams_map, close_stream_tx, new_stream_tx, remote_context, is_rtp))]
     async fn incoming(
         udp_rx: &Arc<dyn Conn + Send + Sync>,
         buf: &mut [u8],
@@ -183,6 +186,7 @@ impl Session {
         Ok(())
     }
 
+    #[tracing::instrument(level = "debug", skip(streams_map, close_stream_tx, is_rtp, ssrc))]
     async fn get_or_create_stream(
         streams_map: &Arc<Mutex<HashMap<u32, Arc<Stream>>>>,
         close_stream_tx: mpsc::Sender<u32>,
@@ -200,6 +204,7 @@ impl Session {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self, ssrc))]
     /// open on the given SSRC to create a stream, it can be used
     /// if you want a certain SSRC, but don't want to wait for Accept
     pub async fn open(&self, ssrc: u32) -> Arc<Stream> {
@@ -214,6 +219,7 @@ impl Session {
         stream
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// accept returns a stream to handle RTCP for a single SSRC
     pub async fn accept(&self) -> Result<(Arc<Stream>, Option<rtp::header::Header>)> {
         let mut new_stream_rx = self.new_stream_rx.lock().await;
@@ -224,12 +230,14 @@ impl Session {
             .ok_or(Error::SessionSrtpAlreadyClosed)
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     pub async fn close(&self) -> Result<()> {
         self.close_session_tx.send(()).await?;
 
         Ok(())
     }
 
+    #[tracing::instrument(level = "debug", skip(self, buf, is_rtp))]
     pub async fn write(&self, buf: &Bytes, is_rtp: bool) -> Result<usize> {
         if self.is_rtp != is_rtp {
             return Err(Error::SessionRtpRtcpTypeMismatch);
@@ -248,11 +256,13 @@ impl Session {
         Ok(self.udp_tx.send(&encrypted).await?)
     }
 
+    #[tracing::instrument(level = "debug", skip(self, pkt))]
     pub async fn write_rtp(&self, pkt: &rtp::packet::Packet) -> Result<usize> {
         let raw = pkt.marshal()?;
         self.write(&raw, true).await
     }
 
+    #[tracing::instrument(level = "debug", skip(self, pkt))]
     pub async fn write_rtcp(
         &self,
         pkt: &(dyn rtcp::packet::Packet + Send + Sync),
@@ -262,6 +272,7 @@ impl Session {
     }
 }
 
+#[tracing::instrument(level = "debug", skip(pkts))]
 /// create a list of Destination SSRCs
 /// that's a superset of all Destinations in the slice.
 fn destination_ssrc(pkts: &[Box<dyn rtcp::packet::Packet + Send + Sync>]) -> Vec<u32> {

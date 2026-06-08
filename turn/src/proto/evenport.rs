@@ -23,6 +23,7 @@ pub struct EvenPort {
 }
 
 impl fmt::Display for EvenPort {
+    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         if self.reserve_port {
             write!(f, "reserve: true")
@@ -36,6 +37,7 @@ const EVEN_PORT_SIZE: usize = 1;
 const FIRST_BIT_SET: u8 = 0b10000000; //FIXME? (1 << 8) - 1;
 
 impl Setter for EvenPort {
+    #[tracing::instrument(level = "debug", skip(self, m))]
     /// Adds `EVEN-PORT` to message.
     fn add_to(&self, m: &mut Message) -> Result<(), stun::Error> {
         let mut v = vec![0; EVEN_PORT_SIZE];
@@ -49,6 +51,7 @@ impl Setter for EvenPort {
 }
 
 impl Getter for EvenPort {
+    #[tracing::instrument(level = "debug", skip(self, m))]
     /// Decodes `EVEN-PORT` from message.
     fn get_from(&mut self, m: &Message) -> Result<(), stun::Error> {
         let v = m.get(ATTR_EVEN_PORT)?;

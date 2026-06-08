@@ -38,12 +38,14 @@ pub struct RTCCertificate {
 }
 
 impl PartialEq for RTCCertificate {
+    #[tracing::instrument(level = "debug", skip(self, other))]
     fn eq(&self, other: &Self) -> bool {
         self.dtls_certificate == other.dtls_certificate
     }
 }
 
 impl RTCCertificate {
+    #[tracing::instrument(level = "debug", skip(params, key_pair))]
     /// Generates a new certificate from the given parameters.
     ///
     /// See [`rcgen::Certificate::from_params`].
@@ -103,6 +105,7 @@ impl RTCCertificate {
         })
     }
 
+    #[tracing::instrument(level = "debug", skip(key_pair))]
     /// Generates a new certificate with default [`CertificateParams`] using the given keypair.
     pub fn from_key_pair(key_pair: KeyPair) -> Result<Self> {
         if !(key_pair.is_compatible(&rcgen::PKCS_ED25519)
@@ -118,6 +121,7 @@ impl RTCCertificate {
         )
     }
 
+    #[tracing::instrument(level = "debug", skip(pem_str))]
     /// Parses a certificate from the ASCII PEM format.
     #[cfg(feature = "pem")]
     pub fn from_pem(pem_str: &str) -> Result<Self> {
@@ -149,6 +153,7 @@ impl RTCCertificate {
         Ok(RTCCertificate::from_existing(dtls_certificate, expires))
     }
 
+    #[tracing::instrument(level = "debug", skip(dtls_certificate, expires))]
     /// Builds a [`RTCCertificate`] using the existing DTLS certificate.
     ///
     /// Use this method when you have a persistent certificate (i.e. you don't want to generate a
@@ -165,6 +170,7 @@ impl RTCCertificate {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// Serializes the certificate (including the private key) in PKCS#8 format in PEM.
     #[cfg(any(doc, feature = "pem"))]
     pub fn serialize_pem(&self) -> String {
@@ -187,6 +193,7 @@ impl RTCCertificate {
         )
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// get_fingerprints returns a SHA-256 fingerprint of this certificate.
     ///
     /// TODO: return a fingerprint computed with the digest algorithm used in the certificate
@@ -209,6 +216,7 @@ impl RTCCertificate {
         fingerprints
     }
 
+    #[tracing::instrument(level = "debug", skip(self, collector))]
     pub(crate) async fn collect_stats(&self, collector: &StatsCollector) {
         if let Some(fingerprint) = self.get_fingerprints().into_iter().next() {
             let stats = CertificateStats::new(self, fingerprint);
@@ -220,6 +228,7 @@ impl RTCCertificate {
     }
 }
 
+#[tracing::instrument(level = "debug", skip())]
 fn gen_stats_id() -> String {
     format!(
         "certificate-{}",

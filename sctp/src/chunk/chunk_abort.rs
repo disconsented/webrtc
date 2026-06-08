@@ -33,6 +33,7 @@ pub(crate) struct ChunkAbort {
 
 /// String makes chunkAbort printable
 impl fmt::Display for ChunkAbort {
+    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut res = vec![self.header().to_string()];
 
@@ -45,6 +46,7 @@ impl fmt::Display for ChunkAbort {
 }
 
 impl Chunk for ChunkAbort {
+    #[tracing::instrument(level = "debug", skip(self))]
     fn header(&self) -> ChunkHeader {
         ChunkHeader {
             typ: CT_ABORT,
@@ -53,6 +55,7 @@ impl Chunk for ChunkAbort {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(raw))]
     fn unmarshal(raw: &Bytes) -> Result<Self> {
         let header = ChunkHeader::unmarshal(raw)?;
 
@@ -73,6 +76,7 @@ impl Chunk for ChunkAbort {
         Ok(ChunkAbort { error_causes })
     }
 
+    #[tracing::instrument(level = "debug", skip(self, buf))]
     fn marshal_to(&self, buf: &mut BytesMut) -> Result<usize> {
         self.header().marshal_to(buf)?;
         for ec in &self.error_causes {
@@ -81,16 +85,19 @@ impl Chunk for ChunkAbort {
         Ok(buf.len())
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn check(&self) -> Result<()> {
         Ok(())
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn value_length(&self) -> usize {
         self.error_causes
             .iter()
             .fold(0, |length, ec| length + ec.length())
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn as_any(&self) -> &(dyn Any + Send + Sync) {
         self
     }

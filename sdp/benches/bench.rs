@@ -30,6 +30,7 @@ a=sendrecv\r\n\
 m=video 51372 RTP/AVP 99\r\n\
 a=rtpmap:99 h263-1998/90000\r\n";
 
+#[tracing::instrument(level = "debug", skip(g))]
 fn benchmark_sdp(g: &mut BenchmarkGroup<WallTime>) {
     let mut reader = Cursor::new(CANONICAL_UNMARSHAL_SDP.as_bytes());
     let sdp = SessionDescription::unmarshal(&mut reader).unwrap();
@@ -52,6 +53,7 @@ fn benchmark_sdp(g: &mut BenchmarkGroup<WallTime>) {
     });
 }
 
+#[tracing::instrument(level = "debug", skip())]
 fn benches() {
     let mut c = Criterion::default().configure_from_args();
     let mut g = c.benchmark_group("SDP");

@@ -33,6 +33,7 @@ const ICE_TRANSPORT_POLICY_ALL_STR: &str = "all";
 
 /// takes a string and converts it to ICETransportPolicy
 impl From<&str> for RTCIceTransportPolicy {
+    #[tracing::instrument(level = "debug", skip(raw))]
     fn from(raw: &str) -> Self {
         match raw {
             ICE_TRANSPORT_POLICY_RELAY_STR => RTCIceTransportPolicy::Relay,
@@ -43,6 +44,7 @@ impl From<&str> for RTCIceTransportPolicy {
 }
 
 impl fmt::Display for RTCIceTransportPolicy {
+    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let s = match *self {
             RTCIceTransportPolicy::Relay => ICE_TRANSPORT_POLICY_RELAY_STR,

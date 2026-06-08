@@ -16,12 +16,14 @@ use super::*;
 pub(crate) struct ParamForwardTsnSupported;
 
 impl fmt::Display for ParamForwardTsnSupported {
+    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.header())
     }
 }
 
 impl Param for ParamForwardTsnSupported {
+    #[tracing::instrument(level = "debug", skip(self))]
     fn header(&self) -> ParamHeader {
         ParamHeader {
             typ: ParamType::ForwardTsnSupp,
@@ -29,24 +31,29 @@ impl Param for ParamForwardTsnSupported {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(raw))]
     fn unmarshal(raw: &Bytes) -> Result<Self> {
         let _ = ParamHeader::unmarshal(raw)?;
         Ok(ParamForwardTsnSupported {})
     }
 
+    #[tracing::instrument(level = "debug", skip(self, buf))]
     fn marshal_to(&self, buf: &mut BytesMut) -> Result<usize> {
         self.header().marshal_to(buf)?;
         Ok(buf.len())
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn value_length(&self) -> usize {
         0
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn clone_to(&self) -> Box<dyn Param + Send + Sync> {
         Box::new(self.clone())
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn as_any(&self) -> &(dyn Any + Send + Sync) {
         self
     }

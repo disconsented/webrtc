@@ -54,6 +54,7 @@ pub struct AllocationInfo {
 }
 
 impl AllocationInfo {
+    #[tracing::instrument(level = "debug", skip(five_tuple, username, relay_addr, relayed_bytes))]
     /// Creates a new [`AllocationInfo`].
     pub fn new(
         five_tuple: FiveTuple,
@@ -91,11 +92,13 @@ pub struct Allocation {
     alloc_close_notify: Option<mpsc::Sender<AllocationInfo>>,
 }
 
+#[tracing::instrument(level = "debug", skip(addr))]
 fn addr2ipfingerprint(addr: &SocketAddr) -> String {
     addr.ip().to_string()
 }
 
 impl Allocation {
+    #[tracing::instrument(level = "debug", skip(turn_socket, relay_socket, relay_addr, five_tuple, username, allocation_map, alloc_close_notify))]
     /// Creates a new [`Allocation`].
     pub fn new(
         turn_socket: Arc<dyn Conn + Send + Sync>,
@@ -125,12 +128,14 @@ impl Allocation {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self, addr))]
     /// Checks the Permission for the `addr`.
     pub async fn has_permission(&self, addr: &SocketAddr) -> bool {
         let permissions = self.permissions.lock().await;
         permissions.get(&addr2ipfingerprint(addr)).is_some()
     }
 
+    #[tracing::instrument(level = "debug", skip(self, p))]
     /// Adds a new [`Permission`] to this [`Allocation`].
     pub async fn add_permission(&self, mut p: Permission) {
         let fingerprint = addr2ipfingerprint(&p.addr);
@@ -152,12 +157,14 @@ impl Allocation {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self, addr))]
     /// Removes the `addr`'s fingerprint from this [`Allocation`]'s permissions.
     pub async fn remove_permission(&self, addr: &SocketAddr) -> bool {
         let mut permissions = self.permissions.lock().await;
         permissions.remove(&addr2ipfingerprint(addr)).is_some()
     }
 
+    #[tracing::instrument(level = "debug", skip(self, c, lifetime))]
     /// Adds a new [`ChannelBind`] to this [`Allocation`], it also updates the
     /// permissions needed for this [`ChannelBind`].
     pub async fn add_channel_bind(&self, mut c: ChannelBind, lifetime: Duration) -> Result<()> {
@@ -204,18 +211,21 @@ impl Allocation {
         Ok(())
     }
 
+    #[tracing::instrument(level = "debug", skip(self, number))]
     /// Removes the [`ChannelBind`] from this [`Allocation`] by `number`.
     pub async fn remove_channel_bind(&self, number: ChannelNumber) -> bool {
         let mut channel_bindings = self.channel_bindings.lock().await;
         channel_bindings.remove(&number).is_some()
     }
 
+    #[tracing::instrument(level = "debug", skip(self, number))]
     /// Gets the [`ChannelBind`]'s address by `number`.
     pub async fn get_channel_addr(&self, number: &ChannelNumber) -> Option<SocketAddr> {
         let channel_bindings = self.channel_bindings.lock().await;
         channel_bindings.get(number).map(|cb| cb.peer)
     }
 
+    #[tracing::instrument(level = "debug", skip(self, addr))]
     /// Gets the [`ChannelBind`]'s number from this [`Allocation`] by `addr`.
     pub async fn get_channel_number(&self, addr: &SocketAddr) -> Option<ChannelNumber> {
         let channel_bindings = self.channel_bindings.lock().await;
@@ -227,6 +237,7 @@ impl Allocation {
         None
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// Closes the [`Allocation`].
     pub async fn close(&self) -> Result<()> {
         if self.closed.load(Ordering::Acquire) {
@@ -270,6 +281,7 @@ impl Allocation {
         Ok(())
     }
 
+    #[tracing::instrument(level = "debug", skip(self, lifetime))]
     pub async fn start(&self, lifetime: Duration) {
         let (reset_tx, mut reset_rx) = mpsc::channel(1);
         self.reset_tx.lock().replace(reset_tx);
@@ -308,11 +320,13 @@ impl Allocation {
         });
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn stop(&self) -> bool {
         let reset_tx = self.reset_tx.lock().take();
         reset_tx.is_none() || self.timer_expired.load(Ordering::SeqCst)
     }
 
+    #[tracing::instrument(level = "debug", skip(self, lifetime))]
     /// Updates the allocations lifetime.
     pub async fn refresh(&self, lifetime: Duration) {
         let reset_tx = self.reset_tx.lock().clone();
@@ -340,6 +354,7 @@ impl Allocation {
     //  datagram, and the XOR-PEER-ADDRESS attribute is set to the source
     //  transport address of the received UDP datagram.  The Data indication
     //  is then sent on the 5-tuple associated with the allocation.
+    #[tracing::instrument(level = "debug", skip(self))]
     async fn packet_handler(&mut self) {
         let five_tuple = self.five_tuple;
         let relay_addr = self.relay_addr;

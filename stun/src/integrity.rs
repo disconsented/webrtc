@@ -23,12 +23,14 @@ pub(crate) const CREDENTIALS_SEP: &str = ":";
 #[derive(Default, Clone)]
 pub struct MessageIntegrity(pub Vec<u8>);
 
+#[tracing::instrument(level = "debug", skip(key, message))]
 fn new_hmac(key: &[u8], message: &[u8]) -> Vec<u8> {
     let mac = hmac::Key::new(hmac::HMAC_SHA1_FOR_LEGACY_USE_ONLY, key);
     hmac::sign(&mac, message).as_ref().to_vec()
 }
 
 impl fmt::Display for MessageIntegrity {
+    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "KEY: 0x{:x?}", self.0)
     }
@@ -38,6 +40,7 @@ impl Setter for MessageIntegrity {
     // add_to adds MESSAGE-INTEGRITY attribute to message.
     //
     // CPU costly, see BenchmarkMessageIntegrity_AddTo.
+    #[tracing::instrument(level = "debug", skip(self, m))]
     fn add_to(&self, m: &mut Message) -> Result<()> {
         for a in &m.attributes.0 {
             // Message should not contain FINGERPRINT attribute
@@ -67,6 +70,7 @@ pub(crate) const MESSAGE_INTEGRITY_SIZE: usize = 20;
 impl MessageIntegrity {
     // new_long_term_integrity returns new MessageIntegrity with key for long-term
     // credentials. Password, username, and realm must be SASL-prepared.
+    #[tracing::instrument(level = "debug", skip(username, realm, password))]
     pub fn new_long_term_integrity(username: String, realm: String, password: String) -> Self {
         let s = [username, realm, password].join(CREDENTIALS_SEP);
 
@@ -78,6 +82,7 @@ impl MessageIntegrity {
 
     // new_short_term_integrity returns new MessageIntegrity with key for short-term
     // credentials. Password must be SASL-prepared.
+    #[tracing::instrument(level = "debug", skip(password))]
     pub fn new_short_term_integrity(password: String) -> Self {
         MessageIntegrity(password.as_bytes().to_vec())
     }
@@ -85,6 +90,7 @@ impl MessageIntegrity {
     // Check checks MESSAGE-INTEGRITY attribute.
     //
     // CPU costly, see BenchmarkMessageIntegrity_Check.
+    #[tracing::instrument(level = "debug", skip(self, m))]
     pub fn check(&self, m: &mut Message) -> Result<()> {
         let v = m.get(ATTR_MESSAGE_INTEGRITY)?;
 

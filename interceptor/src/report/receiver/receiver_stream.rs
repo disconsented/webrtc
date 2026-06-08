@@ -25,21 +25,25 @@ struct ReceiverStreamInternal {
 }
 
 impl ReceiverStreamInternal {
+    #[tracing::instrument(level = "debug", skip(self, seq))]
     fn set_received(&mut self, seq: u16) {
         let pos = (seq as usize) % self.packets.len();
         self.packets[pos / 64] |= 1 << (pos % 64);
     }
 
+    #[tracing::instrument(level = "debug", skip(self, seq))]
     fn del_received(&mut self, seq: u16) {
         let pos = (seq as usize) % self.packets.len();
         self.packets[pos / 64] &= u64::MAX ^ (1u64 << (pos % 64));
     }
 
+    #[tracing::instrument(level = "debug", skip(self, seq))]
     fn get_received(&self, seq: u16) -> bool {
         let pos = (seq as usize) % self.packets.len();
         (self.packets[pos / 64] & (1 << (pos % 64))) != 0
     }
 
+    #[tracing::instrument(level = "debug", skip(self, now, pkt))]
     fn process_rtp(&mut self, now: SystemTime, pkt: &rtp::packet::Packet) {
         if !self.started {
             // first frame
@@ -81,11 +85,13 @@ impl ReceiverStreamInternal {
         self.last_rtp_time_time = now;
     }
 
+    #[tracing::instrument(level = "debug", skip(self, now, sr))]
     fn process_sender_report(&mut self, now: SystemTime, sr: &rtcp::sender_report::SenderReport) {
         self.last_sender_report = (sr.ntp_time >> 16) as u32;
         self.last_sender_report_time = now;
     }
 
+    #[tracing::instrument(level = "debug", skip(self, now))]
     fn generate_report(&mut self, now: SystemTime) -> rtcp::receiver_report::ReceiverReport {
         let total_since_report = (self.last_seq_num - self.last_report_seq_num) as u16;
         let mut total_lost_since_report = {
@@ -153,6 +159,7 @@ pub(crate) struct ReceiverStream {
 }
 
 impl ReceiverStream {
+    #[tracing::instrument(level = "debug", skip(ssrc, clock_rate, reader, now))]
     pub(crate) fn new(
         ssrc: u32,
         clock_rate: u32,
@@ -184,11 +191,13 @@ impl ReceiverStream {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self, now, pkt))]
     pub(crate) fn process_rtp(&self, now: SystemTime, pkt: &rtp::packet::Packet) {
         let mut internal = self.internal.lock();
         internal.process_rtp(now, pkt);
     }
 
+    #[tracing::instrument(level = "debug", skip(self, now, sr))]
     pub(crate) fn process_sender_report(
         &self,
         now: SystemTime,
@@ -198,6 +207,7 @@ impl ReceiverStream {
         internal.process_sender_report(now, sr);
     }
 
+    #[tracing::instrument(level = "debug", skip(self, now))]
     pub(crate) fn generate_report(&self, now: SystemTime) -> rtcp::receiver_report::ReceiverReport {
         let mut internal = self.internal.lock();
         internal.generate_report(now)
@@ -207,6 +217,7 @@ impl ReceiverStream {
 /// RTPReader is used by Interceptor.bind_remote_stream.
 #[async_trait]
 impl RTPReader for ReceiverStream {
+    #[tracing::instrument(level = "debug", skip(self, buf, a))]
     /// read a rtp packet
     async fn read(
         &self,

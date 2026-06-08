@@ -13,6 +13,7 @@ const RAW_RTCP: &[u8] = &[
     0xab, 0xab, 0xab, 0xab, 0xab, 0xab, 0xab, 0xab,
 ];
 
+#[tracing::instrument(level = "debug", skip(g))]
 fn benchmark_encrypt_rtp_aes_128_cm_hmac_sha1(g: &mut BenchmarkGroup<WallTime>) {
     let mut ctx = Context::new(
         MASTER_KEY,
@@ -56,6 +57,7 @@ fn benchmark_encrypt_rtp_aes_128_cm_hmac_sha1(g: &mut BenchmarkGroup<WallTime>) 
     });
 }
 
+#[tracing::instrument(level = "debug", skip(g))]
 fn benchmark_decrypt_rtp_aes_128_cm_hmac_sha1(g: &mut BenchmarkGroup<WallTime>) {
     let mut setup_ctx = Context::new(
         MASTER_KEY,
@@ -106,6 +108,7 @@ fn benchmark_decrypt_rtp_aes_128_cm_hmac_sha1(g: &mut BenchmarkGroup<WallTime>) 
     });
 }
 
+#[tracing::instrument(level = "debug", skip(g))]
 fn benchmark_encrypt_rtcp_aes_128_cm_hmac_sha1(g: &mut BenchmarkGroup<WallTime>) {
     let mut ctx = Context::new(
         MASTER_KEY,
@@ -123,6 +126,7 @@ fn benchmark_encrypt_rtcp_aes_128_cm_hmac_sha1(g: &mut BenchmarkGroup<WallTime>)
     });
 }
 
+#[tracing::instrument(level = "debug", skip(g))]
 fn benchmark_decrypt_rtcp_aes_128_cm_hmac_sha1(g: &mut BenchmarkGroup<WallTime>) {
     let encrypted = Context::new(
         MASTER_KEY,
@@ -149,6 +153,7 @@ fn benchmark_decrypt_rtcp_aes_128_cm_hmac_sha1(g: &mut BenchmarkGroup<WallTime>)
     });
 }
 
+#[tracing::instrument(level = "debug", skip())]
 fn benches() {
     let mut c = Criterion::default().configure_from_args();
     let mut g = c.benchmark_group("SRTP");

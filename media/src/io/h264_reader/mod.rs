@@ -51,6 +51,7 @@ pub enum NalUnitType {
 }
 
 impl fmt::Display for NalUnitType {
+    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let s = match *self {
             NalUnitType::Unspecified => "Unspecified",
@@ -75,6 +76,7 @@ impl fmt::Display for NalUnitType {
 }
 
 impl From<u8> for NalUnitType {
+    #[tracing::instrument(level = "debug", skip(v))]
     fn from(v: u8) -> Self {
         match v {
             0 => NalUnitType::Unspecified,
@@ -111,6 +113,7 @@ pub struct NAL {
 }
 
 impl NAL {
+    #[tracing::instrument(level = "debug", skip(data))]
     fn new(data: BytesMut) -> Self {
         NAL {
             picture_order_count: 0,
@@ -121,6 +124,7 @@ impl NAL {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn parse_header(&mut self) {
         let first_byte = self.data[0];
         self.forbidden_zero_bit = ((first_byte & 0x80) >> 7) == 1; // 0x80 = 0b10000000
@@ -140,6 +144,7 @@ struct ReadBuffer {
 }
 
 impl ReadBuffer {
+    #[tracing::instrument(level = "debug", skip(capacity))]
     fn new(capacity: usize) -> ReadBuffer {
         Self {
             buffer: vec![0u8; capacity].into_boxed_slice(),
@@ -148,11 +153,13 @@ impl ReadBuffer {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     #[inline]
     fn in_buffer(&self) -> usize {
         self.filled_end - self.read_end
     }
 
+    #[tracing::instrument(level = "debug", skip(self, consume))]
     fn consume(&mut self, consume: usize) -> &[u8] {
         debug_assert!(self.read_end + consume <= self.filled_end);
         let result = &self.buffer[self.read_end..][..consume];
@@ -160,6 +167,7 @@ impl ReadBuffer {
         result
     }
 
+    #[tracing::instrument(level = "debug", skip(self, reader))]
     pub(crate) fn fill_buffer(&mut self, reader: &mut impl Read) -> Result<()> {
         debug_assert_eq!(self.read_end, self.filled_end);
 
@@ -182,6 +190,7 @@ pub struct H264Reader<R: Read> {
 }
 
 impl<R: Read> H264Reader<R> {
+    #[tracing::instrument(level = "debug", skip(reader, capacity))]
     /// new creates new `H264Reader` with `capacity` sized read buffer.
     pub fn new(reader: R, capacity: usize) -> H264Reader<R> {
         H264Reader {
@@ -193,6 +202,7 @@ impl<R: Read> H264Reader<R> {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn read4(&mut self) -> Result<([u8; 4], usize)> {
         let mut result = [0u8; 4];
         let mut result_filled = 0;
@@ -216,6 +226,7 @@ impl<R: Read> H264Reader<R> {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn read1(&mut self) -> Result<Option<u8>> {
         if self.buffer.in_buffer() == 0 {
             self.buffer.fill_buffer(&mut self.reader)?;
@@ -228,6 +239,7 @@ impl<R: Read> H264Reader<R> {
         Ok(Some(self.buffer.consume(1)[0]))
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn bit_stream_starts_with_h264prefix(&mut self) -> Result<usize> {
         let (prefix_buffer, n) = self.read4()?;
 
@@ -261,6 +273,7 @@ impl<R: Read> H264Reader<R> {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// next_nal reads from stream and returns then next NAL,
     /// and an error if there is incomplete frame data.
     /// Returns all nil values when no more NALs are available.
@@ -300,6 +313,7 @@ impl<R: Read> H264Reader<R> {
         Ok(nal)
     }
 
+    #[tracing::instrument(level = "debug", skip(self, read_byte))]
     fn process_byte(&mut self, read_byte: u8) -> bool {
         let mut nal_found = false;
 

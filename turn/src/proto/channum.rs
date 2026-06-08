@@ -26,12 +26,14 @@ pub const MAX_CHANNEL_NUMBER: u16 = 0x7FFF;
 pub struct ChannelNumber(pub u16);
 
 impl fmt::Display for ChannelNumber {
+    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.0)
     }
 }
 
 impl Setter for ChannelNumber {
+    #[tracing::instrument(level = "debug", skip(self, m))]
     /// Adds `CHANNEL-NUMBER` to message.
     fn add_to(&self, m: &mut Message) -> Result<(), stun::Error> {
         let mut v = vec![0; CHANNEL_NUMBER_SIZE];
@@ -43,6 +45,7 @@ impl Setter for ChannelNumber {
 }
 
 impl Getter for ChannelNumber {
+    #[tracing::instrument(level = "debug", skip(self, m))]
     /// Decodes `CHANNEL-NUMBER` from message.
     fn get_from(&mut self, m: &Message) -> Result<(), stun::Error> {
         let v = m.get(ATTR_CHANNEL_NUMBER)?;
@@ -57,11 +60,13 @@ impl Getter for ChannelNumber {
 }
 
 impl ChannelNumber {
+    #[tracing::instrument(level = "debug", skip(self))]
     /// Returns true if c in `[0x4000, 0x7FFF]`.
     fn is_channel_number_valid(&self) -> bool {
         self.0 >= MIN_CHANNEL_NUMBER && self.0 <= MAX_CHANNEL_NUMBER
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// returns `true` if channel number has correct value that complies
     /// [RFC 5766 Section 11](https://www.rfc-editor.org/rfc/rfc5766#section-11) range.
     pub fn valid(&self) -> bool {

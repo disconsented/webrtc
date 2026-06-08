@@ -21,6 +21,7 @@ use stun::message::{is_message as is_stun_message, Message as STUNMessage};
 
 use crate::candidate::RECEIVE_MTU;
 
+#[tracing::instrument(level = "debug", skip(target, socket_addr))]
 /// Normalize a target socket addr for sending over a given local socket addr. This is useful when
 /// a dual stack socket is used, in which case an IPv4 target needs to be mapped to an IPv6
 /// address.
@@ -53,6 +54,7 @@ pub struct UDPMuxParams {
 }
 
 impl UDPMuxParams {
+    #[tracing::instrument(level = "debug", skip(conn))]
     pub fn new<C>(conn: C) -> Self
     where
         C: Conn + Send + Sync + 'static,
@@ -82,6 +84,7 @@ pub struct UDPMuxDefault {
 }
 
 impl UDPMuxDefault {
+    #[tracing::instrument(level = "debug", skip(params))]
     pub fn new(params: UDPMuxParams) -> Arc<Self> {
         let (closed_watch_tx, closed_watch_rx) = watch::channel(());
 
@@ -99,10 +102,12 @@ impl UDPMuxDefault {
         mux
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     pub async fn is_closed(&self) -> bool {
         self.closed_watch_tx.lock().await.is_none()
     }
 
+    #[tracing::instrument(level = "debug", skip(self, ufrag))]
     /// Create a muxed connection for a given ufrag.
     fn create_muxed_conn(self: &Arc<Self>, ufrag: &str) -> Result<UDPMuxConn, Error> {
         let local_addr = self.params.conn.local_addr()?;
@@ -116,6 +121,7 @@ impl UDPMuxDefault {
         Ok(UDPMuxConn::new(params))
     }
 
+    #[tracing::instrument(level = "debug", skip(self, buffer, addr))]
     async fn conn_from_stun_message(&self, buffer: &[u8], addr: &SocketAddr) -> Option<UDPMuxConn> {
         let (result, message) = {
             let mut m = STUNMessage::new();
@@ -157,6 +163,7 @@ impl UDPMuxDefault {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self, closed_watch_rx))]
     fn start_conn_worker(self: Arc<Self>, mut closed_watch_rx: watch::Receiver<()>) {
         tokio::spawn(async move {
             let mut buffer = [0u8; RECEIVE_MTU];
@@ -217,6 +224,7 @@ impl UDPMuxDefault {
 
 #[async_trait]
 impl UDPMux for UDPMuxDefault {
+    #[tracing::instrument(level = "debug", skip(self))]
     async fn close(&self) -> Result<(), Error> {
         if self.is_closed().await {
             return Err(Error::ErrAlreadyClosed);
@@ -251,6 +259,7 @@ impl UDPMux for UDPMuxDefault {
         Ok(())
     }
 
+    #[tracing::instrument(level = "debug", skip(self, ufrag))]
     async fn get_conn(self: Arc<Self>, ufrag: &str) -> Result<Arc<dyn Conn + Send + Sync>, Error> {
         if self.is_closed().await {
             return Err(Error::ErrUseClosedNetworkConn);
@@ -281,6 +290,7 @@ impl UDPMux for UDPMuxDefault {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self, ufrag))]
     async fn remove_conn_by_ufrag(&self, ufrag: &str) {
         // Pion's ice implementation has both `RemoveConnByFrag` and `RemoveConn`, but since `conns`
         // is keyed on `ufrag` their implementation is equivalent.
@@ -302,6 +312,7 @@ impl UDPMux for UDPMuxDefault {
 
 #[async_trait]
 impl UDPMuxWriter for UDPMuxDefault {
+    #[tracing::instrument(level = "debug", skip(self, conn, addr))]
     async fn register_conn_for_address(&self, conn: &UDPMuxConn, addr: SocketAddr) {
         if self.is_closed().await {
             return;
@@ -325,6 +336,7 @@ impl UDPMuxWriter for UDPMuxDefault {
         log::debug!("Registered {addr} for {key}");
     }
 
+    #[tracing::instrument(level = "debug", skip(self, buf, target))]
     async fn send_to(&self, buf: &[u8], target: &SocketAddr) -> Result<usize, Error> {
         self.params.conn.send_to(buf, *target).await
     }

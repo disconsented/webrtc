@@ -14,6 +14,7 @@ pub struct TieBreaker(pub u64);
 pub(crate) const TIE_BREAKER_SIZE: usize = 8; // 64 bit
 
 impl TieBreaker {
+    #[tracing::instrument(level = "debug", skip(self, m, t))]
     /// Adds Tiebreaker value to m as t attribute.
     pub fn add_to_as(self, m: &mut Message, t: AttrType) -> Result<(), stun::Error> {
         let mut v = vec![0; TIE_BREAKER_SIZE];
@@ -22,6 +23,7 @@ impl TieBreaker {
         Ok(())
     }
 
+    #[tracing::instrument(level = "debug", skip(self, m, t))]
     /// Decodes Tiebreaker value in message getting it as for t type.
     pub fn get_from_as(&mut self, m: &Message, t: AttrType) -> Result<(), stun::Error> {
         let v = m.get(t)?;
@@ -35,6 +37,7 @@ impl TieBreaker {
 pub struct AttrControlled(pub u64);
 
 impl Setter for AttrControlled {
+    #[tracing::instrument(level = "debug", skip(self, m))]
     /// Adds ICE-CONTROLLED to message.
     fn add_to(&self, m: &mut Message) -> Result<(), stun::Error> {
         TieBreaker(self.0).add_to_as(m, ATTR_ICE_CONTROLLED)
@@ -42,6 +45,7 @@ impl Setter for AttrControlled {
 }
 
 impl Getter for AttrControlled {
+    #[tracing::instrument(level = "debug", skip(self, m))]
     /// Decodes ICE-CONTROLLED from message.
     fn get_from(&mut self, m: &Message) -> Result<(), stun::Error> {
         let mut t = TieBreaker::default();
@@ -57,6 +61,7 @@ pub struct AttrControlling(pub u64);
 
 impl Setter for AttrControlling {
     // add_to adds ICE-CONTROLLING to message.
+    #[tracing::instrument(level = "debug", skip(self, m))]
     fn add_to(&self, m: &mut Message) -> Result<(), stun::Error> {
         TieBreaker(self.0).add_to_as(m, ATTR_ICE_CONTROLLING)
     }
@@ -64,6 +69,7 @@ impl Setter for AttrControlling {
 
 impl Getter for AttrControlling {
     // get_from decodes ICE-CONTROLLING from message.
+    #[tracing::instrument(level = "debug", skip(self, m))]
     fn get_from(&mut self, m: &Message) -> Result<(), stun::Error> {
         let mut t = TieBreaker::default();
         t.get_from_as(m, ATTR_ICE_CONTROLLING)?;
@@ -81,6 +87,7 @@ pub struct AttrControl {
 
 impl Setter for AttrControl {
     // add_to adds ICE-CONTROLLED or ICE-CONTROLLING attribute depending on Role.
+    #[tracing::instrument(level = "debug", skip(self, m))]
     fn add_to(&self, m: &mut Message) -> Result<(), stun::Error> {
         if self.role == Role::Controlling {
             self.tie_breaker.add_to_as(m, ATTR_ICE_CONTROLLING)
@@ -92,6 +99,7 @@ impl Setter for AttrControl {
 
 impl Getter for AttrControl {
     // get_from decodes Role and Tiebreaker value from message.
+    #[tracing::instrument(level = "debug", skip(self, m))]
     fn get_from(&mut self, m: &Message) -> Result<(), stun::Error> {
         if m.contains(ATTR_ICE_CONTROLLING) {
             self.role = Role::Controlling;
@@ -117,6 +125,7 @@ pub enum Role {
 }
 
 impl From<&str> for Role {
+    #[tracing::instrument(level = "debug", skip(raw))]
     fn from(raw: &str) -> Self {
         match raw {
             "controlling" => Self::Controlling,
@@ -127,6 +136,7 @@ impl From<&str> for Role {
 }
 
 impl fmt::Display for Role {
+    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let s = match *self {
             Self::Controlling => "controlling",

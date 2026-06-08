@@ -23,10 +23,12 @@ pub struct HandshakeMessageServerKeyExchange {
 }
 
 impl HandshakeMessageServerKeyExchange {
+    #[tracing::instrument(level = "debug", skip(self))]
     pub fn handshake_type(&self) -> HandshakeType {
         HandshakeType::ServerKeyExchange
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     pub fn size(&self) -> usize {
         if !self.identity_hint.is_empty() {
             2 + self.identity_hint.len()
@@ -35,6 +37,7 @@ impl HandshakeMessageServerKeyExchange {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self, writer))]
     pub fn marshal<W: Write>(&self, writer: &mut W) -> Result<()> {
         if !self.identity_hint.is_empty() {
             writer.write_u16::<BigEndian>(self.identity_hint.len() as u16)?;
@@ -57,6 +60,7 @@ impl HandshakeMessageServerKeyExchange {
         Ok(writer.flush()?)
     }
 
+    #[tracing::instrument(level = "debug", skip(reader))]
     pub fn unmarshal<R: Read>(reader: &mut R) -> Result<Self> {
         let mut data = vec![];
         reader.read_to_end(&mut data)?;

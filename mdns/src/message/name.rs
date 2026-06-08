@@ -14,12 +14,14 @@ pub struct Name {
 
 // String implements fmt.Stringer.String.
 impl fmt::Display for Name {
+    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.data)
     }
 }
 
 impl Name {
+    #[tracing::instrument(level = "debug", skip(data))]
     pub fn new(data: &str) -> Result<Self> {
         if data.len() > NAME_LEN {
             Err(Error::ErrCalcLen)
@@ -37,6 +39,7 @@ impl Name {
     //
     // The compression map will be updated with new domain suffixes. If compression
     // is nil, compression will not be used.
+    #[tracing::instrument(level = "debug", skip(self, msg, compression, compression_off))]
     pub fn pack(
         &self,
         mut msg: Vec<u8>,
@@ -108,10 +111,12 @@ impl Name {
     }
 
     // unpack unpacks a domain name.
+    #[tracing::instrument(level = "debug", skip(self, msg, off))]
     pub fn unpack(&mut self, msg: &[u8], off: usize) -> Result<usize> {
         self.unpack_compressed(msg, off, true /* allowCompression */)
     }
 
+    #[tracing::instrument(level = "debug", skip(self, msg, off, allow_compression))]
     pub fn unpack_compressed(
         &mut self,
         msg: &[u8],
@@ -192,6 +197,7 @@ impl Name {
         Ok(new_off)
     }
 
+    #[tracing::instrument(level = "debug", skip(msg, off))]
     pub(crate) fn skip(msg: &[u8], off: usize) -> Result<usize> {
         // new_off is the offset where the next record will start. Pointers lead
         // to data that belongs to other names and thus doesn't count towards to

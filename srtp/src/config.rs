@@ -35,6 +35,7 @@ pub struct Config {
 }
 
 impl Config {
+    #[tracing::instrument(level = "debug", skip(self, exporter, is_client))]
     /// ExtractSessionKeysFromDTLS allows setting the Config SessionKeys by
     /// extracting them from DTLS. This behavior is defined in RFC5764:
     /// <https://tools.ietf.org/html/rfc5764>

@@ -30,6 +30,7 @@ pub struct Obu {
 }
 
 impl Obu {
+    #[tracing::instrument(level = "debug", skip(self))]
     pub fn header_size(&self) -> usize {
         if obu_has_extension(self.header) {
             2
@@ -39,6 +40,7 @@ impl Obu {
     }
 }
 
+#[tracing::instrument(level = "debug", skip(payload))]
 /// Parses the payload into series of OBUs.
 /// Reference: https://aomediacodec.github.io/av1-spec/#obu-syntax
 pub fn parse_obus(payload: &Bytes) -> Result<Vec<Obu>> {
@@ -95,18 +97,22 @@ pub fn parse_obus(payload: &Bytes) -> Result<Vec<Obu>> {
     Ok(obus)
 }
 
+#[tracing::instrument(level = "debug", skip(header))]
 pub fn obu_has_extension(header: u8) -> bool {
     header & OBU_HAS_EXTENSION_BIT != 0
 }
 
+#[tracing::instrument(level = "debug", skip(header))]
 pub fn obu_has_size(header: u8) -> bool {
     header & OBU_HAS_SIZE_BIT != 0
 }
 
+#[tracing::instrument(level = "debug", skip(header))]
 pub fn obu_type(header: u8) -> u8 {
     (header & OBU_TYPE_MASK) >> 3
 }
 
+#[tracing::instrument(level = "debug", skip(obu_type))]
 fn should_ignore_obu_type(obu_type: u8) -> bool {
     obu_type == OBU_TYPE_TEMPORAL_DELIMITER
         || obu_type == OBU_TYPE_TILE_LIST

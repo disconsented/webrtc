@@ -23,6 +23,7 @@ pub struct SenderBuilder {
 }
 
 impl SenderBuilder {
+    #[tracing::instrument(level = "debug", skip(self, init_sequence_nr))]
     /// with_init_sequence_nr sets the init sequence number of the interceptor.
     pub fn with_init_sequence_nr(mut self, init_sequence_nr: u32) -> SenderBuilder {
         self.init_sequence_nr = init_sequence_nr;
@@ -31,6 +32,7 @@ impl SenderBuilder {
 }
 
 impl InterceptorBuilder for SenderBuilder {
+    #[tracing::instrument(level = "debug", skip(self, _id))]
     /// build constructs a new SenderInterceptor
     fn build(&self, _id: &str) -> Result<Arc<dyn Interceptor + Send + Sync>> {
         Ok(Arc::new(Sender {
@@ -47,6 +49,7 @@ pub struct Sender {
 }
 
 impl Sender {
+    #[tracing::instrument(level = "debug", skip())]
     /// builder returns a new SenderBuilder.
     pub fn builder() -> SenderBuilder {
         SenderBuilder::default()
@@ -55,6 +58,7 @@ impl Sender {
 
 #[async_trait]
 impl Interceptor for Sender {
+    #[tracing::instrument(level = "debug", skip(self, reader))]
     /// bind_rtcp_reader lets you modify any incoming RTCP packets. It is called once per sender/receiver, however this might
     /// change in the future. The returned method will be called once per packet batch.
     async fn bind_rtcp_reader(
@@ -64,6 +68,7 @@ impl Interceptor for Sender {
         reader
     }
 
+    #[tracing::instrument(level = "debug", skip(self, writer))]
     /// bind_rtcp_writer lets you modify any outgoing RTCP packets. It is called once per PeerConnection. The returned method
     /// will be called once per packet batch.
     async fn bind_rtcp_writer(
@@ -73,6 +78,7 @@ impl Interceptor for Sender {
         writer
     }
 
+    #[tracing::instrument(level = "debug", skip(self, info, writer))]
     /// bind_local_stream returns a writer that adds a rtp TransportCCExtension
     /// header with increasing sequence numbers to each outgoing packet.
     async fn bind_local_stream(
@@ -106,12 +112,14 @@ impl Interceptor for Sender {
         stream
     }
 
+    #[tracing::instrument(level = "debug", skip(self, info))]
     /// unbind_local_stream is called when the Stream is removed. It can be used to clean up any data related to that track.
     async fn unbind_local_stream(&self, info: &StreamInfo) {
         let mut streams = self.streams.lock().await;
         streams.remove(&info.ssrc);
     }
 
+    #[tracing::instrument(level = "debug", skip(self, _info, reader))]
     /// bind_remote_stream lets you modify any incoming RTP packets. It is called once for per RemoteStream. The returned method
     /// will be called once per rtp packet.
     async fn bind_remote_stream(
@@ -122,9 +130,11 @@ impl Interceptor for Sender {
         reader
     }
 
+    #[tracing::instrument(level = "debug", skip(self, _info))]
     /// unbind_remote_stream is called when the Stream is removed. It can be used to clean up any data related to that track.
     async fn unbind_remote_stream(&self, _info: &StreamInfo) {}
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// close closes the Interceptor, cleaning up any data if necessary.
     async fn close(&self) -> Result<()> {
         Ok(())

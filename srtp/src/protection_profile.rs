@@ -12,6 +12,7 @@ pub enum ProtectionProfile {
 }
 
 impl ProtectionProfile {
+    #[tracing::instrument(level = "debug", skip(self))]
     pub fn key_len(&self) -> usize {
         match *self {
             ProtectionProfile::Aes128CmHmacSha1_32
@@ -22,6 +23,7 @@ impl ProtectionProfile {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     pub fn salt_len(&self) -> usize {
         match *self {
             ProtectionProfile::Aes128CmHmacSha1_32
@@ -32,6 +34,7 @@ impl ProtectionProfile {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     pub fn rtp_auth_tag_len(&self) -> usize {
         match *self {
             ProtectionProfile::Aes128CmHmacSha1_80 | ProtectionProfile::Aes256CmHmacSha1_80 => 10,
@@ -40,6 +43,7 @@ impl ProtectionProfile {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     pub fn rtcp_auth_tag_len(&self) -> usize {
         match *self {
             ProtectionProfile::Aes128CmHmacSha1_80
@@ -50,6 +54,7 @@ impl ProtectionProfile {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     pub fn aead_auth_tag_len(&self) -> usize {
         match *self {
             ProtectionProfile::Aes128CmHmacSha1_80
@@ -60,6 +65,7 @@ impl ProtectionProfile {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     pub fn auth_key_len(&self) -> usize {
         match *self {
             ProtectionProfile::Aes128CmHmacSha1_80

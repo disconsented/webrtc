@@ -5,11 +5,13 @@ use std::{ops, sync};
 pub struct Mutex<T>(sync::Mutex<T>);
 
 impl<T> Mutex<T> {
+    #[tracing::instrument(level = "debug", skip(value))]
     /// Creates a new mutex in an unlocked state ready for use.
     pub fn new(value: T) -> Self {
         Self(sync::Mutex::new(value))
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// Acquires a mutex, blocking the current thread until it is able to do so.
     pub fn lock(&self) -> MutexGuard<'_, T> {
         let guard = self.0.lock().unwrap();
@@ -17,6 +19,7 @@ impl<T> Mutex<T> {
         MutexGuard(guard)
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// Consumes this mutex, returning the underlying data.
     pub fn into_inner(self) -> T {
         self.0.into_inner().unwrap()
@@ -30,12 +33,14 @@ pub struct MutexGuard<'a, T>(sync::MutexGuard<'a, T>);
 impl<T> ops::Deref for MutexGuard<'_, T> {
     type Target = T;
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn deref(&self) -> &Self::Target {
         &self.0
     }
 }
 
 impl<T> ops::DerefMut for MutexGuard<'_, T> {
+    #[tracing::instrument(level = "debug", skip(self))]
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.0
     }
@@ -46,11 +51,13 @@ impl<T> ops::DerefMut for MutexGuard<'_, T> {
 pub struct RwLock<T>(sync::RwLock<T>);
 
 impl<T> RwLock<T> {
+    #[tracing::instrument(level = "debug", skip(value))]
     /// Creates a new mutex in an unlocked state ready for use.
     pub fn new(value: T) -> Self {
         Self(sync::RwLock::new(value))
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// Locks this rwlock with shared read access, blocking the current thread
     /// until it can be acquired.
     pub fn read(&self) -> RwLockReadGuard<'_, T> {
@@ -59,6 +66,7 @@ impl<T> RwLock<T> {
         RwLockReadGuard(guard)
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// Locks this rwlock with exclusive write access, blocking the current
     /// thread until it can be acquired.
     pub fn write(&self) -> RwLockWriteGuard<'_, T> {
@@ -75,6 +83,7 @@ pub struct RwLockReadGuard<'a, T>(sync::RwLockReadGuard<'a, T>);
 impl<T> ops::Deref for RwLockReadGuard<'_, T> {
     type Target = T;
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn deref(&self) -> &Self::Target {
         &self.0
     }
@@ -87,12 +96,14 @@ pub struct RwLockWriteGuard<'a, T>(sync::RwLockWriteGuard<'a, T>);
 impl<T> ops::Deref for RwLockWriteGuard<'_, T> {
     type Target = T;
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn deref(&self) -> &Self::Target {
         &self.0
     }
 }
 
 impl<T> ops::DerefMut for RwLockWriteGuard<'_, T> {
+    #[tracing::instrument(level = "debug", skip(self))]
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.0
     }

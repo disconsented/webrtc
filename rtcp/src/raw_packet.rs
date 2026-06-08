@@ -15,40 +15,48 @@ use crate::util::*;
 pub struct RawPacket(pub Bytes);
 
 impl fmt::Display for RawPacket {
+    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "RawPacket: {self:?}")
     }
 }
 
 impl Packet for RawPacket {
+    #[tracing::instrument(level = "debug", skip(self))]
     /// Header returns the Header associated with this packet.
     fn header(&self) -> Header {
         Header::unmarshal(&mut self.0.clone()).unwrap_or_default()
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// destination_ssrc returns an array of SSRC values that this packet refers to.
     fn destination_ssrc(&self) -> Vec<u32> {
         vec![]
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn raw_size(&self) -> usize {
         self.0.len()
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn as_any(&self) -> &(dyn Any + Send + Sync) {
         self
     }
 
+    #[tracing::instrument(level = "debug", skip(self, other))]
     fn equal(&self, other: &(dyn Packet + Send + Sync)) -> bool {
         other.as_any().downcast_ref::<RawPacket>() == Some(self)
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn cloned(&self) -> Box<dyn Packet + Send + Sync> {
         Box::new(self.clone())
     }
 }
 
 impl MarshalSize for RawPacket {
+    #[tracing::instrument(level = "debug", skip(self))]
     fn marshal_size(&self) -> usize {
         let l = self.raw_size();
         // align to 32-bit boundary
@@ -57,6 +65,7 @@ impl MarshalSize for RawPacket {
 }
 
 impl Marshal for RawPacket {
+    #[tracing::instrument(level = "debug", skip(self, buf))]
     /// Marshal encodes the packet in binary.
     fn marshal_to(&self, mut buf: &mut [u8]) -> Result<usize, util::Error> {
         let h = Header::unmarshal(&mut self.0.clone())?;
@@ -69,6 +78,7 @@ impl Marshal for RawPacket {
 }
 
 impl Unmarshal for RawPacket {
+    #[tracing::instrument(level = "debug", skip(raw_packet))]
     /// Unmarshal decodes the packet from binary.
     fn unmarshal<B>(raw_packet: &mut B) -> Result<Self, util::Error>
     where

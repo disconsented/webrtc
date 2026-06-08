@@ -21,6 +21,7 @@ pub(crate) struct AckTimer<T: 'static + AckTimerObserver + Send> {
 }
 
 impl<T: 'static + AckTimerObserver + Send> AckTimer<T> {
+    #[tracing::instrument(level = "debug", skip(timeout_observer, interval))]
     /// newAckTimer creates a new acknowledgement timer used to enable delayed ack.
     pub(crate) fn new(timeout_observer: Weak<Mutex<T>>, interval: Duration) -> Self {
         AckTimer {
@@ -30,6 +31,7 @@ impl<T: 'static + AckTimerObserver + Send> AckTimer<T> {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// start starts the timer.
     pub(crate) fn start(&mut self) -> bool {
         // this timer is already closed
@@ -60,12 +62,14 @@ impl<T: 'static + AckTimerObserver + Send> AckTimer<T> {
         true
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// stops the timer. this is similar to stop() but subsequent start() call
     /// will fail (the timer is no longer usable)
     pub(crate) fn stop(&mut self) {
         self.close_tx.take();
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// isRunning tests if the timer is running.
     /// Debug purpose only
     pub(crate) fn is_running(&self) -> bool {

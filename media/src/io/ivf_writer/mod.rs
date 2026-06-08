@@ -21,6 +21,7 @@ pub struct IVFWriter<W: Write + Seek> {
 }
 
 impl<W: Write + Seek> IVFWriter<W> {
+    #[tracing::instrument(level = "debug", skip(writer, header))]
     /// new initialize a new IVF writer with an io.Writer output
     pub fn new(writer: W, header: &IVFFileHeader) -> Result<Self> {
         let mut w = IVFWriter {
@@ -36,6 +37,7 @@ impl<W: Write + Seek> IVFWriter<W> {
         Ok(w)
     }
 
+    #[tracing::instrument(level = "debug", skip(self, header))]
     fn write_header(&mut self, header: &IVFFileHeader) -> Result<()> {
         self.writer.write_all(&header.signature)?; // DKIF
         self.writer.write_u16::<LittleEndian>(header.version)?; // version
@@ -55,6 +57,7 @@ impl<W: Write + Seek> IVFWriter<W> {
 }
 
 impl<W: Write + Seek> Writer for IVFWriter<W> {
+    #[tracing::instrument(level = "debug", skip(self, packet))]
     /// write_rtp adds a new packet and writes the appropriate headers for it
     fn write_rtp(&mut self, packet: &rtp::packet::Packet) -> Result<()> {
         if packet.payload.is_empty() {
@@ -114,6 +117,7 @@ impl<W: Write + Seek> Writer for IVFWriter<W> {
         Ok(())
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// close stops the recording
     fn close(&mut self) -> Result<()> {
         // Update the frame count

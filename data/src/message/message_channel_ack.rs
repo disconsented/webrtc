@@ -17,18 +17,21 @@ type Result<T> = std::result::Result<T, util::Error>;
 pub struct DataChannelAck;
 
 impl MarshalSize for DataChannelAck {
+    #[tracing::instrument(level = "debug", skip(self))]
     fn marshal_size(&self) -> usize {
         0
     }
 }
 
 impl Marshal for DataChannelAck {
+    #[tracing::instrument(level = "debug", skip(self, _buf))]
     fn marshal_to(&self, _buf: &mut [u8]) -> Result<usize> {
         Ok(0)
     }
 }
 
 impl Unmarshal for DataChannelAck {
+    #[tracing::instrument(level = "debug", skip(_buf))]
     fn unmarshal<B>(_buf: &mut B) -> Result<Self>
     where
         Self: Sized,

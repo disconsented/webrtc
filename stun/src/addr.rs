@@ -25,6 +25,7 @@ pub struct MappedAddress {
 }
 
 impl fmt::Display for MappedAddress {
+    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self.ip {
             IpAddr::V4(ipv4) => write!(f, "{}:{}", ipv4, self.port),
@@ -34,6 +35,7 @@ impl fmt::Display for MappedAddress {
 }
 
 impl Default for MappedAddress {
+    #[tracing::instrument(level = "debug", skip())]
     fn default() -> Self {
         MappedAddress {
             ip: IpAddr::V4(Ipv4Addr::from(0)),
@@ -43,6 +45,7 @@ impl Default for MappedAddress {
 }
 
 impl Setter for MappedAddress {
+    #[tracing::instrument(level = "debug", skip(self, m))]
     /// add_to adds MAPPED-ADDRESS to message.
     fn add_to(&self, m: &mut Message) -> Result<()> {
         self.add_to_as(m, ATTR_MAPPED_ADDRESS)
@@ -50,6 +53,7 @@ impl Setter for MappedAddress {
 }
 
 impl Getter for MappedAddress {
+    #[tracing::instrument(level = "debug", skip(self, m))]
     /// get_from decodes MAPPED-ADDRESS from message.
     fn get_from(&mut self, m: &Message) -> Result<()> {
         self.get_from_as(m, ATTR_MAPPED_ADDRESS)
@@ -57,6 +61,7 @@ impl Getter for MappedAddress {
 }
 
 impl MappedAddress {
+    #[tracing::instrument(level = "debug", skip(self, m, t))]
     /// get_from_as decodes MAPPED-ADDRESS value in message m as an attribute of type t.
     pub fn get_from_as(&mut self, m: &Message, t: AttrType) -> Result<()> {
         let v = m.get(t)?;
@@ -85,6 +90,7 @@ impl MappedAddress {
         Ok(())
     }
 
+    #[tracing::instrument(level = "debug", skip(self, m, t))]
     /// add_to_as adds MAPPED-ADDRESS value to m as t attribute.
     pub fn add_to_as(&self, m: &mut Message, t: AttrType) -> Result<()> {
         let family = match self.ip {

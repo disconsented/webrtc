@@ -6,6 +6,7 @@ use super::*;
 type Result<T> = std::result::Result<T, util::Error>;
 
 impl From<Error> for util::Error {
+    #[tracing::instrument(level = "debug", skip(e))]
     fn from(e: Error) -> Self {
         util::Error::from_std(e)
     }
@@ -15,43 +16,53 @@ struct DumbConn;
 
 #[async_trait]
 impl Conn for DumbConn {
+    #[tracing::instrument(level = "debug", skip(self, _addr))]
     async fn connect(&self, _addr: SocketAddr) -> Result<()> {
         Err(io::Error::other("Not applicable").into())
     }
 
+    #[tracing::instrument(level = "debug", skip(self, _b))]
     async fn recv(&self, _b: &mut [u8]) -> Result<usize> {
         Ok(0)
     }
 
+    #[tracing::instrument(level = "debug", skip(self, _buf))]
     async fn recv_from(&self, _buf: &mut [u8]) -> Result<(usize, SocketAddr)> {
         Err(io::Error::other("Not applicable").into())
     }
 
+    #[tracing::instrument(level = "debug", skip(self, _b))]
     async fn send(&self, _b: &[u8]) -> Result<usize> {
         Ok(0)
     }
 
+    #[tracing::instrument(level = "debug", skip(self, _buf, _target))]
     async fn send_to(&self, _buf: &[u8], _target: SocketAddr) -> Result<usize> {
         Err(io::Error::other("Not applicable").into())
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn local_addr(&self) -> Result<SocketAddr> {
         Err(io::Error::new(io::ErrorKind::AddrNotAvailable, "Addr Not Available").into())
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn remote_addr(&self) -> Option<SocketAddr> {
         None
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     async fn close(&self) -> Result<()> {
         Ok(())
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn as_any(&self) -> &(dyn std::any::Any + Send + Sync) {
         self
     }
 }
 
+#[tracing::instrument(level = "debug", skip(config))]
 fn create_association_internal(config: Config) -> AssociationInternal {
     let (close_loop_ch_tx, _close_loop_ch_rx) = broadcast::channel(1);
     let (accept_ch_tx, _accept_ch_rx) = mpsc::channel(1);
@@ -406,6 +417,7 @@ async fn test_assoc_create_new_stream() -> Result<()> {
     Ok(())
 }
 
+#[tracing::instrument(level = "debug", skip(name, initial_state, expect_err))]
 async fn handle_init_test(name: &str, initial_state: AssociationState, expect_err: bool) {
     let mut a = create_association_internal(Config {
         net_conn: Arc::new(DumbConn {}),

@@ -9,6 +9,7 @@ use super::conn_udp_listener::*;
 use super::*;
 use crate::error::{Error, Result};
 
+#[tracing::instrument(level = "debug", skip())]
 async fn pipe() -> Result<(
     Arc<dyn Listener + Send + Sync>,
     Arc<dyn Conn + Send + Sync>,

@@ -15,6 +15,7 @@ struct DummyNic {
 }
 
 impl Default for DummyNic {
+    #[tracing::instrument(level = "debug", skip())]
     fn default() -> Self {
         DummyNic {
             net: Net::Ifs(vec![]),
@@ -29,22 +30,26 @@ impl Default for DummyNic {
 
 #[async_trait]
 impl Nic for DummyNic {
+    #[tracing::instrument(level = "debug", skip(self, ifc_name))]
     async fn get_interface(&self, ifc_name: &str) -> Option<Interface> {
         self.net.get_interface(ifc_name).await
     }
 
+    #[tracing::instrument(level = "debug", skip(self, ifc_name, addrs))]
     async fn add_addrs_to_interface(&mut self, ifc_name: &str, addrs: &[IpNet]) -> Result<()> {
         let nic = self.net.get_nic()?;
         let mut net = nic.lock().await;
         net.add_addrs_to_interface(ifc_name, addrs).await
     }
 
+    #[tracing::instrument(level = "debug", skip(self, r))]
     async fn set_router(&self, r: Arc<Mutex<Router>>) -> Result<()> {
         let nic = self.net.get_nic()?;
         let net = nic.lock().await;
         net.set_router(r).await
     }
 
+    #[tracing::instrument(level = "debug", skip(self, c))]
     async fn on_inbound_chunk(&self, c: Box<dyn Chunk + Send + Sync>) {
         log::debug!("received: {c}");
         match self.on_inbound_chunk_handler {
@@ -93,6 +98,7 @@ impl Nic for DummyNic {
         };
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     async fn get_static_ips(&self) -> Vec<IpAddr> {
         let nic = match self.net.get_nic() {
             Ok(nic) => nic,
@@ -103,6 +109,7 @@ impl Nic for DummyNic {
     }
 }
 
+#[tracing::instrument(level = "debug", skip(nic))]
 async fn get_ipaddr(nic: &Arc<Mutex<dyn Nic + Send + Sync>>) -> Result<IpAddr> {
     let n = nic.lock().await;
     let eth0 = n.get_interface("eth0").await.ok_or(Error::ErrNoInterface)?;
@@ -365,6 +372,7 @@ async fn test_router_standalone_add_chunk_filter() -> Result<()> {
     Ok(())
 }
 
+#[tracing::instrument(level = "debug", skip(title, min_delay, max_jitter))]
 async fn delay_sub_test(title: String, min_delay: Duration, max_jitter: Duration) -> Result<()> {
     let wan = Arc::new(Mutex::new(Router::new(RouterConfig {
         cidr: "1.2.3.0/24".to_string(),

@@ -15,6 +15,7 @@ use webrtc_sctp::Error;
 
 // RUST_LOG=trace cargo run --color=always --package webrtc-sctp --example pong -- --host 0.0.0.0:5678
 
+#[tracing::instrument(level = "debug", skip())]
 #[tokio::main]
 async fn main() -> Result<(), Error> {
     /*env_logger::Builder::new()

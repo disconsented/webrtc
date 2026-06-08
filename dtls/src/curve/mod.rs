@@ -8,6 +8,7 @@ pub enum EllipticCurveType {
 }
 
 impl From<u8> for EllipticCurveType {
+    #[tracing::instrument(level = "debug", skip(val))]
     fn from(val: u8) -> Self {
         match val {
             0x03 => EllipticCurveType::NamedCurve,

@@ -11,6 +11,7 @@ pub enum Deinterleaved {}
 impl Sealed for Deinterleaved {}
 
 impl BufferLayout for Deinterleaved {
+    #[tracing::instrument(level = "debug", skip(info, channel, frame))]
     #[inline]
     fn index_of(info: &BufferInfo<Self>, channel: usize, frame: usize) -> usize {
         (channel * info.frames()) + frame
@@ -23,12 +24,14 @@ pub enum Interleaved {}
 impl Sealed for Interleaved {}
 
 impl BufferLayout for Interleaved {
+    #[tracing::instrument(level = "debug", skip(info, channel, frame))]
     #[inline]
     fn index_of(info: &BufferInfo<Self>, channel: usize, frame: usize) -> usize {
         (frame * info.channels()) + channel
     }
 }
 
+#[tracing::instrument(level = "debug", skip(input, output, channels))]
 #[cfg(test)]
 #[inline(always)]
 pub(crate) fn deinterleaved<T>(input: &[T], output: &mut [T], channels: usize)
@@ -38,6 +41,7 @@ where
     deinterleaved_by(input, output, channels, |sample| *sample)
 }
 
+#[tracing::instrument(level = "debug", skip(input, output, channels, f))]
 /// De-interleaves an interleaved slice using a memory access pattern
 /// that's optimized for efficient cached (i.e. sequential) reads.
 pub(crate) fn deinterleaved_by<T, U, F>(input: &[T], output: &mut [U], channels: usize, f: F)
@@ -59,6 +63,7 @@ where
     }
 }
 
+#[tracing::instrument(level = "debug", skip(input, output, channels))]
 #[cfg(test)]
 #[inline(always)]
 pub(crate) fn interleaved<T>(input: &[T], output: &mut [T], channels: usize)
@@ -68,6 +73,7 @@ where
     interleaved_by(input, output, channels, |sample| *sample)
 }
 
+#[tracing::instrument(level = "debug", skip(input, output, channels, f))]
 /// Interleaves an de-interleaved slice using a memory access pattern
 /// that's optimized for efficient cached (i.e. sequential) reads.
 pub(crate) fn interleaved_by<T, U, F>(input: &[T], output: &mut [U], channels: usize, f: F)

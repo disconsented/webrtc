@@ -19,6 +19,7 @@ use crate::*;
 pub(crate) struct Flight0;
 
 impl fmt::Display for Flight0 {
+    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "Flight 0")
     }
@@ -26,6 +27,7 @@ impl fmt::Display for Flight0 {
 
 #[async_trait]
 impl Flight for Flight0 {
+    #[tracing::instrument(level = "debug", skip(self, _tx, state, cache, cfg))]
     async fn parse(
         &self,
         _tx: &mut mpsc::Sender<mpsc::Sender<()>>,
@@ -186,6 +188,7 @@ impl Flight for Flight0 {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self, state, _cache, _cfg))]
     async fn generate(
         &self,
         state: &mut State,

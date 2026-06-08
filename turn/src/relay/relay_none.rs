@@ -13,6 +13,7 @@ pub struct RelayAddressGeneratorNone {
 
 #[async_trait]
 impl RelayAddressGenerator for RelayAddressGeneratorNone {
+    #[tracing::instrument(level = "debug", skip(self))]
     fn validate(&self) -> Result<()> {
         if self.address.is_empty() {
             Err(Error::ErrListeningAddressInvalid)
@@ -21,6 +22,7 @@ impl RelayAddressGenerator for RelayAddressGeneratorNone {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self, use_ipv4, requested_port))]
     async fn allocate_conn(
         &self,
         use_ipv4: bool,

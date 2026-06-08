@@ -15,6 +15,7 @@ pub trait AuthHandler {
     fn auth_handle(&self, username: &str, realm: &str, src_addr: SocketAddr) -> Result<Vec<u8>>;
 }
 
+#[tracing::instrument(level = "debug", skip(shared_secret, duration))]
 /// `generate_long_term_credentials()` can be used to create credentials valid for `duration` time/
 pub fn generate_long_term_credentials(
     shared_secret: &str,
@@ -26,6 +27,7 @@ pub fn generate_long_term_credentials(
     Ok((username, password))
 }
 
+#[tracing::instrument(level = "debug", skip(username, shared_secret))]
 fn long_term_credentials(username: &str, shared_secret: &str) -> String {
     let mac = hmac::Key::new(
         hmac::HMAC_SHA1_FOR_LEGACY_USE_ONLY,
@@ -35,6 +37,7 @@ fn long_term_credentials(username: &str, shared_secret: &str) -> String {
     BASE64_STANDARD.encode(password)
 }
 
+#[tracing::instrument(level = "debug", skip(username, realm, password))]
 /// A convenience function to easily generate keys in the format used by [`AuthHandler`].
 pub fn generate_auth_key(username: &str, realm: &str, password: &str) -> Vec<u8> {
     let s = format!("{username}:{realm}:{password}");
@@ -49,6 +52,7 @@ pub struct LongTermAuthHandler {
 }
 
 impl AuthHandler for LongTermAuthHandler {
+    #[tracing::instrument(level = "debug", skip(self, username, realm, src_addr))]
     fn auth_handle(&self, username: &str, realm: &str, src_addr: SocketAddr) -> Result<Vec<u8>> {
         log::trace!("Authentication username={username} realm={realm} src_addr={src_addr}");
 
@@ -65,6 +69,7 @@ impl AuthHandler for LongTermAuthHandler {
 }
 
 impl LongTermAuthHandler {
+    #[tracing::instrument(level = "debug", skip(shared_secret))]
     /// https://tools.ietf.org/search/rfc5389#section-10.2
     pub fn new(shared_secret: String) -> Self {
         LongTermAuthHandler { shared_secret }

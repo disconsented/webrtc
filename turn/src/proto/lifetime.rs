@@ -26,6 +26,7 @@ pub const DEFAULT_LIFETIME: Duration = Duration::from_secs(10 * 60);
 pub struct Lifetime(pub Duration);
 
 impl fmt::Display for Lifetime {
+    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}s", self.0.as_secs())
     }
@@ -35,6 +36,7 @@ impl fmt::Display for Lifetime {
 const LIFETIME_SIZE: usize = 4; // 4 bytes, 32 bits
 
 impl Setter for Lifetime {
+    #[tracing::instrument(level = "debug", skip(self, m))]
     /// Adds `LIFETIME` to message.
     fn add_to(&self, m: &mut Message) -> Result<(), stun::Error> {
         let mut v = vec![0; LIFETIME_SIZE];
@@ -45,6 +47,7 @@ impl Setter for Lifetime {
 }
 
 impl Getter for Lifetime {
+    #[tracing::instrument(level = "debug", skip(self, m))]
     /// Decodes `LIFETIME` from message.
     fn get_from(&mut self, m: &Message) -> Result<(), stun::Error> {
         let v = m.get(ATTR_LIFETIME)?;

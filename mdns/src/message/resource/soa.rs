@@ -20,6 +20,7 @@ pub struct SoaResource {
 }
 
 impl fmt::Display for SoaResource {
+    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
@@ -36,11 +37,13 @@ impl fmt::Display for SoaResource {
 }
 
 impl ResourceBody for SoaResource {
+    #[tracing::instrument(level = "debug", skip(self))]
     fn real_type(&self) -> DnsType {
         DnsType::Soa
     }
 
     // pack appends the wire format of the SOAResource to msg.
+    #[tracing::instrument(level = "debug", skip(self, msg, compression, compression_off))]
     fn pack(
         &self,
         mut msg: Vec<u8>,
@@ -56,6 +59,7 @@ impl ResourceBody for SoaResource {
         Ok(pack_uint32(msg, self.min_ttl))
     }
 
+    #[tracing::instrument(level = "debug", skip(self, msg, off, _length))]
     fn unpack(&mut self, msg: &[u8], mut off: usize, _length: usize) -> Result<usize> {
         off = self.ns.unpack(msg, off)?;
         off = self.mbox.unpack(msg, off)?;

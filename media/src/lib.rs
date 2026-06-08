@@ -69,6 +69,7 @@ pub struct Sample {
 }
 
 impl Default for Sample {
+    #[tracing::instrument(level = "debug", skip())]
     fn default() -> Self {
         Sample {
             data: Bytes::new(),
@@ -82,6 +83,7 @@ impl Default for Sample {
 }
 
 impl PartialEq for Sample {
+    #[tracing::instrument(level = "debug", skip(self, other))]
     fn eq(&self, other: &Self) -> bool {
         let mut equal: bool = true;
         if self.data != other.data {

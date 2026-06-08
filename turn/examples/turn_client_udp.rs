@@ -9,6 +9,7 @@ use util::Conn;
 
 // RUST_LOG=trace cargo run --color=always --package turn --example turn_client_udp -- --host 127.0.0.1 --user user=pass --ping
 
+#[tracing::instrument(level = "debug", skip())]
 #[tokio::main]
 async fn main() -> Result<(), Error> {
     env_logger::init();
@@ -115,6 +116,7 @@ async fn main() -> Result<(), Error> {
     Ok(())
 }
 
+#[tracing::instrument(level = "debug", skip(client, relay_conn))]
 async fn do_ping_test(
     client: &Client,
     relay_conn: impl Conn + std::marker::Send + std::marker::Sync + 'static,

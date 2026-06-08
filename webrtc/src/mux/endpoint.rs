@@ -19,6 +19,7 @@ pub struct Endpoint {
 }
 
 impl Endpoint {
+    #[tracing::instrument(level = "debug", skip(self))]
     /// Close unregisters the endpoint from the Mux
     pub async fn close(&self) -> Result<()> {
         self.buffer.close().await;
@@ -34,10 +35,12 @@ type Result<T> = std::result::Result<T, util::Error>;
 
 #[async_trait]
 impl Conn for Endpoint {
+    #[tracing::instrument(level = "debug", skip(self, _addr))]
     async fn connect(&self, _addr: SocketAddr) -> Result<()> {
         Err(io::Error::other("Not applicable").into())
     }
 
+    #[tracing::instrument(level = "debug", skip(self, buf))]
     /// reads a packet of len(p) bytes from the underlying conn
     /// that are matched by the associated MuxFunc
     async fn recv(&self, buf: &mut [u8]) -> Result<usize> {
@@ -46,31 +49,38 @@ impl Conn for Endpoint {
             Err(err) => Err(io::Error::other(err.to_string()).into()),
         }
     }
+    #[tracing::instrument(level = "debug", skip(self, _buf))]
     async fn recv_from(&self, _buf: &mut [u8]) -> Result<(usize, SocketAddr)> {
         Err(io::Error::other("Not applicable").into())
     }
 
+    #[tracing::instrument(level = "debug", skip(self, buf))]
     /// writes bytes to the underlying conn
     async fn send(&self, buf: &[u8]) -> Result<usize> {
         self.next_conn.send(buf).await
     }
 
+    #[tracing::instrument(level = "debug", skip(self, _buf, _target))]
     async fn send_to(&self, _buf: &[u8], _target: SocketAddr) -> Result<usize> {
         Err(io::Error::other("Not applicable").into())
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn local_addr(&self) -> Result<SocketAddr> {
         self.next_conn.local_addr()
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn remote_addr(&self) -> Option<SocketAddr> {
         self.next_conn.remote_addr()
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     async fn close(&self) -> Result<()> {
         self.next_conn.close().await
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn as_any(&self) -> &(dyn std::any::Any + Send + Sync) {
         self
     }

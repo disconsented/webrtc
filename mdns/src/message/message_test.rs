@@ -22,6 +22,7 @@ use super::resource::*;
 use super::*;
 use crate::error::*;
 
+#[tracing::instrument(level = "debug", skip())]
 fn small_test_msg() -> Result<Message> {
     let name = Name::new("example.com.")?;
     Ok(Message {
@@ -65,6 +66,7 @@ fn small_test_msg() -> Result<Message> {
     })
 }
 
+#[tracing::instrument(level = "debug", skip())]
 fn large_test_msg() -> Result<Message> {
     let name = Name::new("foo.bar.example.com.")?;
     Ok(Message {
@@ -234,6 +236,7 @@ fn large_test_msg() -> Result<Message> {
     })
 }
 
+#[tracing::instrument(level = "debug", skip(l, extrc, d))]
 fn must_edns0_resource_header(l: u16, extrc: u32, d: bool) -> Result<ResourceHeader> {
     let mut h = ResourceHeader {
         class: DNSCLASS_INET,

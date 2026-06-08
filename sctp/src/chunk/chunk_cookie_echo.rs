@@ -23,12 +23,14 @@ pub(crate) struct ChunkCookieEcho {
 
 /// makes ChunkCookieEcho printable
 impl fmt::Display for ChunkCookieEcho {
+    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.header())
     }
 }
 
 impl Chunk for ChunkCookieEcho {
+    #[tracing::instrument(level = "debug", skip(self))]
     fn header(&self) -> ChunkHeader {
         ChunkHeader {
             typ: CT_COOKIE_ECHO,
@@ -37,6 +39,7 @@ impl Chunk for ChunkCookieEcho {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(raw))]
     fn unmarshal(raw: &Bytes) -> Result<Self> {
         let header = ChunkHeader::unmarshal(raw)?;
 
@@ -48,20 +51,24 @@ impl Chunk for ChunkCookieEcho {
         Ok(ChunkCookieEcho { cookie })
     }
 
+    #[tracing::instrument(level = "debug", skip(self, buf))]
     fn marshal_to(&self, buf: &mut BytesMut) -> Result<usize> {
         self.header().marshal_to(buf)?;
         buf.extend(self.cookie.clone());
         Ok(buf.len())
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn check(&self) -> Result<()> {
         Ok(())
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn value_length(&self) -> usize {
         self.cookie.len()
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn as_any(&self) -> &(dyn Any + Send + Sync) {
         self
     }

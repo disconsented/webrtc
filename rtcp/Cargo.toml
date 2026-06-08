@@ -14,3 +14,5 @@ util = { workspace = true, default-features = false, features = ["marshal"] }
 
 bytes = "1"
 thiserror = "1"
+
+tracing.workspace = true

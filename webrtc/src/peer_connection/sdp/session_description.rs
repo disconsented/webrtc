@@ -29,6 +29,7 @@ pub struct RTCSessionDescription {
 }
 
 impl Display for RTCSessionDescription {
+    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
@@ -40,6 +41,7 @@ impl Display for RTCSessionDescription {
 }
 
 impl RTCSessionDescription {
+    #[tracing::instrument(level = "debug", skip(sdp))]
     /// Given SDP representing an answer, wrap it in an RTCSessionDescription
     /// that can be given to an RTCPeerConnection.
     pub fn answer(sdp: String) -> Result<RTCSessionDescription> {
@@ -55,6 +57,7 @@ impl RTCSessionDescription {
         Ok(desc)
     }
 
+    #[tracing::instrument(level = "debug", skip(sdp))]
     /// Given SDP representing an offer, wrap it in an RTCSessionDescription
     /// that can be given to an RTCPeerConnection.
     pub fn offer(sdp: String) -> Result<RTCSessionDescription> {
@@ -70,6 +73,7 @@ impl RTCSessionDescription {
         Ok(desc)
     }
 
+    #[tracing::instrument(level = "debug", skip(sdp))]
     /// Given SDP representing an answer, wrap it in an RTCSessionDescription
     /// that can be given to an RTCPeerConnection. `pranswer` is used when the
     /// answer may not be final, or when updating a previously sent pranswer.
@@ -86,6 +90,7 @@ impl RTCSessionDescription {
         Ok(desc)
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// Unmarshal is a helper to deserialize the sdp
     pub fn unmarshal(&self) -> Result<SessionDescription> {
         let mut reader = Cursor::new(self.sdp.as_bytes());

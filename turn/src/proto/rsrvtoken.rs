@@ -21,6 +21,7 @@ pub struct ReservationToken(pub Vec<u8>);
 const RESERVATION_TOKEN_SIZE: usize = 8; // 8 bytes
 
 impl Setter for ReservationToken {
+    #[tracing::instrument(level = "debug", skip(self, m))]
     /// Adds `RESERVATION-TOKEN` to message.
     fn add_to(&self, m: &mut Message) -> Result<(), stun::Error> {
         check_size(ATTR_RESERVATION_TOKEN, self.0.len(), RESERVATION_TOKEN_SIZE)?;
@@ -30,6 +31,7 @@ impl Setter for ReservationToken {
 }
 
 impl Getter for ReservationToken {
+    #[tracing::instrument(level = "debug", skip(self, m))]
     /// Decodes `RESERVATION-TOKEN` from message.
     fn get_from(&mut self, m: &Message) -> Result<(), stun::Error> {
         let v = m.get(ATTR_RESERVATION_TOKEN)?;

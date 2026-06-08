@@ -11,6 +11,7 @@ pub(crate) struct ParamSupportedExtensions {
 }
 
 impl fmt::Display for ParamSupportedExtensions {
+    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
@@ -26,6 +27,7 @@ impl fmt::Display for ParamSupportedExtensions {
 }
 
 impl Param for ParamSupportedExtensions {
+    #[tracing::instrument(level = "debug", skip(self))]
     fn header(&self) -> ParamHeader {
         ParamHeader {
             typ: ParamType::SupportedExt,
@@ -33,6 +35,7 @@ impl Param for ParamSupportedExtensions {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(raw))]
     fn unmarshal(raw: &Bytes) -> Result<Self> {
         let header = ParamHeader::unmarshal(raw)?;
 
@@ -47,6 +50,7 @@ impl Param for ParamSupportedExtensions {
         Ok(ParamSupportedExtensions { chunk_types })
     }
 
+    #[tracing::instrument(level = "debug", skip(self, buf))]
     fn marshal_to(&self, buf: &mut BytesMut) -> Result<usize> {
         self.header().marshal_to(buf)?;
         for ct in &self.chunk_types {
@@ -55,14 +59,17 @@ impl Param for ParamSupportedExtensions {
         Ok(buf.len())
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn value_length(&self) -> usize {
         self.chunk_types.len()
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn clone_to(&self) -> Box<dyn Param + Send + Sync> {
         Box::new(self.clone())
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn as_any(&self) -> &(dyn Any + Send + Sync) {
         self
     }

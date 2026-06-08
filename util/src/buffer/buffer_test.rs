@@ -62,6 +62,7 @@ async fn test_buffer() {
     assert_eq!(Error::ErrBufferClosed, result.unwrap_err());
 }
 
+#[tracing::instrument(level = "debug", skip(grow))]
 async fn test_wraparound(grow: bool) {
     let buffer = Buffer::new(0, 0);
     {

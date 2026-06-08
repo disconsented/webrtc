@@ -32,6 +32,7 @@ pub enum PayloadProtocolIdentifier {
 }
 
 impl fmt::Display for PayloadProtocolIdentifier {
+    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let s = match *self {
             PayloadProtocolIdentifier::Dcep => "WebRTC DCEP",
@@ -46,6 +47,7 @@ impl fmt::Display for PayloadProtocolIdentifier {
 }
 
 impl From<u32> for PayloadProtocolIdentifier {
+    #[tracing::instrument(level = "debug", skip(v))]
     fn from(v: u32) -> PayloadProtocolIdentifier {
         match v {
             50 => PayloadProtocolIdentifier::Dcep,
@@ -125,6 +127,7 @@ pub struct ChunkPayloadData {
 }
 
 impl Default for ChunkPayloadData {
+    #[tracing::instrument(level = "debug", skip())]
     fn default() -> Self {
         ChunkPayloadData {
             unordered: false,
@@ -149,12 +152,14 @@ impl Default for ChunkPayloadData {
 
 /// makes chunkPayloadData printable
 impl fmt::Display for ChunkPayloadData {
+    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}\n{}", self.header(), self.tsn)
     }
 }
 
 impl Chunk for ChunkPayloadData {
+    #[tracing::instrument(level = "debug", skip(self))]
     fn header(&self) -> ChunkHeader {
         let mut flags: u8 = 0;
         if self.ending_fragment {
@@ -177,6 +182,7 @@ impl Chunk for ChunkPayloadData {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(raw))]
     fn unmarshal(raw: &Bytes) -> Result<Self> {
         let header = ChunkHeader::unmarshal(raw)?;
 
@@ -225,6 +231,7 @@ impl Chunk for ChunkPayloadData {
         })
     }
 
+    #[tracing::instrument(level = "debug", skip(self, writer))]
     fn marshal_to(&self, writer: &mut BytesMut) -> Result<usize> {
         self.header().marshal_to(writer)?;
 
@@ -237,20 +244,24 @@ impl Chunk for ChunkPayloadData {
         Ok(writer.len())
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn check(&self) -> Result<()> {
         Ok(())
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn value_length(&self) -> usize {
         PAYLOAD_DATA_HEADER_SIZE + self.user_data.len()
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn as_any(&self) -> &(dyn Any + Send + Sync) {
         self
     }
 }
 
 impl ChunkPayloadData {
+    #[tracing::instrument(level = "debug", skip(self))]
     pub(crate) fn abandoned(&self) -> bool {
         let (abandoned, all_inflight) = (
             self.abandoned.load(Ordering::SeqCst),
@@ -260,10 +271,12 @@ impl ChunkPayloadData {
         abandoned && all_inflight
     }
 
+    #[tracing::instrument(level = "debug", skip(self, abandoned))]
     pub(crate) fn set_abandoned(&self, abandoned: bool) {
         self.abandoned.store(abandoned, Ordering::SeqCst);
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     pub(crate) fn set_all_inflight(&mut self) {
         if self.ending_fragment {
             self.all_inflight.store(true, Ordering::SeqCst);

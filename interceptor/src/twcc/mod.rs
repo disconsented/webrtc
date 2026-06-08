@@ -33,6 +33,7 @@ pub struct Recorder {
 }
 
 impl Recorder {
+    #[tracing::instrument(level = "debug", skip(sender_ssrc))]
     /// new creates a new Recorder which uses the given sender_ssrc in the created
     /// feedback packets.
     pub fn new(sender_ssrc: u32) -> Self {
@@ -42,6 +43,7 @@ impl Recorder {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self, media_ssrc, sequence_number, arrival_time))]
     /// record marks a packet with media_ssrc and a transport wide sequence number sequence_number as received at arrival_time.
     pub fn record(&mut self, media_ssrc: u32, sequence_number: u16, arrival_time: i64) {
         self.media_ssrc = media_ssrc;
@@ -55,6 +57,7 @@ impl Recorder {
         self.last_sequence_number = sequence_number;
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// build_feedback_packet creates a new RTCP packet containing a TWCC feedback report.
     pub fn build_feedback_packet(&mut self) -> Vec<Box<dyn rtcp::packet::Packet + Send + Sync>> {
         if self.received_packets.len() < 2 {
@@ -106,6 +109,7 @@ struct Feedback {
 }
 
 impl Feedback {
+    #[tracing::instrument(level = "debug", skip(sender_ssrc, media_ssrc, fb_pkt_count))]
     fn new(sender_ssrc: u32, media_ssrc: u32, fb_pkt_count: u8) -> Self {
         Feedback {
             rtcp: TransportLayerCc {
@@ -118,6 +122,7 @@ impl Feedback {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self, sequence_number, time_us))]
     fn set_base(&mut self, sequence_number: u16, time_us: i64) {
         self.base_sequence_number = sequence_number;
         self.next_sequence_number = self.base_sequence_number;
@@ -125,6 +130,7 @@ impl Feedback {
         self.last_timestamp_us = self.ref_timestamp64ms * 64000;
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn get_rtcp(&mut self) -> TransportLayerCc {
         self.rtcp.packet_status_count = self.sequence_number_count;
         self.rtcp.reference_time = self.ref_timestamp64ms as u32;
@@ -138,6 +144,7 @@ impl Feedback {
         self.rtcp.clone()
     }
 
+    #[tracing::instrument(level = "debug", skip(self, sequence_number, timestamp_us))]
     fn add_received(&mut self, sequence_number: u16, timestamp_us: i64) -> bool {
         let delta_us = timestamp_us - self.last_timestamp_us;
         let delta250us = delta_us / 250;
@@ -193,6 +200,7 @@ struct Chunk {
 }
 
 impl Chunk {
+    #[tracing::instrument(level = "debug", skip(self, delta))]
     fn can_add(&self, delta: u16) -> bool {
         if self.deltas.len() < MAX_TWO_BIT_CAP {
             return true;
@@ -212,6 +220,7 @@ impl Chunk {
         false
     }
 
+    #[tracing::instrument(level = "debug", skip(self, delta))]
     fn add(&mut self, delta: u16) {
         self.deltas.push(delta);
         self.has_large_delta =
@@ -219,6 +228,7 @@ impl Chunk {
         self.has_different_types = self.has_different_types || delta != self.deltas[0];
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn encode(&mut self) -> PacketStatusChunk {
         if !self.has_different_types {
             let p = PacketStatusChunk::RunLengthChunk(RunLengthChunk {
@@ -271,6 +281,7 @@ impl Chunk {
         svc
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn reset(&mut self) {
         self.deltas = vec![];
         self.has_large_delta = false;

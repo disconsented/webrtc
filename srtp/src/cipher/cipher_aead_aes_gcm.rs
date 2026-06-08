@@ -37,20 +37,24 @@ where
     AES: BlockEncrypt + KeyInit + BlockSizeUser<BlockSize = U16> + 'static,
     AesGcm<AES, NS>: Aead,
 {
+    #[tracing::instrument(level = "debug", skip(self))]
     fn rtp_auth_tag_len(&self) -> usize {
         self.profile.rtp_auth_tag_len()
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// Get RTCP authenticated tag length.
     fn rtcp_auth_tag_len(&self) -> usize {
         self.profile.rtcp_auth_tag_len()
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// Get AEAD auth key length of the cipher.
     fn aead_auth_tag_len(&self) -> usize {
         self.profile.aead_auth_tag_len()
     }
 
+    #[tracing::instrument(level = "debug", skip(self, payload, header, roc))]
     fn encrypt_rtp(
         &mut self,
         payload: &[u8],
@@ -78,6 +82,7 @@ where
         Ok(writer.freeze())
     }
 
+    #[tracing::instrument(level = "debug", skip(self, ciphertext, header, roc))]
     fn decrypt_rtp(
         &mut self,
         ciphertext: &[u8],
@@ -105,6 +110,7 @@ where
         Ok(writer.freeze())
     }
 
+    #[tracing::instrument(level = "debug", skip(self, decrypted, srtcp_index, ssrc))]
     fn encrypt_rtcp(&mut self, decrypted: &[u8], srtcp_index: usize, ssrc: u32) -> Result<Bytes> {
         let iv = self.rtcp_initialization_vector(srtcp_index, ssrc);
         let aad = self.rtcp_additional_authenticated_data(decrypted, srtcp_index);
@@ -125,6 +131,7 @@ where
         Ok(writer.freeze())
     }
 
+    #[tracing::instrument(level = "debug", skip(self, encrypted, srtcp_index, ssrc))]
     fn decrypt_rtcp(&mut self, encrypted: &[u8], srtcp_index: usize, ssrc: u32) -> Result<Bytes> {
         if encrypted.len() < self.aead_auth_tag_len() + SRTCP_INDEX_SIZE {
             return Err(Error::ErrFailedToVerifyAuthTag);
@@ -148,6 +155,7 @@ where
         Ok(writer.freeze())
     }
 
+    #[tracing::instrument(level = "debug", skip(self, input))]
     fn get_rtcp_index(&self, input: &[u8]) -> usize {
         let pos = input.len() - 4;
         let val = BigEndian::read_u32(&input[pos..]);
@@ -162,6 +170,7 @@ where
     AES: BlockEncrypt + KeyInit + BlockSizeUser<BlockSize = U16> + 'static,
     AesGcm<AES, NS>: Aead,
 {
+    #[tracing::instrument(level = "debug", skip(profile, master_key, master_salt))]
     /// Create a new AEAD instance.
     pub(crate) fn new(
         profile: ProtectionProfile,
@@ -229,6 +238,7 @@ where
         })
     }
 
+    #[tracing::instrument(level = "debug", skip(self, header, roc))]
     /// The 12-octet IV used by AES-GCM SRTP is formed by first concatenating
     /// 2 octets of zeroes, the 4-octet SSRC, the 4-octet rollover counter
     /// (ROC), and the 2-octet sequence number (SEQ).  The resulting 12-octet
@@ -252,6 +262,7 @@ where
         iv
     }
 
+    #[tracing::instrument(level = "debug", skip(self, srtcp_index, ssrc))]
     /// The 12-octet IV used by AES-GCM SRTCP is formed by first
     /// concatenating 2 octets of zeroes, the 4-octet SSRC identifier,
     /// 2 octets of zeroes, a single "0" bit, and the 31-bit SRTCP index.
@@ -272,6 +283,7 @@ where
         iv
     }
 
+    #[tracing::instrument(level = "debug", skip(self, rtcp_packet, srtcp_index))]
     /// In an SRTCP packet, a 1-bit Encryption flag is prepended to the
     /// 31-bit SRTCP index to form a 32-bit value we shall call the
     /// "ESRTCP word"

@@ -15,16 +15,19 @@ pub(crate) const PARAM_HEADER_LENGTH: usize = 4;
 
 /// String makes paramHeader printable
 impl fmt::Display for ParamHeader {
+    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.typ)
     }
 }
 
 impl Param for ParamHeader {
+    #[tracing::instrument(level = "debug", skip(self))]
     fn header(&self) -> ParamHeader {
         self.clone()
     }
 
+    #[tracing::instrument(level = "debug", skip(raw))]
     fn unmarshal(raw: &Bytes) -> Result<Self> {
         if raw.len() < PARAM_HEADER_LENGTH {
             return Err(Error::ErrParamHeaderTooShort);
@@ -45,20 +48,24 @@ impl Param for ParamHeader {
         })
     }
 
+    #[tracing::instrument(level = "debug", skip(self, writer))]
     fn marshal_to(&self, writer: &mut BytesMut) -> Result<usize> {
         writer.put_u16(self.typ.into());
         writer.put_u16(self.value_length + PARAM_HEADER_LENGTH as u16);
         Ok(writer.len())
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn value_length(&self) -> usize {
         self.value_length as usize
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn clone_to(&self) -> Box<dyn Param + Send + Sync> {
         Box::new(self.clone())
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn as_any(&self) -> &(dyn Any + Send + Sync) {
         self
     }

@@ -56,6 +56,7 @@ pub enum HandshakeType {
 }
 
 impl fmt::Display for HandshakeType {
+    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match *self {
             HandshakeType::HelloRequest => write!(f, "HelloRequest"),
@@ -75,6 +76,7 @@ impl fmt::Display for HandshakeType {
 }
 
 impl From<u8> for HandshakeType {
+    #[tracing::instrument(level = "debug", skip(val))]
     fn from(val: u8) -> Self {
         match val {
             0 => HandshakeType::HelloRequest,
@@ -109,6 +111,7 @@ pub enum HandshakeMessage {
 }
 
 impl HandshakeMessage {
+    #[tracing::instrument(level = "debug", skip(self))]
     pub fn handshake_type(&self) -> HandshakeType {
         match self {
             HandshakeMessage::ClientHello(msg) => msg.handshake_type(),
@@ -124,6 +127,7 @@ impl HandshakeMessage {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     pub fn size(&self) -> usize {
         match self {
             HandshakeMessage::ClientHello(msg) => msg.size(),
@@ -139,6 +143,7 @@ impl HandshakeMessage {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self, writer))]
     pub fn marshal<W: Write>(&self, writer: &mut W) -> Result<()> {
         match self {
             HandshakeMessage::ClientHello(msg) => msg.marshal(writer)?,
@@ -170,6 +175,7 @@ pub struct Handshake {
 }
 
 impl Handshake {
+    #[tracing::instrument(level = "debug", skip(handshake_message))]
     pub fn new(handshake_message: HandshakeMessage) -> Self {
         Handshake {
             handshake_header: HandshakeHeader {
@@ -183,20 +189,24 @@ impl Handshake {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     pub fn content_type(&self) -> ContentType {
         ContentType::Handshake
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     pub fn size(&self) -> usize {
         self.handshake_header.size() + self.handshake_message.size()
     }
 
+    #[tracing::instrument(level = "debug", skip(self, writer))]
     pub fn marshal<W: Write>(&self, writer: &mut W) -> Result<()> {
         self.handshake_header.marshal(writer)?;
         self.handshake_message.marshal(writer)?;
         Ok(())
     }
 
+    #[tracing::instrument(level = "debug", skip(reader))]
     pub fn unmarshal<R: Read>(reader: &mut R) -> Result<Self> {
         let handshake_header = HandshakeHeader::unmarshal(reader)?;
 

@@ -89,6 +89,7 @@ pub struct AssociationInternal {
 }
 
 impl AssociationInternal {
+    #[tracing::instrument(level = "debug", skip(config, close_loop_ch_tx, accept_ch_tx, handshake_completed_ch_tx, awake_write_loop_ch))]
     pub(crate) fn new(
         config: Config,
         close_loop_ch_tx: broadcast::Sender<()>,
@@ -204,6 +205,7 @@ impl AssociationInternal {
         ret
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// caller must hold self.lock
     pub(crate) fn send_init(&mut self) -> Result<()> {
         if let Some(stored_init) = self.stored_init.clone() {
@@ -225,6 +227,7 @@ impl AssociationInternal {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// caller must hold self.lock
     fn send_cookie_echo(&mut self) -> Result<()> {
         if let Some(stored_cookie_echo) = &self.stored_cookie_echo {
@@ -245,6 +248,7 @@ impl AssociationInternal {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     pub(crate) async fn close(&mut self) -> Result<()> {
         if self.get_state() != AssociationState::Closed {
             self.set_state(AssociationState::Closed);
@@ -296,6 +300,7 @@ impl AssociationInternal {
         Ok(())
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     async fn close_all_timers(&mut self) {
         // Close all retransmission & ack timers
         if let Some(t1init) = &self.t1init {
@@ -318,11 +323,13 @@ impl AssociationInternal {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn awake_write_loop(&self) {
         //log::debug!("[{}] awake_write_loop_ch.notify_one", self.name);
         let _ = self.awake_write_loop_ch.try_send(());
     }
 
+    #[tracing::instrument(level = "debug", skip(self, stream_identifier))]
     /// unregister_stream un-registers a stream from the association
     /// The caller should hold the association write lock.
     fn unregister_stream(&mut self, stream_identifier: u16) {
@@ -336,6 +343,7 @@ impl AssociationInternal {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self, raw))]
     /// handle_inbound parses incoming raw packets
     pub(crate) async fn handle_inbound(&mut self, raw: &Bytes) -> Result<()> {
         let p = match Packet::unmarshal(raw) {
@@ -369,6 +377,7 @@ impl AssociationInternal {
         Ok(())
     }
 
+    #[tracing::instrument(level = "debug", skip(self, raw_packets))]
     fn gather_data_packets_to_retransmit(&mut self, mut raw_packets: Vec<Packet>) -> Vec<Packet> {
         for p in self.get_data_packets_to_retransmit() {
             raw_packets.push(p);
@@ -377,6 +386,7 @@ impl AssociationInternal {
         raw_packets
     }
 
+    #[tracing::instrument(level = "debug", skip(self, raw_packets))]
     async fn gather_outbound_data_and_reconfig_packets(
         &mut self,
         mut raw_packets: Vec<Packet>,
@@ -445,6 +455,7 @@ impl AssociationInternal {
         raw_packets
     }
 
+    #[tracing::instrument(level = "debug", skip(self, raw_packets))]
     fn gather_outbound_fast_retransmission_packets(
         &mut self,
         mut raw_packets: Vec<Packet>,
@@ -509,6 +520,7 @@ impl AssociationInternal {
         raw_packets
     }
 
+    #[tracing::instrument(level = "debug", skip(self, raw_packets))]
     async fn gather_outbound_sack_packets(&mut self, mut raw_packets: Vec<Packet>) -> Vec<Packet> {
         if self.ack_state == AckState::Immediate {
             self.ack_state = AckState::Idle;
@@ -521,6 +533,7 @@ impl AssociationInternal {
         raw_packets
     }
 
+    #[tracing::instrument(level = "debug", skip(self, raw_packets))]
     fn gather_outbound_forward_tsn_packets(&mut self, mut raw_packets: Vec<Packet>) -> Vec<Packet> {
         /*log::debug!(
             "[{}] gatherOutboundForwardTSNPackets {}",
@@ -542,6 +555,7 @@ impl AssociationInternal {
         raw_packets
     }
 
+    #[tracing::instrument(level = "debug", skip(self, raw_packets))]
     async fn gather_outbound_shutdown_packets(
         &mut self,
         mut raw_packets: Vec<Packet>,
@@ -583,6 +597,7 @@ impl AssociationInternal {
         (raw_packets, ok)
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// gather_outbound gathers outgoing packets. The returned bool value set to
     /// false means the association should be closed down after the final send.
     pub(crate) async fn gather_outbound(&mut self) -> (Vec<Packet>, bool) {
@@ -621,6 +636,7 @@ impl AssociationInternal {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self, new_state))]
     /// set_state atomically sets the state of the Association.
     pub(crate) fn set_state(&self, new_state: AssociationState) {
         let old_state = AssociationState::from(self.state.swap(new_state as u8, Ordering::SeqCst));
@@ -634,11 +650,13 @@ impl AssociationInternal {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// get_state atomically returns the state of the Association.
     fn get_state(&self) -> AssociationState {
         self.state.load(Ordering::SeqCst).into()
     }
 
+    #[tracing::instrument(level = "debug", skip(self, p, i))]
     async fn handle_init(&mut self, p: &Packet, i: &ChunkInit) -> Result<Vec<Packet>> {
         let state = self.get_state();
 
@@ -757,6 +775,7 @@ impl AssociationInternal {
         Ok(vec![outbound])
     }
 
+    #[tracing::instrument(level = "debug", skip(self, p, i))]
     async fn handle_init_ack(&mut self, p: &Packet, i: &ChunkInit) -> Result<Vec<Packet>> {
         let state = self.get_state();
         log::debug!("[{}] chunkInitAck received in state '{}'", self.name, state);
@@ -848,6 +867,7 @@ impl AssociationInternal {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self, c))]
     async fn handle_heartbeat(&self, c: &ChunkHeartbeat) -> Result<Vec<Packet>> {
         log::trace!("[{}] chunkHeartbeat", self.name);
         if let Some(p) = c.params.first() {
@@ -873,6 +893,7 @@ impl AssociationInternal {
         Ok(vec![])
     }
 
+    #[tracing::instrument(level = "debug", skip(self, c))]
     async fn handle_cookie_echo(&mut self, c: &ChunkCookieEcho) -> Result<Vec<Packet>> {
         let state = self.get_state();
         log::debug!("[{}] COOKIE-ECHO received in state '{}'", self.name, state);
@@ -919,6 +940,7 @@ impl AssociationInternal {
         }])
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     async fn handle_cookie_ack(&mut self) -> Result<Vec<Packet>> {
         let state = self.get_state();
         log::debug!("[{}] COOKIE-ACK received in state '{}'", self.name, state);
@@ -941,6 +963,7 @@ impl AssociationInternal {
         Ok(vec![])
     }
 
+    #[tracing::instrument(level = "debug", skip(self, d))]
     async fn handle_data(&mut self, d: &ChunkPayloadData) -> Result<Vec<Packet>> {
         log::trace!(
             "[{}] DATA: tsn={} immediateSack={} len={}",
@@ -995,6 +1018,7 @@ impl AssociationInternal {
         self.handle_peer_last_tsn_and_acknowledgement(immediate_sack)
     }
 
+    #[tracing::instrument(level = "debug", skip(self, sack_immediately))]
     /// A common routine for handle_data and handle_forward_tsn routines
     fn handle_peer_last_tsn_and_acknowledgement(
         &mut self,
@@ -1049,6 +1073,7 @@ impl AssociationInternal {
         Ok(reply)
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     pub(crate) async fn get_my_receiver_window_credit(&self) -> u32 {
         let mut bytes_queued = 0;
         for s in self.streams.values() {
@@ -1058,6 +1083,7 @@ impl AssociationInternal {
         self.max_receive_buffer_size.saturating_sub(bytes_queued)
     }
 
+    #[tracing::instrument(level = "debug", skip(self, stream_identifier, default_payload_type))]
     pub(crate) fn open_stream(
         &mut self,
         stream_identifier: u16,
@@ -1075,6 +1101,7 @@ impl AssociationInternal {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self, stream_identifier, accept))]
     /// create_stream creates a stream. The caller should hold the lock and check no stream exists for this id.
     fn create_stream(&mut self, stream_identifier: u16, accept: bool) -> Option<Arc<Stream>> {
         let s = Arc::new(Stream::new(
@@ -1103,6 +1130,7 @@ impl AssociationInternal {
         Some(s)
     }
 
+    #[tracing::instrument(level = "debug", skip(self, stream_identifier))]
     /// get_or_create_stream gets or creates a stream. The caller should hold the lock.
     fn get_or_create_stream(&mut self, stream_identifier: u16) -> Option<Arc<Stream>> {
         if self.streams.contains_key(&stream_identifier) {
@@ -1112,6 +1140,7 @@ impl AssociationInternal {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self, d))]
     async fn process_selective_ack(
         &mut self,
         d: &ChunkSelectiveAck,
@@ -1242,6 +1271,7 @@ impl AssociationInternal {
         Ok((bytes_acked_per_stream, htna))
     }
 
+    #[tracing::instrument(level = "debug", skip(self, total_bytes_acked))]
     async fn on_cumulative_tsn_ack_point_advanced(&mut self, total_bytes_acked: i64) {
         // RFC 4096, sec 6.3.2.  Retransmission Timer Rules
         //   R2)  Whenever all outstanding data sent to an address have been
@@ -1324,6 +1354,7 @@ impl AssociationInternal {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self, cum_tsn_ack_point, htna, cum_tsn_ack_point_advanced))]
     fn process_fast_retransmission(
         &mut self,
         cum_tsn_ack_point: u32,
@@ -1388,6 +1419,7 @@ impl AssociationInternal {
         Ok(())
     }
 
+    #[tracing::instrument(level = "debug", skip(self, d))]
     async fn handle_sack(&mut self, d: &ChunkSelectiveAck) -> Result<Vec<Packet>> {
         log::trace!(
             "[{}] {}, SACK: cumTSN={} a_rwnd={}",
@@ -1513,6 +1545,7 @@ impl AssociationInternal {
         Ok(vec![])
     }
 
+    #[tracing::instrument(level = "debug", skip(self, state, should_awake_write_loop))]
     /// The caller must hold the lock. This method was only added because the
     /// linter was complaining about the "cognitive complexity" of handle_sack.
     async fn postprocess_sack(
@@ -1543,6 +1576,7 @@ impl AssociationInternal {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     async fn handle_shutdown(&mut self, _: &ChunkShutdown) -> Result<Vec<Packet>> {
         let state = self.get_state();
 
@@ -1568,6 +1602,7 @@ impl AssociationInternal {
         Ok(vec![])
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     async fn handle_shutdown_ack(&mut self, _: &ChunkShutdownAck) -> Result<Vec<Packet>> {
         let state = self.get_state();
         if state == AssociationState::ShutdownSent || state == AssociationState::ShutdownAckSent {
@@ -1582,6 +1617,7 @@ impl AssociationInternal {
         Ok(vec![])
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     async fn handle_shutdown_complete(&mut self, _: &ChunkShutdownComplete) -> Result<Vec<Packet>> {
         let state = self.get_state();
         if state == AssociationState::ShutdownAckSent {
@@ -1594,6 +1630,7 @@ impl AssociationInternal {
         Ok(vec![])
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// create_forward_tsn generates ForwardTSN chunk.
     /// This method will be be called if use_forward_tsn is set to false.
     fn create_forward_tsn(&self) -> ChunkForwardTsn {
@@ -1641,6 +1678,7 @@ impl AssociationInternal {
         fwd_tsn
     }
 
+    #[tracing::instrument(level = "debug", skip(self, chunks))]
     /// create_packet wraps chunks in a packet.
     /// The caller should hold the read lock.
     pub(crate) fn create_packet(&self, chunks: Vec<Box<dyn Chunk + Send + Sync>>) -> Packet {
@@ -1652,6 +1690,7 @@ impl AssociationInternal {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self, c))]
     async fn handle_reconfig(&mut self, c: &ChunkReconfig) -> Result<Vec<Packet>> {
         log::trace!("[{}] handle_reconfig", self.name);
 
@@ -1668,6 +1707,7 @@ impl AssociationInternal {
         Ok(pp)
     }
 
+    #[tracing::instrument(level = "debug", skip(self, c))]
     async fn handle_forward_tsn(&mut self, c: &ChunkForwardTsn) -> Result<Vec<Packet>> {
         log::trace!("[{}] FwdTSN: {}", self.name, c);
 
@@ -1749,6 +1789,7 @@ impl AssociationInternal {
         self.handle_peer_last_tsn_and_acknowledgement(false)
     }
 
+    #[tracing::instrument(level = "debug", skip(self, stream_identifier))]
     async fn send_reset_request(&mut self, stream_identifier: u16) -> Result<()> {
         let state = self.get_state();
         if state != AssociationState::Established {
@@ -1771,6 +1812,7 @@ impl AssociationInternal {
         Ok(())
     }
 
+    #[tracing::instrument(level = "debug", skip(self, raw, reply))]
     #[allow(clippy::borrowed_box)]
     async fn handle_reconfig_param(
         &mut self,
@@ -1795,6 +1837,7 @@ impl AssociationInternal {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self, p, respond, reply))]
     fn reset_streams_if_any(
         &mut self,
         p: &ParamOutgoingResetRequest,
@@ -1869,6 +1912,7 @@ impl AssociationInternal {
         Ok(())
     }
 
+    #[tracing::instrument(level = "debug", skip(self, beginning_fragment, unordered))]
     /// Move the chunk peeked with self.pending_queue.peek() to the inflight_queue.
     async fn move_pending_data_chunk_to_inflight_queue(
         &mut self,
@@ -1910,6 +1954,7 @@ impl AssociationInternal {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// pop_pending_data_chunks_to_send pops chunks from the pending queues as many as
     /// the cwnd and rwnd allows to send.
     async fn pop_pending_data_chunks_to_send(&mut self) -> (Vec<ChunkPayloadData>, Vec<u16>) {
@@ -1983,6 +2028,7 @@ impl AssociationInternal {
         (chunks, sis_to_reset)
     }
 
+    #[tracing::instrument(level = "debug", skip(self, chunks))]
     /// bundle_data_chunks_into_packets packs DATA chunks into packets. It tries to bundle
     /// DATA chunks into a packet so long as the resulting packet size does not exceed
     /// the path MTU.
@@ -2014,6 +2060,7 @@ impl AssociationInternal {
         packets
     }
 
+    #[tracing::instrument(level = "debug", skip(self, c))]
     fn check_partial_reliability_status(&self, c: &ChunkPayloadData) {
         if !self.use_forward_tsn {
             return;
@@ -2064,6 +2111,7 @@ impl AssociationInternal {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// get_data_packets_to_retransmit is called when T3-rtx is timed out and retransmit outstanding data chunks
     /// that are not acked or abandoned yet.
     fn get_data_packets_to_retransmit(&mut self) -> Vec<Packet> {
@@ -2116,6 +2164,7 @@ impl AssociationInternal {
         self.bundle_data_chunks_into_packets(chunks)
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// generate_next_tsn returns the my_next_tsn and increases it. The caller should hold the lock.
     fn generate_next_tsn(&mut self) -> u32 {
         let tsn = self.my_next_tsn;
@@ -2123,6 +2172,7 @@ impl AssociationInternal {
         tsn
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// generate_next_rsn returns the my_next_rsn and increases it. The caller should hold the lock.
     fn generate_next_rsn(&mut self) -> u32 {
         let rsn = self.my_next_rsn;
@@ -2130,6 +2180,7 @@ impl AssociationInternal {
         rsn
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     async fn create_selective_ack_chunk(&mut self) -> ChunkSelectiveAck {
         ChunkSelectiveAck {
             cumulative_tsn_ack: self.peer_last_tsn,
@@ -2139,15 +2190,18 @@ impl AssociationInternal {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(p))]
     fn pack(p: Packet) -> Vec<Packet> {
         vec![p]
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn handle_chunk_start(&mut self) {
         self.delayed_ack_triggered = false;
         self.immediate_ack_triggered = false;
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn handle_chunk_end(&mut self) {
         if self.immediate_ack_triggered {
             self.ack_state = AckState::Immediate;
@@ -2164,6 +2218,7 @@ impl AssociationInternal {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self, p, chunk))]
     #[allow(clippy::borrowed_box)]
     async fn handle_chunk(
         &mut self,
@@ -2277,6 +2332,7 @@ impl AssociationInternal {
         Ok(())
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// buffered_amount returns total amount (in bytes) of currently buffered user data.
     /// This is used only by testing.
     pub(crate) fn buffered_amount(&self) -> usize {
@@ -2286,6 +2342,7 @@ impl AssociationInternal {
 
 #[async_trait]
 impl AckTimerObserver for AssociationInternal {
+    #[tracing::instrument(level = "debug", skip(self))]
     async fn on_ack_timeout(&mut self) {
         log::trace!(
             "[{}] ack timed out (ack_state: {})",
@@ -2300,6 +2357,7 @@ impl AckTimerObserver for AssociationInternal {
 
 #[async_trait]
 impl RtxTimerObserver for AssociationInternal {
+    #[tracing::instrument(level = "debug", skip(self, id, n_rtos))]
     async fn on_retransmission_timeout(&mut self, id: RtxTimerId, n_rtos: usize) {
         match id {
             RtxTimerId::T1Init => {
@@ -2417,6 +2475,7 @@ impl RtxTimerObserver for AssociationInternal {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self, id))]
     async fn on_retransmission_failure(&mut self, id: RtxTimerId) {
         match id {
             RtxTimerId::T1Init => {

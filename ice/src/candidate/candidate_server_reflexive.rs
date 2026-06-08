@@ -18,6 +18,7 @@ pub struct CandidateServerReflexiveConfig {
 }
 
 impl CandidateServerReflexiveConfig {
+    #[tracing::instrument(level = "debug", skip(self))]
     /// Creates a new server reflective candidate.
     pub fn new_candidate_server_reflexive(self) -> Result<CandidateBase> {
         let ip: IpAddr = match self.base_config.address.parse() {

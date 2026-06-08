@@ -106,6 +106,7 @@ pub enum CandidateType {
 
 // String makes CandidateType printable
 impl fmt::Display for CandidateType {
+    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let s = match *self {
             CandidateType::Host => "host",
@@ -136,6 +137,7 @@ impl CandidateType {
     }
 }
 
+#[tracing::instrument(level = "debug", skip(candidate_type, candidate_type_list))]
 pub(crate) fn contains_candidate_type(
     candidate_type: CandidateType,
     candidate_type_list: &[CandidateType],
@@ -160,6 +162,7 @@ pub struct CandidateRelatedAddress {
 
 // String makes CandidateRelatedAddress printable
 impl fmt::Display for CandidateRelatedAddress {
+    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, " related {}:{}", self.address, self.port)
     }
@@ -191,6 +194,7 @@ pub enum CandidatePairState {
 }
 
 impl From<u8> for CandidatePairState {
+    #[tracing::instrument(level = "debug", skip(v))]
     fn from(v: u8) -> Self {
         match v {
             1 => Self::Waiting,
@@ -203,6 +207,7 @@ impl From<u8> for CandidatePairState {
 }
 
 impl fmt::Display for CandidatePairState {
+    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let s = match *self {
             Self::Waiting => "waiting",
@@ -228,6 +233,7 @@ pub struct CandidatePair {
 }
 
 impl Default for CandidatePair {
+    #[tracing::instrument(level = "debug", skip())]
     fn default() -> Self {
         Self {
             ice_role_controlling: AtomicBool::new(false),
@@ -242,6 +248,7 @@ impl Default for CandidatePair {
 }
 
 impl fmt::Debug for CandidatePair {
+    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
@@ -256,6 +263,7 @@ impl fmt::Debug for CandidatePair {
 }
 
 impl fmt::Display for CandidatePair {
+    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
@@ -270,12 +278,14 @@ impl fmt::Display for CandidatePair {
 }
 
 impl PartialEq for CandidatePair {
+    #[tracing::instrument(level = "debug", skip(self, other))]
     fn eq(&self, other: &Self) -> bool {
         self.local.equal(&*other.local) && self.remote.equal(&*other.remote)
     }
 }
 
 impl CandidatePair {
+    #[tracing::instrument(level = "debug", skip(local, remote, controlling))]
     #[must_use]
     pub fn new(
         local: Arc<dyn Candidate + Send + Sync>,
@@ -293,6 +303,7 @@ impl CandidatePair {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// RFC 5245 - 5.7.2.  Computing Pair Priority and Ordering Pairs
     /// Let G be the priority for the candidate provided by the controlling
     /// agent.  Let D be the priority for the candidate provided by the
@@ -312,6 +323,7 @@ impl CandidatePair {
             + u64::from(g > d)
     }
 
+    #[tracing::instrument(level = "debug", skip(self, b))]
     pub async fn write(&self, b: &[u8]) -> Result<usize> {
         self.local.write_to(b, &*self.remote).await
     }

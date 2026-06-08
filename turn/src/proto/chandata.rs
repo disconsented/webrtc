@@ -6,6 +6,7 @@ use crate::error::*;
 
 const PADDING: usize = 4;
 
+#[tracing::instrument(level = "debug", skip(l))]
 fn nearest_padded_value_length(l: usize) -> usize {
     let mut n = PADDING * (l / PADDING);
     if n < l {
@@ -28,12 +29,14 @@ pub struct ChannelData {
 }
 
 impl PartialEq for ChannelData {
+    #[tracing::instrument(level = "debug", skip(self, other))]
     fn eq(&self, other: &Self) -> bool {
         self.data == other.data && self.number == other.number
     }
 }
 
 impl ChannelData {
+    #[tracing::instrument(level = "debug", skip(self))]
     /// Resets length, [`Self::data`] and [`Self::raw`] length.
     #[inline]
     pub fn reset(&mut self) {
@@ -41,6 +44,7 @@ impl ChannelData {
         self.data.clear();
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// Encodes this to [`Self::raw`].
     pub fn encode(&mut self) {
         self.raw.clear();
@@ -53,6 +57,7 @@ impl ChannelData {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// Decodes this from [`Self::raw`].
     pub fn decode(&mut self) -> Result<()> {
         let buf = &self.raw;
@@ -76,6 +81,7 @@ impl ChannelData {
         Ok(())
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// Writes channel number and length.
     pub fn write_header(&mut self) {
         if self.raw.len() < CHANNEL_DATA_HEADER_SIZE {
@@ -89,6 +95,7 @@ impl ChannelData {
             .copy_from_slice(&(self.data.len() as u16).to_be_bytes());
     }
 
+    #[tracing::instrument(level = "debug", skip(buf))]
     /// Returns `true` if `buf` looks like the `ChannelData` Message.
     pub fn is_channel_data(buf: &[u8]) -> bool {
         if buf.len() < CHANNEL_DATA_HEADER_SIZE {

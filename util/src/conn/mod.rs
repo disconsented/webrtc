@@ -52,6 +52,7 @@ pub trait Listener {
     async fn addr(&self) -> Result<SocketAddr>;
 }
 
+#[tracing::instrument(level = "debug", skip(use_ipv4, host))]
 pub async fn lookup_host<T>(use_ipv4: bool, host: T) -> Result<SocketAddr>
 where
     T: ToSocketAddrs,

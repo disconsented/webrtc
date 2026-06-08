@@ -41,6 +41,7 @@ pub mod dtls_parameters;
 pub mod dtls_role;
 pub mod dtls_transport_state;
 
+#[tracing::instrument(level = "debug", skip())]
 pub(crate) fn default_srtp_protection_profiles() -> Vec<SrtpProtectionProfile> {
     vec![
         SrtpProtectionProfile::Srtp_Aead_Aes_128_Gcm,
@@ -88,6 +89,7 @@ pub struct RTCDtlsTransport {
 }
 
 impl RTCDtlsTransport {
+    #[tracing::instrument(level = "debug", skip(ice_transport, certificates, setting_engine))]
     pub(crate) fn new(
         ice_transport: Arc<RTCIceTransport>,
         certificates: Vec<RTCCertificate>,
@@ -107,17 +109,20 @@ impl RTCDtlsTransport {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     pub(crate) async fn conn(&self) -> Option<Arc<DTLSConn>> {
         let conn = self.conn.lock().await;
         conn.clone()
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// returns the currently-configured ICETransport or None
     /// if one has not been configured
     pub fn ice_transport(&self) -> &RTCIceTransport {
         &self.ice_transport
     }
 
+    #[tracing::instrument(level = "debug", skip(self, state))]
     /// state_change requires the caller holds the lock
     async fn state_change(&self, state: RTCDtlsTransportState) {
         self.state.store(state as u8, Ordering::SeqCst);
@@ -127,6 +132,7 @@ impl RTCDtlsTransport {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self, f))]
     /// on_state_change sets a handler that is fired when the DTLS
     /// connection state changes.
     pub fn on_state_change(&self, f: OnDTLSTransportStateChangeHdlrFn) {
@@ -134,11 +140,13 @@ impl RTCDtlsTransport {
             .store(Some(Arc::new(Mutex::new(f))));
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// state returns the current dtls_transport transport state.
     pub fn state(&self) -> RTCDtlsTransportState {
         self.state.load(Ordering::SeqCst).into()
     }
 
+    #[tracing::instrument(level = "debug", skip(self, pkts))]
     /// write_rtcp sends a user provided RTCP packet to the connected peer. If no peer is connected the
     /// packet is discarded.
     pub async fn write_rtcp(
@@ -154,6 +162,7 @@ impl RTCDtlsTransport {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// get_local_parameters returns the DTLS parameters of the local DTLSTransport upon construction.
     pub fn get_local_parameters(&self) -> Result<DTLSParameters> {
         let mut fingerprints = vec![];
@@ -168,6 +177,7 @@ impl RTCDtlsTransport {
         })
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// get_remote_certificate returns the certificate chain in use by the remote side
     /// returns an empty list prior to selection of the remote certificate
     pub async fn get_remote_certificate(&self) -> Bytes {
@@ -175,6 +185,7 @@ impl RTCDtlsTransport {
         remote_certificate.clone()
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     pub(crate) async fn start_srtp(&self) -> Result<()> {
         let profile = {
             let srtp_protection_profile = self.srtp_protection_profile.lock().await;
@@ -273,16 +284,19 @@ impl RTCDtlsTransport {
         Ok(())
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     pub(crate) async fn get_srtp_session(&self) -> Option<Arc<Session>> {
         let srtp_session = self.srtp_session.lock().await;
         srtp_session.clone()
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     pub(crate) async fn get_srtcp_session(&self) -> Option<Arc<Session>> {
         let srtcp_session = self.srtcp_session.lock().await;
         srtcp_session.clone()
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     pub(crate) async fn role(&self) -> DTLSRole {
         // If remote has an explicit role use the inverse
         {
@@ -309,12 +323,14 @@ impl RTCDtlsTransport {
         DEFAULT_DTLS_ROLE_ANSWER
     }
 
+    #[tracing::instrument(level = "debug", skip(self, collector))]
     pub(crate) async fn collect_stats(&self, collector: &StatsCollector) {
         for cert in &self.certificates {
             cert.collect_stats(collector).await;
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self, remote_parameters))]
     async fn prepare_transport(
         &self,
         remote_parameters: DTLSParameters,
@@ -366,6 +382,7 @@ impl RTCDtlsTransport {
         ))
     }
 
+    #[tracing::instrument(level = "debug", skip(self, remote_parameters))]
     /// start DTLS transport negotiation with the parameters of the remote DTLS transport
     pub async fn start(&self, remote_parameters: DTLSParameters) -> Result<()> {
         let dtls_conn_result = if let Some(dtls_endpoint) =
@@ -475,6 +492,7 @@ impl RTCDtlsTransport {
         self.start_srtp().await
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// stops and closes the DTLSTransport object.
     pub async fn stop(&self) -> Result<()> {
         // Try closing everything and collect the errors
@@ -545,6 +563,7 @@ impl RTCDtlsTransport {
         flatten_errs(close_errs)
     }
 
+    #[tracing::instrument(level = "debug", skip(self, remote_cert))]
     pub(crate) async fn validate_fingerprint(&self, remote_cert: &[u8]) -> Result<()> {
         let remote_parameters = self.remote_parameters.lock().await;
         for fp in &remote_parameters.fingerprints {
@@ -566,6 +585,7 @@ impl RTCDtlsTransport {
         Err(Error::ErrNoMatchingCertificateFingerprint)
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     pub(crate) fn ensure_ice_conn(&self) -> Result<()> {
         if self.ice_transport.state() == RTCIceTransportState::New {
             Err(Error::ErrICEConnectionNotStarted)
@@ -574,16 +594,19 @@ impl RTCDtlsTransport {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self, ssrc, stream))]
     pub(crate) async fn store_simulcast_stream(&self, ssrc: SSRC, stream: Arc<Stream>) {
         let mut simulcast_streams = self.simulcast_streams.lock().await;
         simulcast_streams.insert(ssrc, stream);
     }
 
+    #[tracing::instrument(level = "debug", skip(self, ssrc))]
     pub(crate) async fn remove_simulcast_stream(&self, ssrc: SSRC) {
         let mut simulcast_streams = self.simulcast_streams.lock().await;
         simulcast_streams.remove(&ssrc);
     }
 
+    #[tracing::instrument(level = "debug", skip(self, ssrc, stream_info, interceptor))]
     pub(crate) async fn streams_for_ssrc(
         &self,
         ssrc: SSRC,

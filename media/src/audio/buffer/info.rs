@@ -10,6 +10,7 @@ pub struct BufferInfo<L> {
 }
 
 impl<L> BufferInfo<L> {
+    #[tracing::instrument(level = "debug", skip(channels, frames))]
     pub fn new(channels: usize, frames: usize) -> Self {
         Self {
             channels,
@@ -18,26 +19,31 @@ impl<L> BufferInfo<L> {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// Get a reference to the buffer info's channels.
     pub fn channels(&self) -> usize {
         self.channels
     }
 
+    #[tracing::instrument(level = "debug", skip(self, channels))]
     /// Set the buffer info's channels.
     pub fn set_channels(&mut self, channels: usize) {
         self.channels = channels;
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// Get a reference to the buffer info's frames.
     pub fn frames(&self) -> usize {
         self.frames
     }
 
+    #[tracing::instrument(level = "debug", skip(self, frames))]
     /// Set the buffer info's frames.
     pub fn set_frames(&mut self, frames: usize) {
         self.frames = frames;
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     pub fn samples(&self) -> usize {
         self.channels * self.frames
     }
@@ -46,6 +52,7 @@ impl<L> BufferInfo<L> {
 impl<L> Copy for BufferInfo<L> {}
 
 impl<L> Clone for BufferInfo<L> {
+    #[tracing::instrument(level = "debug", skip(self))]
     fn clone(&self) -> Self {
         *self
     }

@@ -31,16 +31,19 @@ pub(crate) const CHUNK_HEADER_SIZE: usize = 4;
 
 /// makes ChunkHeader printable
 impl fmt::Display for ChunkHeader {
+    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.typ)
     }
 }
 
 impl Chunk for ChunkHeader {
+    #[tracing::instrument(level = "debug", skip(self))]
     fn header(&self) -> ChunkHeader {
         self.clone()
     }
 
+    #[tracing::instrument(level = "debug", skip(raw))]
     fn unmarshal(raw: &Bytes) -> Result<Self> {
         if raw.len() < CHUNK_HEADER_SIZE {
             return Err(Error::ErrChunkHeaderTooSmall);
@@ -90,6 +93,7 @@ impl Chunk for ChunkHeader {
         })
     }
 
+    #[tracing::instrument(level = "debug", skip(self, writer))]
     fn marshal_to(&self, writer: &mut BytesMut) -> Result<usize> {
         writer.put_u8(self.typ.0);
         writer.put_u8(self.flags);
@@ -97,14 +101,17 @@ impl Chunk for ChunkHeader {
         Ok(writer.len())
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn check(&self) -> Result<()> {
         Ok(())
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn value_length(&self) -> usize {
         self.value_length as usize
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn as_any(&self) -> &(dyn Any + Send + Sync) {
         self
     }

@@ -78,6 +78,7 @@ pub(crate) struct Mapping {
 }
 
 impl Default for Mapping {
+    #[tracing::instrument(level = "debug", skip())]
     fn default() -> Self {
         Mapping {
             proto: String::new(),                             // "udp" or "tcp"
@@ -102,6 +103,7 @@ pub(crate) struct NetworkAddressTranslator {
 }
 
 impl NetworkAddressTranslator {
+    #[tracing::instrument(level = "debug", skip(config))]
     pub(crate) fn new(config: NatConfig) -> Result<Self> {
         let mut nat_type = config.nat_type;
 
@@ -137,6 +139,7 @@ impl NetworkAddressTranslator {
         })
     }
 
+    #[tracing::instrument(level = "debug", skip(self, loc_ip))]
     pub(crate) fn get_paired_mapped_ip(&self, loc_ip: &IpAddr) -> Option<&IpAddr> {
         for (i, ip) in self.local_ips.iter().enumerate() {
             if ip == loc_ip {
@@ -146,6 +149,7 @@ impl NetworkAddressTranslator {
         None
     }
 
+    #[tracing::instrument(level = "debug", skip(self, mapped_ip))]
     pub(crate) fn get_paired_local_ip(&self, mapped_ip: &IpAddr) -> Option<&IpAddr> {
         for (i, ip) in self.mapped_ips.iter().enumerate() {
             if ip == mapped_ip {
@@ -155,6 +159,7 @@ impl NetworkAddressTranslator {
         None
     }
 
+    #[tracing::instrument(level = "debug", skip(self, from))]
     pub(crate) async fn translate_outbound(
         &self,
         from: &(dyn Chunk + Send + Sync),
@@ -286,6 +291,7 @@ impl NetworkAddressTranslator {
         Err(Error::ErrNonUdpTranslationNotSupported)
     }
 
+    #[tracing::instrument(level = "debug", skip(self, from))]
     pub(crate) async fn translate_inbound(
         &self,
         from: &(dyn Chunk + Send + Sync),
@@ -363,6 +369,7 @@ impl NetworkAddressTranslator {
     }
 
     // caller must hold the mutex
+    #[tracing::instrument(level = "debug", skip(self, o_key))]
     pub(crate) async fn find_outbound_mapping(&self, o_key: &str) -> Option<Arc<Mapping>> {
         let mapping_life_time = self.nat_type.mapping_life_time;
         let mut expired = false;
@@ -405,6 +412,7 @@ impl NetworkAddressTranslator {
     }
 
     // caller must hold the mutex
+    #[tracing::instrument(level = "debug", skip(self, i_key))]
     pub(crate) async fn find_inbound_mapping(&self, i_key: &str) -> Option<Arc<Mapping>> {
         let mut expired = false;
         let (in_key, out_key) = {
@@ -444,19 +452,23 @@ impl NetworkAddressTranslator {
     }
 
     // caller must hold the mutex
+    #[tracing::instrument(level = "debug", skip(m))]
     fn get_outbound_map_key(m: &Mapping) -> String {
         format!("{}:{}:{}", m.proto, m.local, m.bound)
     }
 
+    #[tracing::instrument(level = "debug", skip(m))]
     fn get_inbound_map_key(m: &Mapping) -> String {
         format!("{}:{}", m.proto, m.mapped)
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     async fn inbound_map_len(&self) -> usize {
         let inbound_map = self.inbound_map.lock().await;
         inbound_map.len()
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     async fn outbound_map_len(&self) -> usize {
         let outbound_map = self.outbound_map.lock().await;
         outbound_map.len()

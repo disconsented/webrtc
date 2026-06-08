@@ -20,6 +20,7 @@ pub struct Stream {
 }
 
 impl Stream {
+    #[tracing::instrument(level = "debug", skip(ssrc, tx, is_rtp))]
     /// Create a new stream
     pub fn new(ssrc: u32, tx: mpsc::Sender<u32>, is_rtp: bool) -> Self {
         Stream {
@@ -38,21 +39,25 @@ impl Stream {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// GetSSRC returns the SSRC we are demuxing for
     pub fn get_ssrc(&self) -> u32 {
         self.ssrc
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// Check if RTP is a stream.
     pub fn is_rtp_stream(&self) -> bool {
         self.is_rtp
     }
 
+    #[tracing::instrument(level = "debug", skip(self, buf))]
     /// Read reads and decrypts full RTP packet from the nextConn
     pub async fn read(&self, buf: &mut [u8]) -> Result<usize> {
         Ok(self.buffer.read(buf, None).await?)
     }
 
+    #[tracing::instrument(level = "debug", skip(self, buf))]
     /// ReadRTP reads and decrypts full RTP packet and its header from the nextConn
     pub async fn read_rtp(&self, buf: &mut [u8]) -> Result<rtp::packet::Packet> {
         if !self.is_rtp {
@@ -66,6 +71,7 @@ impl Stream {
         Ok(pkt)
     }
 
+    #[tracing::instrument(level = "debug", skip(self, buf))]
     /// read_rtcp reads and decrypts full RTP packet and its header from the nextConn
     pub async fn read_rtcp(
         &self,
@@ -82,6 +88,7 @@ impl Stream {
         Ok(pkt)
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// Close removes the ReadStream from the session and cleans up any associated state
     pub async fn close(&self) -> Result<()> {
         self.buffer.close().await;

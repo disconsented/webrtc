@@ -58,40 +58,47 @@ pub struct TrackLocalContext {
 }
 
 impl TrackLocalContext {
+    #[tracing::instrument(level = "debug", skip(self))]
     /// codec_parameters returns the negotiated RTPCodecParameters. These are the codecs supported by both
     /// PeerConnections and the SSRC/PayloadTypes
     pub fn codec_parameters(&self) -> &[RTCRtpCodecParameters] {
         &self.params.codecs
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// header_extensions returns the negotiated RTPHeaderExtensionParameters. These are the header extensions supported by
     /// both PeerConnections and the SSRC/PayloadTypes
     pub fn header_extensions(&self) -> &[RTCRtpHeaderExtensionParameters] {
         &self.params.header_extensions
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// ssrc requires the negotiated SSRC of this track
     /// This track may have multiple if RTX is enabled
     pub fn ssrc(&self) -> SSRC {
         self.ssrc
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// write_stream returns the write_stream for this TrackLocal. The implementer writes the outbound
     /// media packets to it
     pub fn write_stream(&self) -> Arc<dyn TrackLocalWriter + Send + Sync> {
         self.write_stream.clone()
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// id is a unique identifier that is used for both bind/unbind
     pub fn id(&self) -> String {
         self.id.clone()
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// mid returns the id of media associated with the RTP stream
     pub fn mid(&self) -> Option<SmolStr> {
         self.mid.clone()
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// paused returns a boolean indicating whether the track is currently paused
     pub fn paused(&self) -> Arc<AtomicBool> {
         self.paused.clone()
@@ -143,6 +150,7 @@ pub(crate) struct TrackBinding {
 }
 
 impl TrackBinding {
+    #[tracing::instrument(level = "debug", skip(self))]
     pub fn is_sender_paused(&self) -> bool {
         self.sender_paused.load(Ordering::SeqCst)
     }
@@ -154,6 +162,7 @@ pub(crate) struct InterceptorToTrackLocalWriter {
 }
 
 impl InterceptorToTrackLocalWriter {
+    #[tracing::instrument(level = "debug", skip(paused))]
     pub(crate) fn new(paused: Arc<AtomicBool>) -> Self {
         InterceptorToTrackLocalWriter {
             interceptor_rtp_writer: Mutex::new(None),
@@ -161,12 +170,14 @@ impl InterceptorToTrackLocalWriter {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn is_sender_paused(&self) -> bool {
         self.sender_paused.load(Ordering::SeqCst)
     }
 }
 
 impl std::fmt::Debug for InterceptorToTrackLocalWriter {
+    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("InterceptorToTrackLocalWriter").finish()
     }
@@ -174,6 +185,7 @@ impl std::fmt::Debug for InterceptorToTrackLocalWriter {
 
 #[async_trait]
 impl TrackLocalWriter for InterceptorToTrackLocalWriter {
+    #[tracing::instrument(level = "debug", skip(self, pkt, attr))]
     async fn write_rtp_with_attributes(
         &self,
         pkt: &rtp::packet::Packet,

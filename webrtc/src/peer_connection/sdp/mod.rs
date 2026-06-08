@@ -49,6 +49,7 @@ pub(crate) struct TrackDetails {
     pub(crate) rids: Vec<SmolStr>,
 }
 
+#[tracing::instrument(level = "debug", skip(track_details, ssrc))]
 pub(crate) fn track_details_for_ssrc(
     track_details: &[TrackDetails],
     ssrc: SSRC,
@@ -56,6 +57,7 @@ pub(crate) fn track_details_for_ssrc(
     track_details.iter().find(|x| x.ssrcs.contains(&ssrc))
 }
 
+#[tracing::instrument(level = "debug", skip(track_details, rid))]
 pub(crate) fn track_details_for_rid(
     track_details: &[TrackDetails],
     rid: SmolStr,
@@ -63,10 +65,12 @@ pub(crate) fn track_details_for_rid(
     track_details.iter().find(|x| x.rids.contains(&rid))
 }
 
+#[tracing::instrument(level = "debug", skip(incoming_tracks, ssrc))]
 pub(crate) fn filter_track_with_ssrc(incoming_tracks: &mut Vec<TrackDetails>, ssrc: SSRC) {
     incoming_tracks.retain(|x| !x.ssrcs.contains(&ssrc));
 }
 
+#[tracing::instrument(level = "debug", skip(s, exclude_inactive))]
 /// extract all TrackDetails from an SDP.
 pub(crate) fn track_details_from_sdp(
     s: &SessionDescription,
@@ -231,6 +235,7 @@ pub(crate) fn track_details_from_sdp(
     incoming_tracks
 }
 
+#[tracing::instrument(level = "debug", skip(media))]
 pub(crate) fn get_rids(media: &MediaDescription) -> Vec<SimulcastRid> {
     let mut rids = vec![];
     let mut simulcast_attr: Option<String> = None;
@@ -277,6 +282,7 @@ pub(crate) fn get_rids(media: &MediaDescription) -> Vec<SimulcastRid> {
     rids
 }
 
+#[tracing::instrument(level = "debug", skip(candidates, m, ice_gathering_state))]
 pub(crate) async fn add_candidates_to_media_descriptions(
     candidates: &[RTCIceCandidate],
     mut m: MediaDescription,
@@ -325,6 +331,7 @@ pub(crate) struct AddDataMediaSectionParams {
     ice_gathering_state: RTCIceGatheringState,
 }
 
+#[tracing::instrument(level = "debug", skip(d, dtls_fingerprints, candidates, params))]
 pub(crate) async fn add_data_media_section(
     d: SessionDescription,
     dtls_fingerprints: &[RTCDtlsFingerprint],
@@ -379,6 +386,7 @@ pub(crate) async fn add_data_media_section(
     Ok(d.with_media(media))
 }
 
+#[tracing::instrument(level = "debug", skip(session_description, ice_gatherer, ice_gathering_state))]
 pub(crate) async fn populate_local_candidates(
     session_description: Option<&session_description::RTCSessionDescription>,
     ice_gatherer: Option<&Arc<RTCIceGatherer>>,
@@ -428,6 +436,7 @@ pub(crate) struct AddTransceiverSdpParams {
     offered_direction: Option<RTCRtpTransceiverDirection>,
 }
 
+#[tracing::instrument(level = "debug", skip(d, dtls_fingerprints, media_engine, ice_params, candidates, media_section, params))]
 pub(crate) async fn add_transceiver_sdp(
     mut d: SessionDescription,
     dtls_fingerprints: &[RTCDtlsFingerprint],
@@ -736,6 +745,7 @@ pub(crate) enum SimulcastDirection {
 
 impl TryFrom<&str> for SimulcastDirection {
     type Error = SimulcastRidParseError;
+    #[tracing::instrument(level = "debug", skip(value))]
     fn try_from(value: &str) -> std::result::Result<Self, Self::Error> {
         match value.to_lowercase().as_str() {
             "send" => Ok(SimulcastDirection::Send),
@@ -755,6 +765,7 @@ pub(crate) struct SimulcastRid {
 
 impl TryFrom<&String> for SimulcastRid {
     type Error = SimulcastRidParseError;
+    #[tracing::instrument(level = "debug", skip(value))]
     fn try_from(value: &String) -> std::result::Result<Self, Self::Error> {
         let mut split = value.split(' ');
         let id = split
@@ -777,6 +788,7 @@ impl TryFrom<&String> for SimulcastRid {
     }
 }
 
+#[tracing::instrument(level = "debug", skip(bundle, id))]
 fn bundle_match(bundle: Option<&String>, id: &str) -> bool {
     match bundle {
         None => true,
@@ -803,6 +815,7 @@ pub(crate) struct PopulateSdpParams {
     pub(crate) match_bundle_group: Option<String>,
 }
 
+#[tracing::instrument(level = "debug", skip(d, dtls_fingerprints, media_engine, candidates, ice_params, media_sections, params))]
 /// populate_sdp serializes a PeerConnections state into an SDP
 pub(crate) async fn populate_sdp(
     mut d: SessionDescription,
@@ -905,6 +918,7 @@ pub(crate) async fn populate_sdp(
     Ok(d)
 }
 
+#[tracing::instrument(level = "debug", skip(media))]
 pub(crate) fn get_mid_value(media: &MediaDescription) -> Option<&String> {
     for attr in &media.attributes {
         if attr.key == "mid" {
@@ -914,6 +928,7 @@ pub(crate) fn get_mid_value(media: &MediaDescription) -> Option<&String> {
     None
 }
 
+#[tracing::instrument(level = "debug", skip(media))]
 pub(crate) fn get_peer_direction(media: &MediaDescription) -> RTCRtpTransceiverDirection {
     for a in &media.attributes {
         let direction = RTCRtpTransceiverDirection::from(a.key.as_str());
@@ -924,6 +939,7 @@ pub(crate) fn get_peer_direction(media: &MediaDescription) -> RTCRtpTransceiverD
     RTCRtpTransceiverDirection::Unspecified
 }
 
+#[tracing::instrument(level = "debug", skip(desc))]
 pub(crate) fn extract_fingerprint(desc: &SessionDescription) -> Result<(String, String)> {
     let mut fingerprints = vec![];
 
@@ -955,6 +971,7 @@ pub(crate) fn extract_fingerprint(desc: &SessionDescription) -> Result<(String, 
     Ok((parts[1].to_owned(), parts[0].to_owned()))
 }
 
+#[tracing::instrument(level = "debug", skip(desc))]
 pub(crate) async fn extract_ice_details(
     desc: &SessionDescription,
 ) -> Result<(String, String, Vec<RTCIceCandidate>)> {
@@ -1020,6 +1037,7 @@ pub(crate) async fn extract_ice_details(
     Ok((remote_ufrag.to_owned(), remote_pwd.to_owned(), candidates))
 }
 
+#[tracing::instrument(level = "debug", skip(desc))]
 pub(crate) fn get_application_media_section_sctp_port(desc: &SessionDescription) -> Option<u16> {
     for m in &desc.media_descriptions {
         if m.media_name.media == MEDIA_SECTION_APPLICATION {
@@ -1049,6 +1067,7 @@ pub(crate) fn get_application_media_section_sctp_port(desc: &SessionDescription)
     None
 }
 
+#[tracing::instrument(level = "debug", skip(desc))]
 pub(crate) fn get_application_media_section_max_message_size(
     desc: &SessionDescription,
 ) -> Option<u32> {
@@ -1058,6 +1077,7 @@ pub(crate) fn get_application_media_section_max_message_size(
         .ok()
 }
 
+#[tracing::instrument(level = "debug", skip(search_mid, desc))]
 pub(crate) fn get_by_mid<'a>(
     search_mid: &str,
     desc: &'a session_description::RTCSessionDescription,
@@ -1074,12 +1094,14 @@ pub(crate) fn get_by_mid<'a>(
     None
 }
 
+#[tracing::instrument(level = "debug", skip(desc))]
 pub(crate) fn get_application_media(desc: &SessionDescription) -> Option<&MediaDescription> {
     desc.media_descriptions
         .iter()
         .find(|media_description| media_description.media_name.media == MEDIA_SECTION_APPLICATION)
 }
 
+#[tracing::instrument(level = "debug", skip(desc))]
 /// have_data_channel return MediaDescription with MediaName equal application
 pub(crate) fn have_data_channel(
     desc: &session_description::RTCSessionDescription,
@@ -1087,6 +1109,7 @@ pub(crate) fn have_data_channel(
     get_application_media(desc.parsed.as_ref()?)
 }
 
+#[tracing::instrument(level = "debug", skip(m))]
 pub(crate) fn codecs_from_media_description(
     m: &MediaDescription,
 ) -> Result<Vec<RTCRtpCodecParameters>> {
@@ -1145,6 +1168,7 @@ pub(crate) fn codecs_from_media_description(
     Ok(out)
 }
 
+#[tracing::instrument(level = "debug", skip(m))]
 pub(crate) fn rtp_extensions_from_media_description(
     m: &MediaDescription,
 ) -> Result<HashMap<String, isize>> {
@@ -1165,6 +1189,7 @@ pub(crate) fn rtp_extensions_from_media_description(
     Ok(out)
 }
 
+#[tracing::instrument(level = "debug", skip(origin, d))]
 /// update_sdp_origin saves sdp.Origin in PeerConnection when creating 1st local SDP;
 /// for subsequent calling, it updates Origin for SessionDescription from saved one
 /// and increments session version by one.

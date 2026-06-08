@@ -6,6 +6,7 @@ use tokio::io::{AsyncReadExt, AsyncWriteExt};
 
 use super::*;
 
+#[tracing::instrument(level = "debug", skip())]
 fn create_test_stream() -> Stream {
     let (awake_write_loop_ch_tx, _awake_write_loop_ch_rx) = mpsc::channel(1);
     Stream::new(

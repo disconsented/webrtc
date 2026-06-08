@@ -22,6 +22,7 @@ pub struct DnsOption {
 }
 
 impl fmt::Display for DnsOption {
+    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
@@ -32,6 +33,7 @@ impl fmt::Display for DnsOption {
 }
 
 impl fmt::Display for OptResource {
+    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let s: Vec<String> = self.options.iter().map(|o| o.to_string()).collect();
         write!(f, "dnsmessage.OPTResource{{options: {}}}", s.join(","))
@@ -39,10 +41,12 @@ impl fmt::Display for OptResource {
 }
 
 impl ResourceBody for OptResource {
+    #[tracing::instrument(level = "debug", skip(self))]
     fn real_type(&self) -> DnsType {
         DnsType::Opt
     }
 
+    #[tracing::instrument(level = "debug", skip(self, msg, _compression, _compression_off))]
     fn pack(
         &self,
         mut msg: Vec<u8>,
@@ -57,6 +61,7 @@ impl ResourceBody for OptResource {
         Ok(msg)
     }
 
+    #[tracing::instrument(level = "debug", skip(self, msg, off, length))]
     fn unpack(&mut self, msg: &[u8], mut off: usize, length: usize) -> Result<usize> {
         let mut opts = vec![];
         let old_off = off;

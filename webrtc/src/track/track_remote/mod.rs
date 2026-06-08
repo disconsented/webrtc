@@ -60,6 +60,7 @@ pub struct TrackRemote {
 }
 
 impl std::fmt::Debug for TrackRemote {
+    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("TrackRemote")
             .field("id", &self.id)
@@ -75,6 +76,7 @@ impl std::fmt::Debug for TrackRemote {
 }
 
 impl TrackRemote {
+    #[tracing::instrument(level = "debug", skip(receive_mtu, kind, ssrc, rid, receiver, media_engine, interceptor))]
     pub(crate) fn new(
         receive_mtu: usize,
         kind: RTPCodecType,
@@ -104,10 +106,12 @@ impl TrackRemote {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     pub fn tid(&self) -> usize {
         self.tid
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// id is the unique identifier for this Track. This should be unique for the
     /// stream, but doesn't have to globally unique. A common example would be 'audio' or 'video'
     /// and StreamID would be 'desktop' or 'webcam'
@@ -116,22 +120,26 @@ impl TrackRemote {
         id.clone()
     }
 
+    #[tracing::instrument(level = "debug", skip(self, s))]
     pub fn set_id(&self, s: String) {
         let mut id = self.id.lock();
         *id = s;
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// stream_id is the group this track belongs too. This must be unique
     pub fn stream_id(&self) -> String {
         let stream_id = self.stream_id.lock();
         stream_id.clone()
     }
 
+    #[tracing::instrument(level = "debug", skip(self, s))]
     pub fn set_stream_id(&self, s: String) {
         let mut stream_id = self.stream_id.lock();
         *stream_id = s;
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// rid gets the RTP Stream ID of this Track
     /// With Simulcast you will have multiple tracks with the same ID, but different RID values.
     /// In many cases a TrackRemote will not have an RID, so it is important to assert it is non-zero
@@ -139,59 +147,71 @@ impl TrackRemote {
         self.rid.as_str()
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// payload_type gets the PayloadType of the track
     pub fn payload_type(&self) -> PayloadType {
         self.payload_type.load(Ordering::SeqCst)
     }
 
+    #[tracing::instrument(level = "debug", skip(self, payload_type))]
     pub fn set_payload_type(&self, payload_type: PayloadType) {
         self.payload_type.store(payload_type, Ordering::SeqCst);
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// kind gets the Kind of the track
     pub fn kind(&self) -> RTPCodecType {
         self.kind.load(Ordering::SeqCst).into()
     }
 
+    #[tracing::instrument(level = "debug", skip(self, kind))]
     pub fn set_kind(&self, kind: RTPCodecType) {
         self.kind.store(kind as u8, Ordering::SeqCst);
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// ssrc gets the SSRC of the track
     pub fn ssrc(&self) -> SSRC {
         self.ssrc.load(Ordering::SeqCst)
     }
 
+    #[tracing::instrument(level = "debug", skip(self, ssrc))]
     pub fn set_ssrc(&self, ssrc: SSRC) {
         self.ssrc.store(ssrc, Ordering::SeqCst);
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// msid gets the Msid of the track
     pub fn msid(&self) -> String {
         format!("{} {}", self.stream_id(), self.id())
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// codec gets the Codec of the track
     pub fn codec(&self) -> RTCRtpCodecParameters {
         let codec = self.codec.lock();
         codec.clone()
     }
 
+    #[tracing::instrument(level = "debug", skip(self, codec))]
     pub fn set_codec(&self, codec: RTCRtpCodecParameters) {
         let mut c = self.codec.lock();
         *c = codec;
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     pub fn params(&self) -> RTCRtpParameters {
         let p = self.params.lock();
         p.clone()
     }
 
+    #[tracing::instrument(level = "debug", skip(self, params))]
     pub fn set_params(&self, params: RTCRtpParameters) {
         let mut p = self.params.lock();
         *p = params;
     }
 
+    #[tracing::instrument(level = "debug", skip(self, handler))]
     pub fn onmute<F>(&self, handler: F)
     where
         F: FnMut() -> Pin<Box<dyn Future<Output = ()> + Send + 'static>> + Send + 'static + Sync,
@@ -201,6 +221,7 @@ impl TrackRemote {
             .store(Some(Arc::new(Mutex::new(Box::new(handler)))));
     }
 
+    #[tracing::instrument(level = "debug", skip(self, handler))]
     pub fn onunmute<F>(&self, handler: F)
     where
         F: FnMut() -> Pin<Box<dyn Future<Output = ()> + Send + 'static>> + Send + 'static + Sync,
@@ -210,6 +231,7 @@ impl TrackRemote {
             .store(Some(Arc::new(Mutex::new(Box::new(handler)))));
     }
 
+    #[tracing::instrument(level = "debug", skip(self, b))]
     /// Reads data from the track.
     ///
     /// **Cancel Safety:** This method is not cancel safe. Dropping the resulting [`Future`] before
@@ -235,6 +257,7 @@ impl TrackRemote {
         Ok((pkt, attributes))
     }
 
+    #[tracing::instrument(level = "debug", skip(self, pkt))]
     /// check_and_update_track checks payloadType for every incoming packet
     /// once a different payloadType is detected the track will be updated
     pub(crate) async fn check_and_update_track(&self, pkt: &rtp::packet::Packet) -> Result<()> {
@@ -268,6 +291,7 @@ impl TrackRemote {
         Ok(())
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// read_rtp is a convenience method that wraps Read and unmarshals for you.
     pub async fn read_rtp(&self) -> Result<(rtp::packet::Packet, Attributes)> {
         let mut b = vec![0u8; self.receive_mtu];
@@ -276,6 +300,7 @@ impl TrackRemote {
         Ok((pkt, attributes))
     }
 
+    #[tracing::instrument(level = "debug", skip(self, b))]
     /// peek is like Read, but it doesn't discard the packet read
     pub(crate) async fn peek(&self, b: &mut [u8]) -> Result<(rtp::packet::Packet, Attributes)> {
         let (pkt, a) = self.read(b).await?;
@@ -290,6 +315,7 @@ impl TrackRemote {
         Ok((pkt, a))
     }
 
+    #[tracing::instrument(level = "debug", skip(self, data))]
     /// Set the initially peeked data for this track.
     ///
     /// This is useful when a track is first created to populate data read from the track in the
@@ -303,6 +329,7 @@ impl TrackRemote {
         internal.peeked = data;
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     pub(crate) async fn fire_onmute(&self) {
         let on_mute = self.handlers.on_mute.load();
 
@@ -311,6 +338,7 @@ impl TrackRemote {
         };
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     pub(crate) async fn fire_onunmute(&self) {
         let on_unmute = self.handlers.on_unmute.load();
 

@@ -12,11 +12,13 @@ pub trait Sequencer: fmt::Debug {
 }
 
 impl Clone for Box<dyn Sequencer + Send + Sync> {
+    #[tracing::instrument(level = "debug", skip(self))]
     fn clone(&self) -> Box<dyn Sequencer + Send + Sync> {
         self.clone_to()
     }
 }
 
+#[tracing::instrument(level = "debug", skip())]
 /// NewRandomSequencer returns a new sequencer starting from a random sequence
 /// number
 pub fn new_random_sequencer() -> impl Sequencer {
@@ -27,6 +29,7 @@ pub fn new_random_sequencer() -> impl Sequencer {
     SequencerImpl(c)
 }
 
+#[tracing::instrument(level = "debug", skip(s))]
 /// NewFixedSequencer returns a new sequencer starting from a specific
 /// sequence number
 pub fn new_fixed_sequencer(s: u16) -> impl Sequencer {
@@ -50,6 +53,7 @@ struct Counters {
 }
 
 impl Sequencer for SequencerImpl {
+    #[tracing::instrument(level = "debug", skip(self))]
     /// NextSequenceNumber increment and returns a new sequence number for
     /// building RTP packets
     fn next_sequence_number(&self) -> u16 {
@@ -62,12 +66,14 @@ impl Sequencer for SequencerImpl {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// RollOverCount returns the amount of times the 16bit sequence number
     /// has wrapped
     fn roll_over_count(&self) -> u64 {
         self.0.roll_over_count.load(Ordering::SeqCst)
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn clone_to(&self) -> Box<dyn Sequencer + Send + Sync> {
         Box::new(self.clone())
     }

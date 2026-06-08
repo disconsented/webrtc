@@ -48,6 +48,7 @@ pub struct SampleBuilder<T: Depacketizer> {
 }
 
 impl<T: Depacketizer> SampleBuilder<T> {
+    #[tracing::instrument(level = "debug", skip(max_late, depacketizer, sample_rate))]
     /// Constructs a new SampleBuilder.
     /// `max_late` is how long to wait until we can construct a completed [`Sample`].
     /// `max_late` is measured in RTP packet sequence numbers.
@@ -71,12 +72,14 @@ impl<T: Depacketizer> SampleBuilder<T> {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self, max_late_duration))]
     pub fn with_max_time_delay(mut self, max_late_duration: Duration) -> Self {
         self.max_late_timestamp =
             (self.sample_rate as u128 * max_late_duration.as_millis() / 1000) as u32;
         self
     }
 
+    #[tracing::instrument(level = "debug", skip(self, location))]
     fn too_old(&self, location: &SampleSequenceLocation) -> bool {
         if self.max_late_timestamp == 0 {
             return false;
@@ -114,6 +117,7 @@ impl<T: Depacketizer> SampleBuilder<T> {
         found_tail.unwrap().wrapping_sub(found_head.unwrap()) > self.max_late_timestamp
     }
 
+    #[tracing::instrument(level = "debug", skip(self, location))]
     /// Returns the timestamp associated with a given sample location
     fn fetch_timestamp(&self, location: &SampleSequenceLocation) -> Option<u32> {
         if location.empty() {
@@ -128,10 +132,12 @@ impl<T: Depacketizer> SampleBuilder<T> {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self, i))]
     fn release_packet(&mut self, i: u16) {
         self.buffer[i as usize] = None;
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// Clears all buffers that have already been consumed by
     /// popping.
     fn purge_consumed_buffers(&mut self) {
@@ -139,6 +145,7 @@ impl<T: Depacketizer> SampleBuilder<T> {
         self.purge_consumed_location(&active, false);
     }
 
+    #[tracing::instrument(level = "debug", skip(self, consume, force_consume))]
     /// Clears all buffers that have already been consumed
     /// during a sample building method.
     fn purge_consumed_location(&mut self, consume: &SampleSequenceLocation, force_consume: bool) {
@@ -158,6 +165,7 @@ impl<T: Depacketizer> SampleBuilder<T> {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// Flushes all buffers that are already consumed or those buffers
     /// that are too late to consume.
     fn purge_buffers(&mut self) {
@@ -193,6 +201,7 @@ impl<T: Depacketizer> SampleBuilder<T> {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self, p))]
     /// Adds an RTP Packet to self's buffer.
     ///
     /// Push does not copy the input. If you wish to reuse
@@ -216,6 +225,7 @@ impl<T: Depacketizer> SampleBuilder<T> {
         self.purge_buffers();
     }
 
+    #[tracing::instrument(level = "debug", skip(self, purging_buffers))]
     /// Creates a sample from a valid collection of RTP Packets by
     /// walking forwards building a sample if everything looks good clear and
     /// update buffer+values
@@ -365,6 +375,7 @@ impl<T: Depacketizer> SampleBuilder<T> {
         Ok(consume)
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// Compiles pushed RTP packets into media samples and then
     /// returns the next valid sample (or None if no sample is compiled).
     pub fn pop(&mut self) -> Option<Sample> {
@@ -378,6 +389,7 @@ impl<T: Depacketizer> SampleBuilder<T> {
         result
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// Compiles pushed RTP packets into media samples and then
     /// returns the next valid sample with its associated RTP timestamp (or `None` if
     /// no sample is compiled).
@@ -400,6 +412,7 @@ impl<T: Depacketizer> SampleBuilder<T> {
     }
 }*/
 
+#[tracing::instrument(level = "debug", skip(x, y))]
 pub(crate) fn seqnum_distance(x: u16, y: u16) -> u16 {
     let diff = x.wrapping_sub(y);
     if diff > 0xFFFF / 2 {

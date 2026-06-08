@@ -11,22 +11,27 @@ struct DummyRelayConnObserver {
 
 #[async_trait]
 impl RelayConnObserver for DummyRelayConnObserver {
+    #[tracing::instrument(level = "debug", skip(self))]
     fn turn_server_addr(&self) -> String {
         self.turn_server_addr.clone()
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn username(&self) -> Username {
         self.username.clone()
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn realm(&self) -> Realm {
         self.realm.clone()
     }
 
+    #[tracing::instrument(level = "debug", skip(self, _data, _to))]
     async fn write_to(&self, _data: &[u8], _to: &str) -> std::result::Result<usize, util::Error> {
         Ok(0)
     }
 
+    #[tracing::instrument(level = "debug", skip(self, _msg, _to, _dont_wait))]
     async fn perform_transaction(
         &mut self,
         _msg: &Message,

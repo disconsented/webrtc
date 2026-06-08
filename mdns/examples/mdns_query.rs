@@ -15,6 +15,7 @@ use webrtc_mdns as mdns;
 // For interop with pion/mdns_server:
 // cargo run --color=always --package webrtc-mdns --example mdns_query -- --local-name pion-test.local
 
+#[tracing::instrument(level = "debug", skip())]
 #[tokio::main]
 async fn main() -> Result<(), Error> {
     env_logger::Builder::new()

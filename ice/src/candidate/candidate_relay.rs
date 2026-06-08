@@ -20,6 +20,7 @@ pub struct CandidateRelayConfig {
 }
 
 impl CandidateRelayConfig {
+    #[tracing::instrument(level = "debug", skip(self))]
     /// Creates a new relay candidate.
     pub fn new_candidate_relay(self) -> Result<CandidateBase> {
         let mut candidate_id = self.base_config.candidate_id;

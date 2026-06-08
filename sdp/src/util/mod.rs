@@ -33,6 +33,7 @@ const CONNECTION_ROLE_ACTPASS_STR: &str = "actpass";
 const CONNECTION_ROLE_HOLDCONN_STR: &str = "holdconn";
 
 impl fmt::Display for ConnectionRole {
+    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let s = match self {
             ConnectionRole::Active => CONNECTION_ROLE_ACTIVE_STR,
@@ -46,6 +47,7 @@ impl fmt::Display for ConnectionRole {
 }
 
 impl From<u8> for ConnectionRole {
+    #[tracing::instrument(level = "debug", skip(v))]
     fn from(v: u8) -> Self {
         match v {
             1 => ConnectionRole::Active,
@@ -58,6 +60,7 @@ impl From<u8> for ConnectionRole {
 }
 
 impl From<&str> for ConnectionRole {
+    #[tracing::instrument(level = "debug", skip(raw))]
     fn from(raw: &str) -> Self {
         match raw {
             CONNECTION_ROLE_ACTIVE_STR => ConnectionRole::Active,
@@ -69,6 +72,7 @@ impl From<&str> for ConnectionRole {
     }
 }
 
+#[tracing::instrument(level = "debug", skip())]
 /// https://tools.ietf.org/html/draft-ietf-rtcweb-jsep-26#section-5.2.1
 /// Session ID is recommended to be constructed by generating a 64-bit
 /// quantity with the highest bit set to zero and the remaining 63-bits
@@ -90,6 +94,7 @@ pub struct Codec {
 }
 
 impl fmt::Display for Codec {
+    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
@@ -111,6 +116,7 @@ impl fmt::Display for Codec {
     }
 }
 
+#[tracing::instrument(level = "debug", skip(rtpmap))]
 pub(crate) fn parse_rtpmap(rtpmap: &str) -> Result<Codec> {
     // a=rtpmap:<payload type> <encoding name>/<clock rate>[/<encoding parameters>]
     let split: Vec<&str> = rtpmap.split_whitespace().collect();
@@ -147,6 +153,7 @@ pub(crate) fn parse_rtpmap(rtpmap: &str) -> Result<Codec> {
     })
 }
 
+#[tracing::instrument(level = "debug", skip(fmtp))]
 pub(crate) fn parse_fmtp(fmtp: &str) -> Result<Codec> {
     // a=fmtp:<format> <format specific parameters>
     let split: Vec<&str> = fmtp.split_whitespace().collect();
@@ -169,6 +176,7 @@ pub(crate) fn parse_fmtp(fmtp: &str) -> Result<Codec> {
     })
 }
 
+#[tracing::instrument(level = "debug", skip(rtcp_fb))]
 pub(crate) fn parse_rtcp_fb(rtcp_fb: &str) -> Result<Codec> {
     // a=ftcp-fb:<payload type> <RTCP feedback type> [<RTCP feedback parameter>]
     let split: Vec<&str> = rtcp_fb.splitn(2, ' ').collect();
@@ -188,6 +196,7 @@ pub(crate) fn parse_rtcp_fb(rtcp_fb: &str) -> Result<Codec> {
     })
 }
 
+#[tracing::instrument(level = "debug", skip(codec, codecs))]
 pub(crate) fn merge_codecs(mut codec: Codec, codecs: &mut HashMap<u8, Codec>) {
     if let Some(saved_codec) = codecs.get_mut(&codec.payload_type) {
         if saved_codec.payload_type == 0 {
@@ -211,6 +220,7 @@ pub(crate) fn merge_codecs(mut codec: Codec, codecs: &mut HashMap<u8, Codec>) {
     }
 }
 
+#[tracing::instrument(level = "debug", skip(want, got))]
 fn equivalent_fmtp(want: &str, got: &str) -> bool {
     let mut want_split: Vec<&str> = want.split(';').collect();
     let mut got_split: Vec<&str> = got.split(';').collect();
@@ -233,6 +243,7 @@ fn equivalent_fmtp(want: &str, got: &str) -> bool {
     true
 }
 
+#[tracing::instrument(level = "debug", skip(wanted, got))]
 pub(crate) fn codecs_match(wanted: &Codec, got: &Codec) -> bool {
     if !wanted.name.is_empty() && wanted.name.to_lowercase() != got.name.to_lowercase() {
         return false;

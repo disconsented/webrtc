@@ -51,6 +51,7 @@ pub struct Header {
 }
 
 impl Unmarshal for Header {
+    #[tracing::instrument(level = "debug", skip(raw_packet))]
     /// Unmarshal parses the passed byte slice and stores the result in the Header this method is called upon
     fn unmarshal<B>(raw_packet: &mut B) -> Result<Self, util::Error>
     where
@@ -203,6 +204,7 @@ impl Unmarshal for Header {
 }
 
 impl MarshalSize for Header {
+    #[tracing::instrument(level = "debug", skip(self))]
     /// MarshalSize returns the size of the packet once marshaled.
     fn marshal_size(&self) -> usize {
         let mut head_size = 12 + (self.csrc.len() * CSRC_LENGTH);
@@ -216,6 +218,7 @@ impl MarshalSize for Header {
 }
 
 impl Marshal for Header {
+    #[tracing::instrument(level = "debug", skip(self, buf))]
     /// Marshal serializes the header and writes to the buffer.
     fn marshal_to(&self, mut buf: &mut [u8]) -> Result<usize, util::Error> {
         /*
@@ -322,6 +325,7 @@ impl Marshal for Header {
 }
 
 impl Header {
+    #[tracing::instrument(level = "debug", skip(self))]
     pub fn get_extension_payload_len(&self) -> usize {
         let payload_len: usize = self
             .extensions
@@ -339,6 +343,7 @@ impl Header {
         payload_len + profile_len
     }
 
+    #[tracing::instrument(level = "debug", skip(self, id, payload))]
     /// SetExtension sets an RTP header extension
     pub fn set_extension(&mut self, id: u8, payload: Bytes) -> Result<(), Error> {
         let payload_len = payload.len() as isize;
@@ -426,6 +431,7 @@ impl Header {
         Ok(())
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// returns an extension id array
     pub fn get_extension_ids(&self) -> Vec<u8> {
         if self.extension {
@@ -435,6 +441,7 @@ impl Header {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self, id))]
     /// returns an RTP header extension
     pub fn get_extension(&self, id: u8) -> Option<Bytes> {
         if self.extension {
@@ -447,6 +454,7 @@ impl Header {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self, id))]
     /// Removes an RTP Header extension
     pub fn del_extension(&mut self, id: u8) -> Result<(), Error> {
         if self.extension {

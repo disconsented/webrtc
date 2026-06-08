@@ -8,17 +8,20 @@ pub struct CnameResource {
 }
 
 impl fmt::Display for CnameResource {
+    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "dnsmessage.cnameresource{{cname: {}}}", self.cname)
     }
 }
 
 impl ResourceBody for CnameResource {
+    #[tracing::instrument(level = "debug", skip(self))]
     fn real_type(&self) -> DnsType {
         DnsType::Cname
     }
 
     // pack appends the wire format of the cnameresource to msg.
+    #[tracing::instrument(level = "debug", skip(self, msg, compression, compression_off))]
     fn pack(
         &self,
         msg: Vec<u8>,
@@ -28,6 +31,7 @@ impl ResourceBody for CnameResource {
         self.cname.pack(msg, compression, compression_off)
     }
 
+    #[tracing::instrument(level = "debug", skip(self, msg, off, _length))]
     fn unpack(&mut self, msg: &[u8], off: usize, _length: usize) -> Result<usize> {
         self.cname.unpack(msg, off)
     }

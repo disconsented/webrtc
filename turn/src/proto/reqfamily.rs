@@ -17,6 +17,7 @@ pub const REQUESTED_FAMILY_IPV6: RequestedAddressFamily = RequestedAddressFamily
 pub struct RequestedAddressFamily(pub u8);
 
 impl fmt::Display for RequestedAddressFamily {
+    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let s = match *self {
             REQUESTED_FAMILY_IPV4 => "IPv4",
@@ -30,6 +31,7 @@ impl fmt::Display for RequestedAddressFamily {
 const REQUESTED_FAMILY_SIZE: usize = 4;
 
 impl Setter for RequestedAddressFamily {
+    #[tracing::instrument(level = "debug", skip(self, m))]
     /// Adds `REQUESTED-ADDRESS-FAMILY` to message.
     fn add_to(&self, m: &mut Message) -> Result<(), stun::Error> {
         let mut v = vec![0; REQUESTED_FAMILY_SIZE];
@@ -43,6 +45,7 @@ impl Setter for RequestedAddressFamily {
 }
 
 impl Getter for RequestedAddressFamily {
+    #[tracing::instrument(level = "debug", skip(self, m))]
     /// Decodes `REQUESTED-ADDRESS-FAMILY` from message.
     fn get_from(&mut self, m: &Message) -> Result<(), stun::Error> {
         let v = m.get(ATTR_REQUESTED_ADDRESS_FAMILY)?;

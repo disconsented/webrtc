@@ -56,6 +56,7 @@ pub struct Origin {
 }
 
 impl fmt::Display for Origin {
+    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
@@ -71,6 +72,7 @@ impl fmt::Display for Origin {
 }
 
 impl Origin {
+    #[tracing::instrument(level = "debug", skip())]
     pub fn new() -> Self {
         Origin {
             username: "".to_owned(),
@@ -106,6 +108,7 @@ pub struct TimeZone {
 }
 
 impl fmt::Display for TimeZone {
+    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{} {}", self.adjustment_time, self.offset)
     }
@@ -136,6 +139,7 @@ pub struct Timing {
 }
 
 impl fmt::Display for Timing {
+    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{} {}", self.start_time, self.stop_time)
     }
@@ -151,6 +155,7 @@ pub struct RepeatTime {
 }
 
 impl fmt::Display for RepeatTime {
+    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{} {}", self.interval, self.duration)?;
 
@@ -238,6 +243,7 @@ pub struct SessionDescription {
 }
 
 impl fmt::Display for SessionDescription {
+    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write_key_value(f, "v=", Some(&self.version))?;
         write_key_value(f, "o=", Some(&self.origin))?;
@@ -292,6 +298,7 @@ impl fmt::Display for SessionDescription {
 
 /// Reset cleans the SessionDescription, and sets all fields back to their default values
 impl SessionDescription {
+    #[tracing::instrument(level = "debug", skip(identity))]
     /// API to match draft-ietf-rtcweb-jsep
     /// Move to webrtc or its own package?
     /// NewJSEPSessionDescription creates a new SessionDescription with
@@ -337,29 +344,34 @@ impl SessionDescription {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self, key))]
     /// WithPropertyAttribute adds a property attribute 'a=key' to the session description
     pub fn with_property_attribute(mut self, key: String) -> Self {
         self.attributes.push(Attribute::new(key, None));
         self
     }
 
+    #[tracing::instrument(level = "debug", skip(self, key, value))]
     /// WithValueAttribute adds a value attribute 'a=key:value' to the session description
     pub fn with_value_attribute(mut self, key: String, value: String) -> Self {
         self.attributes.push(Attribute::new(key, Some(value)));
         self
     }
 
+    #[tracing::instrument(level = "debug", skip(self, algorithm, value))]
     /// WithFingerprint adds a fingerprint to the session description
     pub fn with_fingerprint(self, algorithm: String, value: String) -> Self {
         self.with_value_attribute("fingerprint".to_string(), algorithm + " " + value.as_str())
     }
 
+    #[tracing::instrument(level = "debug", skip(self, md))]
     /// WithMedia adds a media description to the session description
     pub fn with_media(mut self, md: MediaDescription) -> Self {
         self.media_descriptions.push(md);
         self
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn build_codec_map(&self) -> HashMap<u8, Codec> {
         let mut codecs: HashMap<u8, Codec> = HashMap::new();
 
@@ -385,6 +397,7 @@ impl SessionDescription {
         codecs
     }
 
+    #[tracing::instrument(level = "debug", skip(self, payload_type))]
     /// get_codec_for_payload_type scans the SessionDescription for the given payload type and returns the codec
     pub fn get_codec_for_payload_type(&self, payload_type: u8) -> Result<Codec> {
         let codecs = self.build_codec_map();
@@ -396,6 +409,7 @@ impl SessionDescription {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self, wanted))]
     /// get_payload_type_for_codec scans the SessionDescription for a codec that matches the provided codec
     /// as closely as possible and returns its payload type
     pub fn get_payload_type_for_codec(&self, wanted: &Codec) -> Result<u8> {
@@ -410,11 +424,13 @@ impl SessionDescription {
         Err(Error::CodecNotFound)
     }
 
+    #[tracing::instrument(level = "debug", skip(self, key))]
     /// Returns whether an attribute exists
     pub fn has_attribute(&self, key: &str) -> bool {
         self.attributes.iter().any(|a| a.key == key)
     }
 
+    #[tracing::instrument(level = "debug", skip(self, key))]
     /// Attribute returns the value of an attribute and if it exists
     pub fn attribute(&self, key: &str) -> Option<&String> {
         for a in &self.attributes {
@@ -425,6 +441,7 @@ impl SessionDescription {
         None
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// Marshal takes a SDP struct to text
     ///
     /// <https://tools.ietf.org/html/rfc4566#section-5>
@@ -462,6 +479,7 @@ impl SessionDescription {
         self.to_string()
     }
 
+    #[tracing::instrument(level = "debug", skip(reader))]
     /// Unmarshal is the primary function that deserializes the session description
     /// message and stores it inside of a structured SessionDescription object.
     ///
@@ -571,6 +589,7 @@ impl SessionDescription {
 }
 
 impl From<SessionDescription> for String {
+    #[tracing::instrument(level = "debug", skip(sdp))]
     fn from(sdp: SessionDescription) -> String {
         sdp.marshal()
     }
@@ -578,6 +597,7 @@ impl From<SessionDescription> for String {
 
 impl TryFrom<String> for SessionDescription {
     type Error = Error;
+    #[tracing::instrument(level = "debug", skip(sdp_string))]
     fn try_from(sdp_string: String) -> Result<Self> {
         let mut reader = io::Cursor::new(sdp_string.as_bytes());
         let session_description = SessionDescription::unmarshal(&mut reader)?;
@@ -585,6 +605,7 @@ impl TryFrom<String> for SessionDescription {
     }
 }
 
+#[tracing::instrument(level = "debug", skip(lexer))]
 fn s1<'a, R: io::BufRead + io::Seek>(lexer: &mut Lexer<'a, R>) -> Result<Option<StateFn<'a, R>>> {
     let (key, _) = read_type(lexer.reader)?;
     if &key == b"v=" {
@@ -596,6 +617,7 @@ fn s1<'a, R: io::BufRead + io::Seek>(lexer: &mut Lexer<'a, R>) -> Result<Option<
     Err(Error::SdpInvalidSyntax(String::from_utf8(key)?))
 }
 
+#[tracing::instrument(level = "debug", skip(lexer))]
 fn s2<'a, R: io::BufRead + io::Seek>(lexer: &mut Lexer<'a, R>) -> Result<Option<StateFn<'a, R>>> {
     let (key, _) = read_type(lexer.reader)?;
     if &key == b"o=" {
@@ -607,6 +629,7 @@ fn s2<'a, R: io::BufRead + io::Seek>(lexer: &mut Lexer<'a, R>) -> Result<Option<
     Err(Error::SdpInvalidSyntax(String::from_utf8(key)?))
 }
 
+#[tracing::instrument(level = "debug", skip(lexer))]
 fn s3<'a, R: io::BufRead + io::Seek>(lexer: &mut Lexer<'a, R>) -> Result<Option<StateFn<'a, R>>> {
     let (key, _) = read_type(lexer.reader)?;
     if &key == b"s=" {
@@ -618,6 +641,7 @@ fn s3<'a, R: io::BufRead + io::Seek>(lexer: &mut Lexer<'a, R>) -> Result<Option<
     Err(Error::SdpInvalidSyntax(String::from_utf8(key)?))
 }
 
+#[tracing::instrument(level = "debug", skip(lexer))]
 fn s4<'a, R: io::BufRead + io::Seek>(lexer: &mut Lexer<'a, R>) -> Result<Option<StateFn<'a, R>>> {
     let (key, _) = read_type(lexer.reader)?;
     match key.as_slice() {
@@ -640,6 +664,7 @@ fn s4<'a, R: io::BufRead + io::Seek>(lexer: &mut Lexer<'a, R>) -> Result<Option<
     }
 }
 
+#[tracing::instrument(level = "debug", skip(lexer))]
 fn s5<'a, R: io::BufRead + io::Seek>(lexer: &mut Lexer<'a, R>) -> Result<Option<StateFn<'a, R>>> {
     let (key, _) = read_type(lexer.reader)?;
     match key.as_slice() {
@@ -653,6 +678,7 @@ fn s5<'a, R: io::BufRead + io::Seek>(lexer: &mut Lexer<'a, R>) -> Result<Option<
     }
 }
 
+#[tracing::instrument(level = "debug", skip(lexer))]
 fn s6<'a, R: io::BufRead + io::Seek>(lexer: &mut Lexer<'a, R>) -> Result<Option<StateFn<'a, R>>> {
     let (key, _) = read_type(lexer.reader)?;
     match key.as_slice() {
@@ -670,6 +696,7 @@ fn s6<'a, R: io::BufRead + io::Seek>(lexer: &mut Lexer<'a, R>) -> Result<Option<
     }
 }
 
+#[tracing::instrument(level = "debug", skip(lexer))]
 fn s7<'a, R: io::BufRead + io::Seek>(lexer: &mut Lexer<'a, R>) -> Result<Option<StateFn<'a, R>>> {
     let (key, _) = read_type(lexer.reader)?;
     match key.as_slice() {
@@ -689,6 +716,7 @@ fn s7<'a, R: io::BufRead + io::Seek>(lexer: &mut Lexer<'a, R>) -> Result<Option<
     }
 }
 
+#[tracing::instrument(level = "debug", skip(lexer))]
 fn s8<'a, R: io::BufRead + io::Seek>(lexer: &mut Lexer<'a, R>) -> Result<Option<StateFn<'a, R>>> {
     let (key, _) = read_type(lexer.reader)?;
     match key.as_slice() {
@@ -705,6 +733,7 @@ fn s8<'a, R: io::BufRead + io::Seek>(lexer: &mut Lexer<'a, R>) -> Result<Option<
     }
 }
 
+#[tracing::instrument(level = "debug", skip(lexer))]
 fn s9<'a, R: io::BufRead + io::Seek>(lexer: &mut Lexer<'a, R>) -> Result<Option<StateFn<'a, R>>> {
     let (key, num_bytes) = read_type(lexer.reader)?;
     if key.is_empty() && num_bytes == 0 {
@@ -734,6 +763,7 @@ fn s9<'a, R: io::BufRead + io::Seek>(lexer: &mut Lexer<'a, R>) -> Result<Option<
     }
 }
 
+#[tracing::instrument(level = "debug", skip(lexer))]
 fn s10<'a, R: io::BufRead + io::Seek>(lexer: &mut Lexer<'a, R>) -> Result<Option<StateFn<'a, R>>> {
     let (key, _) = read_type(lexer.reader)?;
     match key.as_slice() {
@@ -752,6 +782,7 @@ fn s10<'a, R: io::BufRead + io::Seek>(lexer: &mut Lexer<'a, R>) -> Result<Option
     }
 }
 
+#[tracing::instrument(level = "debug", skip(lexer))]
 fn s11<'a, R: io::BufRead + io::Seek>(lexer: &mut Lexer<'a, R>) -> Result<Option<StateFn<'a, R>>> {
     let (key, num_bytes) = read_type(lexer.reader)?;
     if key.is_empty() && num_bytes == 0 {
@@ -769,6 +800,7 @@ fn s11<'a, R: io::BufRead + io::Seek>(lexer: &mut Lexer<'a, R>) -> Result<Option
     }
 }
 
+#[tracing::instrument(level = "debug", skip(lexer))]
 fn s12<'a, R: io::BufRead + io::Seek>(lexer: &mut Lexer<'a, R>) -> Result<Option<StateFn<'a, R>>> {
     let (key, num_bytes) = read_type(lexer.reader)?;
     if key.is_empty() && num_bytes == 0 {
@@ -798,6 +830,7 @@ fn s12<'a, R: io::BufRead + io::Seek>(lexer: &mut Lexer<'a, R>) -> Result<Option
     }
 }
 
+#[tracing::instrument(level = "debug", skip(lexer))]
 fn s13<'a, R: io::BufRead + io::Seek>(lexer: &mut Lexer<'a, R>) -> Result<Option<StateFn<'a, R>>> {
     let (key, num_bytes) = read_type(lexer.reader)?;
     if key.is_empty() && num_bytes == 0 {
@@ -818,6 +851,7 @@ fn s13<'a, R: io::BufRead + io::Seek>(lexer: &mut Lexer<'a, R>) -> Result<Option
     }
 }
 
+#[tracing::instrument(level = "debug", skip(lexer))]
 fn s14<'a, R: io::BufRead + io::Seek>(lexer: &mut Lexer<'a, R>) -> Result<Option<StateFn<'a, R>>> {
     let (key, num_bytes) = read_type(lexer.reader)?;
     if key.is_empty() && num_bytes == 0 {
@@ -851,6 +885,7 @@ fn s14<'a, R: io::BufRead + io::Seek>(lexer: &mut Lexer<'a, R>) -> Result<Option
     }
 }
 
+#[tracing::instrument(level = "debug", skip(lexer))]
 fn s15<'a, R: io::BufRead + io::Seek>(lexer: &mut Lexer<'a, R>) -> Result<Option<StateFn<'a, R>>> {
     let (key, num_bytes) = read_type(lexer.reader)?;
     if key.is_empty() && num_bytes == 0 {
@@ -881,6 +916,7 @@ fn s15<'a, R: io::BufRead + io::Seek>(lexer: &mut Lexer<'a, R>) -> Result<Option
     }
 }
 
+#[tracing::instrument(level = "debug", skip(lexer))]
 fn s16<'a, R: io::BufRead + io::Seek>(lexer: &mut Lexer<'a, R>) -> Result<Option<StateFn<'a, R>>> {
     let (key, num_bytes) = read_type(lexer.reader)?;
     if key.is_empty() && num_bytes == 0 {
@@ -911,6 +947,7 @@ fn s16<'a, R: io::BufRead + io::Seek>(lexer: &mut Lexer<'a, R>) -> Result<Option
     }
 }
 
+#[tracing::instrument(level = "debug", skip(lexer))]
 fn unmarshal_protocol_version<'a, R: io::BufRead + io::Seek>(
     lexer: &mut Lexer<'a, R>,
 ) -> Result<Option<StateFn<'a, R>>> {
@@ -927,6 +964,7 @@ fn unmarshal_protocol_version<'a, R: io::BufRead + io::Seek>(
     Ok(Some(StateFn { f: s2 }))
 }
 
+#[tracing::instrument(level = "debug", skip(lexer))]
 fn unmarshal_origin<'a, R: io::BufRead + io::Seek>(
     lexer: &mut Lexer<'a, R>,
 ) -> Result<Option<StateFn<'a, R>>> {
@@ -968,6 +1006,7 @@ fn unmarshal_origin<'a, R: io::BufRead + io::Seek>(
     Ok(Some(StateFn { f: s3 }))
 }
 
+#[tracing::instrument(level = "debug", skip(lexer))]
 fn unmarshal_session_name<'a, R: io::BufRead + io::Seek>(
     lexer: &mut Lexer<'a, R>,
 ) -> Result<Option<StateFn<'a, R>>> {
@@ -976,6 +1015,7 @@ fn unmarshal_session_name<'a, R: io::BufRead + io::Seek>(
     Ok(Some(StateFn { f: s4 }))
 }
 
+#[tracing::instrument(level = "debug", skip(lexer))]
 fn unmarshal_session_information<'a, R: io::BufRead + io::Seek>(
     lexer: &mut Lexer<'a, R>,
 ) -> Result<Option<StateFn<'a, R>>> {
@@ -984,6 +1024,7 @@ fn unmarshal_session_information<'a, R: io::BufRead + io::Seek>(
     Ok(Some(StateFn { f: s7 }))
 }
 
+#[tracing::instrument(level = "debug", skip(lexer))]
 fn unmarshal_uri<'a, R: io::BufRead + io::Seek>(
     lexer: &mut Lexer<'a, R>,
 ) -> Result<Option<StateFn<'a, R>>> {
@@ -992,6 +1033,7 @@ fn unmarshal_uri<'a, R: io::BufRead + io::Seek>(
     Ok(Some(StateFn { f: s10 }))
 }
 
+#[tracing::instrument(level = "debug", skip(lexer))]
 fn unmarshal_email<'a, R: io::BufRead + io::Seek>(
     lexer: &mut Lexer<'a, R>,
 ) -> Result<Option<StateFn<'a, R>>> {
@@ -1000,6 +1042,7 @@ fn unmarshal_email<'a, R: io::BufRead + io::Seek>(
     Ok(Some(StateFn { f: s6 }))
 }
 
+#[tracing::instrument(level = "debug", skip(lexer))]
 fn unmarshal_phone<'a, R: io::BufRead + io::Seek>(
     lexer: &mut Lexer<'a, R>,
 ) -> Result<Option<StateFn<'a, R>>> {
@@ -1008,6 +1051,7 @@ fn unmarshal_phone<'a, R: io::BufRead + io::Seek>(
     Ok(Some(StateFn { f: s8 }))
 }
 
+#[tracing::instrument(level = "debug", skip(lexer))]
 fn unmarshal_session_connection_information<'a, R: io::BufRead + io::Seek>(
     lexer: &mut Lexer<'a, R>,
 ) -> Result<Option<StateFn<'a, R>>> {
@@ -1016,6 +1060,7 @@ fn unmarshal_session_connection_information<'a, R: io::BufRead + io::Seek>(
     Ok(Some(StateFn { f: s5 }))
 }
 
+#[tracing::instrument(level = "debug", skip(value))]
 fn unmarshal_connection_information(value: &str) -> Result<Option<ConnectionInformation>> {
     let fields: Vec<&str> = value.split_whitespace().collect();
     if fields.len() < 2 {
@@ -1053,6 +1098,7 @@ fn unmarshal_connection_information(value: &str) -> Result<Option<ConnectionInfo
     }))
 }
 
+#[tracing::instrument(level = "debug", skip(lexer))]
 fn unmarshal_session_bandwidth<'a, R: io::BufRead + io::Seek>(
     lexer: &mut Lexer<'a, R>,
 ) -> Result<Option<StateFn<'a, R>>> {
@@ -1061,6 +1107,7 @@ fn unmarshal_session_bandwidth<'a, R: io::BufRead + io::Seek>(
     Ok(Some(StateFn { f: s5 }))
 }
 
+#[tracing::instrument(level = "debug", skip(value))]
 fn unmarshal_bandwidth(value: &str) -> Result<Bandwidth> {
     let mut parts: Vec<&str> = value.split(':').collect();
     if parts.len() != 2 {
@@ -1083,6 +1130,7 @@ fn unmarshal_bandwidth(value: &str) -> Result<Bandwidth> {
     })
 }
 
+#[tracing::instrument(level = "debug", skip(lexer))]
 fn unmarshal_timing<'a, R: io::BufRead + io::Seek>(
     lexer: &mut Lexer<'a, R>,
 ) -> Result<Option<StateFn<'a, R>>> {
@@ -1107,6 +1155,7 @@ fn unmarshal_timing<'a, R: io::BufRead + io::Seek>(
     Ok(Some(StateFn { f: s9 }))
 }
 
+#[tracing::instrument(level = "debug", skip(lexer))]
 fn unmarshal_repeat_times<'a, R: io::BufRead + io::Seek>(
     lexer: &mut Lexer<'a, R>,
 ) -> Result<Option<StateFn<'a, R>>> {
@@ -1137,6 +1186,7 @@ fn unmarshal_repeat_times<'a, R: io::BufRead + io::Seek>(
     }
 }
 
+#[tracing::instrument(level = "debug", skip(lexer))]
 fn unmarshal_time_zones<'a, R: io::BufRead + io::Seek>(
     lexer: &mut Lexer<'a, R>,
 ) -> Result<Option<StateFn<'a, R>>> {
@@ -1163,6 +1213,7 @@ fn unmarshal_time_zones<'a, R: io::BufRead + io::Seek>(
     Ok(Some(StateFn { f: s13 }))
 }
 
+#[tracing::instrument(level = "debug", skip(lexer))]
 fn unmarshal_session_encryption_key<'a, R: io::BufRead + io::Seek>(
     lexer: &mut Lexer<'a, R>,
 ) -> Result<Option<StateFn<'a, R>>> {
@@ -1171,6 +1222,7 @@ fn unmarshal_session_encryption_key<'a, R: io::BufRead + io::Seek>(
     Ok(Some(StateFn { f: s11 }))
 }
 
+#[tracing::instrument(level = "debug", skip(lexer))]
 fn unmarshal_session_attribute<'a, R: io::BufRead + io::Seek>(
     lexer: &mut Lexer<'a, R>,
 ) -> Result<Option<StateFn<'a, R>>> {
@@ -1193,6 +1245,7 @@ fn unmarshal_session_attribute<'a, R: io::BufRead + io::Seek>(
     Ok(Some(StateFn { f: s11 }))
 }
 
+#[tracing::instrument(level = "debug", skip(lexer))]
 fn unmarshal_media_description<'a, R: io::BufRead + io::Seek>(
     lexer: &mut Lexer<'a, R>,
 ) -> Result<Option<StateFn<'a, R>>> {
@@ -1268,6 +1321,7 @@ fn unmarshal_media_description<'a, R: io::BufRead + io::Seek>(
     Ok(Some(StateFn { f: s12 }))
 }
 
+#[tracing::instrument(level = "debug", skip(lexer))]
 fn unmarshal_media_title<'a, R: io::BufRead + io::Seek>(
     lexer: &mut Lexer<'a, R>,
 ) -> Result<Option<StateFn<'a, R>>> {
@@ -1281,6 +1335,7 @@ fn unmarshal_media_title<'a, R: io::BufRead + io::Seek>(
     }
 }
 
+#[tracing::instrument(level = "debug", skip(lexer))]
 fn unmarshal_media_connection_information<'a, R: io::BufRead + io::Seek>(
     lexer: &mut Lexer<'a, R>,
 ) -> Result<Option<StateFn<'a, R>>> {
@@ -1294,6 +1349,7 @@ fn unmarshal_media_connection_information<'a, R: io::BufRead + io::Seek>(
     }
 }
 
+#[tracing::instrument(level = "debug", skip(lexer))]
 fn unmarshal_media_bandwidth<'a, R: io::BufRead + io::Seek>(
     lexer: &mut Lexer<'a, R>,
 ) -> Result<Option<StateFn<'a, R>>> {
@@ -1308,6 +1364,7 @@ fn unmarshal_media_bandwidth<'a, R: io::BufRead + io::Seek>(
     }
 }
 
+#[tracing::instrument(level = "debug", skip(lexer))]
 fn unmarshal_media_encryption_key<'a, R: io::BufRead + io::Seek>(
     lexer: &mut Lexer<'a, R>,
 ) -> Result<Option<StateFn<'a, R>>> {
@@ -1321,6 +1378,7 @@ fn unmarshal_media_encryption_key<'a, R: io::BufRead + io::Seek>(
     }
 }
 
+#[tracing::instrument(level = "debug", skip(lexer))]
 fn unmarshal_media_attribute<'a, R: io::BufRead + io::Seek>(
     lexer: &mut Lexer<'a, R>,
 ) -> Result<Option<StateFn<'a, R>>> {
@@ -1347,6 +1405,7 @@ fn unmarshal_media_attribute<'a, R: io::BufRead + io::Seek>(
     }
 }
 
+#[tracing::instrument(level = "debug", skip(value))]
 fn parse_time_units(value: &str) -> Result<i64> {
     // Some time offsets in the protocol can be provided with a shorthand
     // notation. This code ensures to convert it to NTP timestamp format.

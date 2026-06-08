@@ -12,12 +12,15 @@ struct DummyObserver;
 
 #[async_trait]
 impl ConnObserver for DummyObserver {
+    #[tracing::instrument(level = "debug", skip(self, _c))]
     async fn write(&self, _c: Box<dyn Chunk + Send + Sync>) -> Result<()> {
         Ok(())
     }
 
+    #[tracing::instrument(level = "debug", skip(self, _addr))]
     async fn on_closed(&self, _addr: SocketAddr) {}
 
+    #[tracing::instrument(level = "debug", skip(self, loc_ip, _dst_ip))]
     fn determine_source_ip(&self, loc_ip: IpAddr, _dst_ip: IpAddr) -> Option<IpAddr> {
         Some(loc_ip)
     }

@@ -37,6 +37,7 @@ pub struct RTCIceCandidate {
     pub tcp_type: String,
 }
 
+#[tracing::instrument(level = "debug", skip(ice_candidates))]
 /// Conversion for ice_candidates
 pub(crate) fn rtc_ice_candidates_from_ice_candidates(
     ice_candidates: &[Arc<dyn Candidate + Send + Sync>],
@@ -45,6 +46,7 @@ pub(crate) fn rtc_ice_candidates_from_ice_candidates(
 }
 
 impl From<&Arc<dyn Candidate + Send + Sync>> for RTCIceCandidate {
+    #[tracing::instrument(level = "debug", skip(c))]
     fn from(c: &Arc<dyn Candidate + Send + Sync>) -> Self {
         let typ: RTCIceCandidateType = c.candidate_type().into();
         let protocol = RTCIceProtocol::from(c.network_type().network_short().as_str());
@@ -71,6 +73,7 @@ impl From<&Arc<dyn Candidate + Send + Sync>> for RTCIceCandidate {
 }
 
 impl RTCIceCandidate {
+    #[tracing::instrument(level = "debug", skip(self))]
     pub(crate) fn to_ice(&self) -> Result<impl Candidate> {
         let candidate_id = self.stats_id.clone();
         let base_config = CandidateBaseConfig {
@@ -124,6 +127,7 @@ impl RTCIceCandidate {
         Ok(c)
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// to_json returns an ICECandidateInit
     /// as indicated by the spec <https://w3c.github.io/webrtc-pc/#dom-rtcicecandidate-tojson>
     pub fn to_json(&self) -> Result<RTCIceCandidateInit> {
@@ -139,6 +143,7 @@ impl RTCIceCandidate {
 }
 
 impl fmt::Display for RTCIceCandidate {
+    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,

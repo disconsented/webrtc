@@ -6,6 +6,7 @@ pub enum ClientCertificateType {
 }
 
 impl From<u8> for ClientCertificateType {
+    #[tracing::instrument(level = "debug", skip(val))]
     fn from(val: u8) -> Self {
         match val {
             1 => ClientCertificateType::RsaSign,

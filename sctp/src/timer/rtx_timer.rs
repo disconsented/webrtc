@@ -27,6 +27,7 @@ pub(crate) struct RtoManager {
 }
 
 impl RtoManager {
+    #[tracing::instrument(level = "debug", skip())]
     /// newRTOManager creates a new rtoManager.
     pub(crate) fn new() -> Self {
         RtoManager {
@@ -35,6 +36,7 @@ impl RtoManager {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self, rtt))]
     /// set_new_rtt takes a newly measured RTT then adjust the RTO in msec.
     pub(crate) fn set_new_rtt(&mut self, rtt: u64) -> u64 {
         if self.no_update {
@@ -58,11 +60,13 @@ impl RtoManager {
         self.srtt
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// get_rto simply returns the current RTO in msec.
     pub(crate) fn get_rto(&self) -> u64 {
         self.rto
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// reset resets the RTO variables to the initial values.
     pub(crate) fn reset(&mut self) {
         if self.no_update {
@@ -74,6 +78,7 @@ impl RtoManager {
         self.rto = RTO_INITIAL;
     }
 
+    #[tracing::instrument(level = "debug", skip(self, rto, no_update))]
     /// set RTO value for testing
     pub(crate) fn set_rto(&mut self, rto: u64, no_update: bool) {
         self.rto = rto;
@@ -81,6 +86,7 @@ impl RtoManager {
     }
 }
 
+#[tracing::instrument(level = "debug", skip(rto, n_rtos))]
 pub(crate) fn calculate_next_timeout(rto: u64, n_rtos: usize) -> u64 {
     // RFC 4096 sec 6.3.3.  Handle T3-rtx Expiration
     //   E2)  For the destination address for which the timer expires, set RTO
@@ -113,6 +119,7 @@ pub(crate) struct RtxTimer<T: 'static + RtxTimerObserver + Send> {
 }
 
 impl<T: 'static + RtxTimerObserver + Send> RtxTimer<T> {
+    #[tracing::instrument(level = "debug", skip(timeout_observer, id, max_retrans))]
     /// newRTXTimer creates a new retransmission timer.
     /// if max_retrans is set to 0, it will keep retransmitting until stop() is called.
     /// (it will never make on_retransmission_failure() callback.
@@ -129,6 +136,7 @@ impl<T: 'static + RtxTimerObserver + Send> RtxTimer<T> {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self, rto))]
     /// start starts the timer.
     pub(crate) async fn start(&self, rto: u64) -> bool {
         // Note: rto value is intentionally not capped by RTO.Min to allow
@@ -193,12 +201,14 @@ impl<T: 'static + RtxTimerObserver + Send> RtxTimer<T> {
         true
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// stop stops the timer.
     pub(crate) async fn stop(&self) {
         let mut close_tx = self.close_tx.lock().await;
         close_tx.take();
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// isRunning tests if the timer is running.
     /// Debug purpose only
     pub(crate) async fn is_running(&self) -> bool {

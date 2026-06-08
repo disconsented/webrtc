@@ -11,6 +11,7 @@ pub enum CompressionMethodId {
 }
 
 impl From<u8> for CompressionMethodId {
+    #[tracing::instrument(level = "debug", skip(val))]
     fn from(val: u8) -> Self {
         match val {
             0 => CompressionMethodId::Null,
@@ -25,10 +26,12 @@ pub struct CompressionMethods {
 }
 
 impl CompressionMethods {
+    #[tracing::instrument(level = "debug", skip(self))]
     pub fn size(&self) -> usize {
         1 + self.ids.len()
     }
 
+    #[tracing::instrument(level = "debug", skip(self, writer))]
     pub fn marshal<W: Write>(&self, writer: &mut W) -> Result<()> {
         writer.write_u8(self.ids.len() as u8)?;
 
@@ -39,6 +42,7 @@ impl CompressionMethods {
         Ok(writer.flush()?)
     }
 
+    #[tracing::instrument(level = "debug", skip(reader))]
     pub fn unmarshal<R: Read>(reader: &mut R) -> Result<Self> {
         let compression_methods_count = reader.read_u8()? as usize;
         let mut ids = vec![];
@@ -53,6 +57,7 @@ impl CompressionMethods {
     }
 }
 
+#[tracing::instrument(level = "debug", skip())]
 pub fn default_compression_methods() -> CompressionMethods {
     CompressionMethods {
         ids: vec![CompressionMethodId::Null],

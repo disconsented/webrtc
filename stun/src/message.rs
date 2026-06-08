@@ -47,6 +47,7 @@ pub trait Checker {
 // is_message returns true if b looks like STUN message.
 // Useful for multiplexing. is_message does not guarantee
 // that decoding will be successful.
+#[tracing::instrument(level = "debug", skip(b))]
 pub fn is_message(b: &[u8]) -> bool {
     b.len() >= MESSAGE_HEADER_SIZE && u32::from_be_bytes([b[4], b[5], b[6], b[7]]) == MAGIC_COOKIE
 }
@@ -66,6 +67,7 @@ pub struct Message {
 }
 
 impl fmt::Display for Message {
+    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let t_id = BASE64_STANDARD.encode(self.transaction_id.0);
         write!(
@@ -82,6 +84,7 @@ impl fmt::Display for Message {
 // Equal returns true if Message b equals to m.
 // Ignores m.Raw.
 impl PartialEq for Message {
+    #[tracing::instrument(level = "debug", skip(self, other))]
     fn eq(&self, other: &Self) -> bool {
         if self.typ != other.typ {
             return false;
@@ -105,6 +108,7 @@ impl Setter for Message {
     // add_to sets b.TransactionID to m.TransactionID.
     //
     // Implements Setter to aid in crafting responses.
+    #[tracing::instrument(level = "debug", skip(self, b))]
     fn add_to(&self, b: &mut Message) -> Result<()> {
         b.transaction_id = self.transaction_id;
         b.write_transaction_id();
@@ -114,6 +118,7 @@ impl Setter for Message {
 
 impl Message {
     // New returns *Message with pre-allocated Raw.
+    #[tracing::instrument(level = "debug", skip())]
     pub fn new() -> Self {
         Message {
             raw: {
@@ -126,6 +131,7 @@ impl Message {
     }
 
     // marshal_binary implements the encoding.BinaryMarshaler interface.
+    #[tracing::instrument(level = "debug", skip(self))]
     pub fn marshal_binary(&self) -> Result<Vec<u8>> {
         // We can't return m.Raw, allocation is expected by implicit interface
         // contract induced by other implementations.
@@ -133,6 +139,7 @@ impl Message {
     }
 
     // unmarshal_binary implements the encoding.BinaryUnmarshaler interface.
+    #[tracing::instrument(level = "debug", skip(self, data))]
     pub fn unmarshal_binary(&mut self, data: &[u8]) -> Result<()> {
         // We can't retain data, copy is expected by interface contract.
         self.raw.clear();
@@ -142,6 +149,7 @@ impl Message {
 
     // NewTransactionID sets m.TransactionID to random value from crypto/rand
     // and returns error if any.
+    #[tracing::instrument(level = "debug", skip(self))]
     pub fn new_transaction_id(&mut self) -> Result<()> {
         rand::rng().fill(&mut self.transaction_id.0);
         self.write_transaction_id();
@@ -149,6 +157,7 @@ impl Message {
     }
 
     // Reset resets Message, attributes and underlying buffer length.
+    #[tracing::instrument(level = "debug", skip(self))]
     pub fn reset(&mut self) {
         self.raw.clear();
         self.length = 0;
@@ -156,6 +165,7 @@ impl Message {
     }
 
     // grow ensures that internal buffer has n length.
+    #[tracing::instrument(level = "debug", skip(self, n, resize))]
     fn grow(&mut self, n: usize, resize: bool) {
         if self.raw.len() >= n {
             if resize {
@@ -170,6 +180,7 @@ impl Message {
     //
     // Value of attribute is copied to internal buffer so
     // it is safe to reuse v.
+    #[tracing::instrument(level = "debug", skip(self, t, v))]
     pub fn add(&mut self, t: AttrType, v: &[u8]) {
         // Allocating buffer for TLV (type-length-value).
         // T = t, L = len(v), V = v.
@@ -220,12 +231,14 @@ impl Message {
     }
 
     // WriteLength writes m.Length to m.Raw.
+    #[tracing::instrument(level = "debug", skip(self))]
     pub fn write_length(&mut self) {
         self.grow(4, false);
         self.raw[2..4].copy_from_slice(&(self.length as u16).to_be_bytes());
     }
 
     // WriteHeader writes header to underlying buffer. Not goroutine-safe.
+    #[tracing::instrument(level = "debug", skip(self))]
     pub fn write_header(&mut self) {
         self.grow(MESSAGE_HEADER_SIZE, false);
 
@@ -237,12 +250,14 @@ impl Message {
     }
 
     // WriteTransactionID writes m.TransactionID to m.Raw.
+    #[tracing::instrument(level = "debug", skip(self))]
     pub fn write_transaction_id(&mut self) {
         self.raw[8..MESSAGE_HEADER_SIZE].copy_from_slice(&self.transaction_id.0);
         // transaction ID
     }
 
     // WriteAttributes encodes all m.Attributes to m.
+    #[tracing::instrument(level = "debug", skip(self))]
     pub fn write_attributes(&mut self) {
         let attributes: Vec<RawAttribute> = self.attributes.0.drain(..).collect();
         for a in &attributes {
@@ -252,18 +267,21 @@ impl Message {
     }
 
     // WriteType writes m.Type to m.Raw.
+    #[tracing::instrument(level = "debug", skip(self))]
     pub fn write_type(&mut self) {
         self.grow(2, false);
         self.raw[..2].copy_from_slice(&self.typ.value().to_be_bytes()); // message type
     }
 
     // SetType sets m.Type and writes it to m.Raw.
+    #[tracing::instrument(level = "debug", skip(self, t))]
     pub fn set_type(&mut self, t: MessageType) {
         self.typ = t;
         self.write_type();
     }
 
     // Encode re-encodes message into m.Raw.
+    #[tracing::instrument(level = "debug", skip(self))]
     pub fn encode(&mut self) {
         self.raw.clear();
         self.write_header();
@@ -272,6 +290,7 @@ impl Message {
     }
 
     // Decode decodes m.Raw into m.
+    #[tracing::instrument(level = "debug", skip(self))]
     pub fn decode(&mut self) -> Result<()> {
         // decoding message header
         let buf = &self.raw;
@@ -349,6 +368,7 @@ impl Message {
 
     // WriteTo implements WriterTo via calling Write(m.Raw) on w and returning
     // call result.
+    #[tracing::instrument(level = "debug", skip(self, writer))]
     pub fn write_to<W: Write>(&self, writer: &mut W) -> Result<usize> {
         let n = writer.write(&self.raw)?;
         Ok(n)
@@ -359,6 +379,7 @@ impl Message {
     // ErrUnexpectedEOF, ErrUnexpectedHeaderEOF or *DecodeErr.
     //
     // Can return *DecodeErr while decoding too.
+    #[tracing::instrument(level = "debug", skip(self, reader))]
     pub fn read_from<R: Read>(&mut self, reader: &mut R) -> Result<usize> {
         let mut t_buf = vec![0; DEFAULT_RAW_CAPACITY];
         let n = reader.read(&mut t_buf)?;
@@ -370,6 +391,7 @@ impl Message {
     // Write decodes message and return error if any.
     //
     // Any error is unrecoverable, but message could be partially decoded.
+    #[tracing::instrument(level = "debug", skip(self, t_buf))]
     pub fn write(&mut self, t_buf: &[u8]) -> Result<usize> {
         self.raw.clear();
         self.raw.extend_from_slice(t_buf);
@@ -378,6 +400,7 @@ impl Message {
     }
 
     // CloneTo clones m to b securing any further m mutations.
+    #[tracing::instrument(level = "debug", skip(self, b))]
     pub fn clone_to(&self, b: &mut Message) -> Result<()> {
         b.raw.clear();
         b.raw.extend_from_slice(&self.raw);
@@ -385,6 +408,7 @@ impl Message {
     }
 
     // Contains return true if message contain t attribute.
+    #[tracing::instrument(level = "debug", skip(self, t))]
     pub fn contains(&self, t: AttrType) -> bool {
         for a in &self.attributes.0 {
             if a.typ == t {
@@ -397,6 +421,7 @@ impl Message {
     // get returns byte slice that represents attribute value,
     // if there is no attribute with such type,
     // ErrAttributeNotFound is returned.
+    #[tracing::instrument(level = "debug", skip(self, t))]
     pub fn get(&self, t: AttrType) -> Result<Vec<u8>> {
         let (v, ok) = self.attributes.get(t);
         if ok {
@@ -421,6 +446,7 @@ impl Message {
     //  m.Build(&t, &username, &nonce, &realm) // 0 allocations
     //
     // See BenchmarkBuildOverhead.
+    #[tracing::instrument(level = "debug", skip(self, setters))]
     pub fn build(&mut self, setters: &[Box<dyn Setter>]) -> Result<()> {
         self.reset();
         self.write_header();
@@ -431,6 +457,7 @@ impl Message {
     }
 
     // Check applies checkers to message in batch, returning on first error.
+    #[tracing::instrument(level = "debug", skip(self, checkers))]
     pub fn check<C: Checker>(&self, checkers: &[C]) -> Result<()> {
         for c in checkers {
             c.check(self)?;
@@ -439,6 +466,7 @@ impl Message {
     }
 
     // Parse applies getters to message in batch, returning on first error.
+    #[tracing::instrument(level = "debug", skip(self, getters))]
     pub fn parse<G: Getter>(&self, getters: &mut [G]) -> Result<()> {
         for c in getters {
             c.get_from(self)?;
@@ -458,6 +486,7 @@ pub const CLASS_SUCCESS_RESPONSE: MessageClass = MessageClass(0x02); // 0b10
 pub const CLASS_ERROR_RESPONSE: MessageClass = MessageClass(0x03); // 0b11
 
 impl fmt::Display for MessageClass {
+    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let s = match *self {
             CLASS_REQUEST => "request",
@@ -490,6 +519,7 @@ pub const METHOD_CONNECTION_BIND: Method = Method(0x000b);
 pub const METHOD_CONNECTION_ATTEMPT: Method = Method(0x000c);
 
 impl fmt::Display for Method {
+    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let unknown = format!("0x{:x}", self.0);
 
@@ -538,6 +568,7 @@ pub const BINDING_ERROR: MessageType = MessageType {
 };
 
 impl fmt::Display for MessageType {
+    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{} {}", self.method, self.class)
     }
@@ -561,6 +592,7 @@ const CLASS_C1SHIFT: u16 = 7;
 
 impl Setter for MessageType {
     // add_to sets m type to t.
+    #[tracing::instrument(level = "debug", skip(self, m))]
     fn add_to(&self, m: &mut Message) -> Result<()> {
         m.set_type(*self);
         Ok(())
@@ -569,11 +601,13 @@ impl Setter for MessageType {
 
 impl MessageType {
     // NewType returns new message type with provided method and class.
+    #[tracing::instrument(level = "debug", skip(method, class))]
     pub fn new(method: Method, class: MessageClass) -> Self {
         MessageType { method, class }
     }
 
     // Value returns bit representation of messageType.
+    #[tracing::instrument(level = "debug", skip(self))]
     pub fn value(&self) -> u16 {
         //	 0                 1
         //	 2  3  4 5 6 7 8 9 0 1 2 3 4 5
@@ -608,6 +642,7 @@ impl MessageType {
     }
 
     // ReadValue decodes uint16 into MessageType.
+    #[tracing::instrument(level = "debug", skip(self, value))]
     pub fn read_value(&mut self, value: u16) {
         // Decoding class.
         // We are taking first bit from v >> 4 and second from v >> 7.

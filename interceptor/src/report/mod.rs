@@ -25,18 +25,21 @@ pub struct ReportBuilder {
 }
 
 impl ReportBuilder {
+    #[tracing::instrument(level = "debug", skip(self, interval))]
     /// with_interval sets send interval for the interceptor.
     pub fn with_interval(mut self, interval: Duration) -> ReportBuilder {
         self.interval = Some(interval);
         self
     }
 
+    #[tracing::instrument(level = "debug", skip(self, now))]
     /// with_now_fn sets an alternative for the time.Now function.
     pub fn with_now_fn(mut self, now: FnTimeGen) -> ReportBuilder {
         self.now = Some(now);
         self
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn build_rr(&self) -> ReceiverReport {
         let (close_tx, close_rx) = mpsc::channel(1);
         ReceiverReport {
@@ -56,6 +59,7 @@ impl ReportBuilder {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn build_sr(&self) -> SenderReport {
         let (close_tx, close_rx) = mpsc::channel(1);
         SenderReport {
@@ -77,6 +81,7 @@ impl ReportBuilder {
 }
 
 impl InterceptorBuilder for ReportBuilder {
+    #[tracing::instrument(level = "debug", skip(self, _id))]
     fn build(&self, _id: &str) -> Result<Arc<dyn Interceptor + Send + Sync>> {
         if self.is_rr {
             Ok(Arc::new(self.build_rr()))

@@ -242,6 +242,7 @@ pub enum TunnelType {
     TunnelTypeIpHttps = 15,
 }
 
+#[tracing::instrument(level = "debug", skip(unicast_addr))]
 unsafe fn v4_socket_from_adapter(unicast_addr: &IpAdapterUnicastAddress) -> SocketAddrV4 {
     let socket_addr = &unicast_addr.address;
 
@@ -258,6 +259,7 @@ unsafe fn v4_socket_from_adapter(unicast_addr: &IpAdapterUnicastAddress) -> Sock
     SocketAddrV4::new(v4_addr, 0)
 }
 
+#[tracing::instrument(level = "debug", skip(unicast_addr))]
 unsafe fn v6_socket_from_adapter(unicast_addr: &IpAdapterUnicastAddress) -> SocketAddrV6 {
     let socket_addr = &unicast_addr.address;
 
@@ -274,6 +276,7 @@ unsafe fn v6_socket_from_adapter(unicast_addr: &IpAdapterUnicastAddress) -> Sock
     )
 }
 
+#[tracing::instrument(level = "debug", skip(buffer))]
 unsafe fn local_ifaces_with_buffer(buffer: &mut Vec<u8>) -> io::Result<()> {
     let mut length = buffer.capacity() as u32;
 
@@ -314,6 +317,7 @@ unsafe fn local_ifaces_with_buffer(buffer: &mut Vec<u8>) -> io::Result<()> {
     }
 }
 
+#[tracing::instrument(level = "debug", skip(adapter_addr))]
 unsafe fn map_adapter_addresses(mut adapter_addr: *const IpAdapterAddresses) -> Vec<Interface> {
     let mut adapter_addresses = Vec::new();
 
@@ -358,6 +362,7 @@ unsafe fn map_adapter_addresses(mut adapter_addr: *const IpAdapterAddresses) -> 
     adapter_addresses
 }
 
+#[tracing::instrument(level = "debug", skip())]
 /// Query the local system for all interface addresses.
 pub fn ifaces() -> Result<Vec<Interface>, ::std::io::Error> {
     let mut adapters_list = Vec::with_capacity(PREALLOC_ADAPTERS_LEN);
@@ -370,6 +375,7 @@ pub fn ifaces() -> Result<Vec<Interface>, ::std::io::Error> {
     }
 }
 
+#[tracing::instrument(level = "debug", skip(unicast_addr))]
 unsafe fn is_ipv4_enabled(unicast_addr: &IpAdapterUnicastAddress) -> bool {
     if unicast_addr.length != 0 {
         let socket_addr = &unicast_addr.address;
@@ -381,6 +387,7 @@ unsafe fn is_ipv4_enabled(unicast_addr: &IpAdapterUnicastAddress) -> bool {
     }
 }
 
+#[tracing::instrument(level = "debug", skip(unicast_addr))]
 unsafe fn is_ipv6_enabled(unicast_addr: &IpAdapterUnicastAddress) -> bool {
     if unicast_addr.length != 0 {
         let socket_addr = &unicast_addr.address;

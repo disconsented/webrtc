@@ -80,6 +80,7 @@ struct GatherCandidatesSrflxParams {
 }
 
 impl Agent {
+    #[tracing::instrument(level = "debug", skip(params))]
     pub(crate) async fn gather_candidates_internal(params: GatherCandidatesInternalParams) {
         Self::set_gathering_state(
             &params.chan_candidate_tx,
@@ -179,6 +180,7 @@ impl Agent {
         .await;
     }
 
+    #[tracing::instrument(level = "debug", skip(chan_candidate_tx, gathering_state, new_state))]
     async fn set_gathering_state(
         chan_candidate_tx: &ChanCandidateTx,
         gathering_state: &Arc<AtomicU8>,
@@ -196,6 +198,7 @@ impl Agent {
         gathering_state.store(new_state as u8, Ordering::SeqCst);
     }
 
+    #[tracing::instrument(level = "debug", skip(params))]
     async fn gather_candidates_local(params: GatherCandidatesLocalParams) {
         let GatherCandidatesLocalParams {
             udp_network,
@@ -382,6 +385,7 @@ impl Agent {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(params))]
     async fn gather_candidates_local_udp_mux(
         params: GatherCandidatesLocalUDPMuxParams,
     ) -> Result<()> {
@@ -471,6 +475,7 @@ impl Agent {
         Ok(())
     }
 
+    #[tracing::instrument(level = "debug", skip(params))]
     async fn gather_candidates_srflx_mapped(params: GatherCandidatesSrflxMappedParasm) {
         let GatherCandidatesSrflxMappedParasm {
             network_types,
@@ -598,6 +603,7 @@ impl Agent {
         wg.wait().await;
     }
 
+    #[tracing::instrument(level = "debug", skip(params))]
     async fn gather_candidates_srflx(params: GatherCandidatesSrflxParams) {
         let GatherCandidatesSrflxParams {
             urls,
@@ -735,6 +741,7 @@ impl Agent {
         wg.wait().await;
     }
 
+    #[tracing::instrument(level = "debug", skip(urls, net, agent_internal))]
     pub(crate) async fn gather_candidates_relay(
         urls: Vec<Url>,
         net: Arc<Net>,

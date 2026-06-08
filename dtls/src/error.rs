@@ -182,18 +182,21 @@ pub struct IoError(#[from] pub io::Error);
 
 // Workaround for wanting PartialEq for io::Error.
 impl PartialEq for IoError {
+    #[tracing::instrument(level = "debug", skip(self, other))]
     fn eq(&self, other: &Self) -> bool {
         self.0.kind() == other.0.kind()
     }
 }
 
 impl From<io::Error> for Error {
+    #[tracing::instrument(level = "debug", skip(e))]
     fn from(e: io::Error) -> Self {
         Error::Io(IoError(e))
     }
 }
 
 impl From<sec1::Error> for Error {
+    #[tracing::instrument(level = "debug", skip(e))]
     fn from(e: sec1::Error) -> Self {
         Error::Sec1(e)
     }
@@ -204,12 +207,14 @@ impl From<sec1::Error> for Error {
 pub struct P256Error(#[source] p256::elliptic_curve::Error);
 
 impl PartialEq for P256Error {
+    #[tracing::instrument(level = "debug", skip(self))]
     fn eq(&self, _: &Self) -> bool {
         false
     }
 }
 
 impl From<p256::elliptic_curve::Error> for Error {
+    #[tracing::instrument(level = "debug", skip(e))]
     fn from(e: p256::elliptic_curve::Error) -> Self {
         Error::P256(P256Error(e))
     }
@@ -217,6 +222,7 @@ impl From<p256::elliptic_curve::Error> for Error {
 
 // Because Tokio SendError is parameterized, we sadly lose the backtrace.
 impl<T> From<MpscSendError<T>> for Error {
+    #[tracing::instrument(level = "debug", skip(e))]
     fn from(e: MpscSendError<T>) -> Self {
         Error::MpscSend(e.to_string())
     }

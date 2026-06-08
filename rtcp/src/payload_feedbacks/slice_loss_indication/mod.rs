@@ -41,6 +41,7 @@ pub struct SliceLossIndication {
 }
 
 impl fmt::Display for SliceLossIndication {
+    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
@@ -51,6 +52,7 @@ impl fmt::Display for SliceLossIndication {
 }
 
 impl Packet for SliceLossIndication {
+    #[tracing::instrument(level = "debug", skip(self))]
     /// Header returns the Header associated with this packet.
     fn header(&self) -> Header {
         Header {
@@ -61,29 +63,35 @@ impl Packet for SliceLossIndication {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// destination_ssrc returns an array of SSRC values that this packet refers to.
     fn destination_ssrc(&self) -> Vec<u32> {
         vec![self.media_ssrc]
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn raw_size(&self) -> usize {
         HEADER_LENGTH + SLI_OFFSET + self.sli_entries.len() * 4
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn as_any(&self) -> &(dyn Any + Send + Sync) {
         self
     }
 
+    #[tracing::instrument(level = "debug", skip(self, other))]
     fn equal(&self, other: &(dyn Packet + Send + Sync)) -> bool {
         other.as_any().downcast_ref::<SliceLossIndication>() == Some(self)
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn cloned(&self) -> Box<dyn Packet + Send + Sync> {
         Box::new(self.clone())
     }
 }
 
 impl MarshalSize for SliceLossIndication {
+    #[tracing::instrument(level = "debug", skip(self))]
     fn marshal_size(&self) -> usize {
         let l = self.raw_size();
         // align to 32-bit boundary
@@ -92,6 +100,7 @@ impl MarshalSize for SliceLossIndication {
 }
 
 impl Marshal for SliceLossIndication {
+    #[tracing::instrument(level = "debug", skip(self, buf))]
     /// Marshal encodes the SliceLossIndication in binary
     fn marshal_to(&self, mut buf: &mut [u8]) -> Result<usize> {
         if (self.sli_entries.len() + SLI_LENGTH) as u8 > u8::MAX {
@@ -125,6 +134,7 @@ impl Marshal for SliceLossIndication {
 }
 
 impl Unmarshal for SliceLossIndication {
+    #[tracing::instrument(level = "debug", skip(raw_packet))]
     /// Unmarshal decodes the SliceLossIndication from binary
     fn unmarshal<B>(raw_packet: &mut B) -> Result<Self>
     where

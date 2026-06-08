@@ -378,6 +378,7 @@ fn test_feedback() -> Result<()> {
     Ok(())
 }
 
+#[tracing::instrument(level = "debug", skip(r, sequence_numbers, arrival_times))]
 fn add_run(r: &mut Recorder, sequence_numbers: &[u16], arrival_times: &[i64]) {
     assert_eq!(sequence_numbers.len(), arrival_times.len());
 
@@ -389,11 +390,13 @@ fn add_run(r: &mut Recorder, sequence_numbers: &[u16], arrival_times: &[i64]) {
 const TYPE_TCC_DELTA_SCALE_FACTOR: i64 = 250;
 const SCALE_FACTOR_REFERENCE_TIME: i64 = 64000;
 
+#[tracing::instrument(level = "debug", skip(arrival_time, increase_amount))]
 fn increase_time(arrival_time: &mut i64, increase_amount: i64) -> i64 {
     *arrival_time += increase_amount;
     *arrival_time
 }
 
+#[tracing::instrument(level = "debug", skip(pkts))]
 fn marshal_all(pkts: &[Box<dyn rtcp::packet::Packet + Send + Sync>]) -> Result<()> {
     for pkt in pkts {
         let _ = pkt.marshal()?;

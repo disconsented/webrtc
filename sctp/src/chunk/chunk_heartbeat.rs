@@ -42,12 +42,14 @@ pub(crate) struct ChunkHeartbeat {
 
 /// makes ChunkHeartbeat printable
 impl fmt::Display for ChunkHeartbeat {
+    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.header())
     }
 }
 
 impl Chunk for ChunkHeartbeat {
+    #[tracing::instrument(level = "debug", skip(self))]
     fn header(&self) -> ChunkHeader {
         ChunkHeader {
             typ: CT_HEARTBEAT,
@@ -56,6 +58,7 @@ impl Chunk for ChunkHeartbeat {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(raw))]
     fn unmarshal(raw: &Bytes) -> Result<Self> {
         let header = ChunkHeader::unmarshal(raw)?;
 
@@ -77,6 +80,7 @@ impl Chunk for ChunkHeartbeat {
         Ok(ChunkHeartbeat { params })
     }
 
+    #[tracing::instrument(level = "debug", skip(self, buf))]
     fn marshal_to(&self, buf: &mut BytesMut) -> Result<usize> {
         self.header().marshal_to(buf)?;
         for p in &self.params {
@@ -85,16 +89,19 @@ impl Chunk for ChunkHeartbeat {
         Ok(buf.len())
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn check(&self) -> Result<()> {
         Ok(())
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn value_length(&self) -> usize {
         self.params.iter().fold(0, |length, p| {
             length + PARAM_HEADER_LENGTH + p.value_length()
         })
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn as_any(&self) -> &(dyn Any + Send + Sync) {
         self
     }

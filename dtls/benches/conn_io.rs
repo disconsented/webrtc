@@ -23,6 +23,7 @@ use dtls::content::{Content, ContentType};
 use dtls::record_layer::record_layer_header::{RecordLayerHeader, PROTOCOL_VERSION1_2};
 use dtls::record_layer::RecordLayer;
 
+#[tracing::instrument(level = "debug", skip())]
 fn make_record_layer_header() -> RecordLayerHeader {
     RecordLayerHeader {
         content_type: ContentType::ApplicationData,
@@ -33,6 +34,7 @@ fn make_record_layer_header() -> RecordLayerHeader {
     }
 }
 
+#[tracing::instrument(level = "debug", skip(payload_len))]
 fn make_record_layer(payload_len: usize) -> RecordLayer {
     let data = vec![0xABu8; payload_len];
     RecordLayer::new(
@@ -46,6 +48,7 @@ fn make_record_layer(payload_len: usize) -> RecordLayer {
 // Write strategies
 // ---------------------------------------------------------------------------
 
+#[tracing::instrument(level = "debug", skip(header))]
 fn marshal_header_upstream(header: &RecordLayerHeader) -> Vec<u8> {
     let mut buf = vec![];
     {
@@ -55,12 +58,14 @@ fn marshal_header_upstream(header: &RecordLayerHeader) -> Vec<u8> {
     buf
 }
 
+#[tracing::instrument(level = "debug", skip(header))]
 fn marshal_header_branch(header: &RecordLayerHeader) -> Vec<u8> {
     let mut buf = Vec::with_capacity(13);
     header.marshal(&mut buf).unwrap();
     buf
 }
 
+#[tracing::instrument(level = "debug", skip(record))]
 fn marshal_record_upstream(record: &RecordLayer) -> Vec<u8> {
     let mut buf = vec![];
     {
@@ -70,6 +75,7 @@ fn marshal_record_upstream(record: &RecordLayer) -> Vec<u8> {
     buf
 }
 
+#[tracing::instrument(level = "debug", skip(record))]
 fn marshal_record_branch(record: &RecordLayer) -> Vec<u8> {
     // 1200 B matches the typical DTLS MTU; avoids BufWriter's 8 KB internal buffer.
     let mut buf = Vec::with_capacity(1200);
@@ -81,21 +87,25 @@ fn marshal_record_branch(record: &RecordLayer) -> Vec<u8> {
 // Read strategies
 // ---------------------------------------------------------------------------
 
+#[tracing::instrument(level = "debug", skip(bytes))]
 fn unmarshal_header_upstream(bytes: &[u8]) -> RecordLayerHeader {
     let mut r = BufReader::new(bytes);
     RecordLayerHeader::unmarshal(&mut r).unwrap()
 }
 
+#[tracing::instrument(level = "debug", skip(bytes))]
 fn unmarshal_header_branch(bytes: &[u8]) -> RecordLayerHeader {
     let mut r = Cursor::new(bytes);
     RecordLayerHeader::unmarshal(&mut r).unwrap()
 }
 
+#[tracing::instrument(level = "debug", skip(bytes))]
 fn unmarshal_record_upstream(bytes: &[u8]) -> RecordLayer {
     let mut r = BufReader::new(bytes);
     RecordLayer::unmarshal(&mut r).unwrap()
 }
 
+#[tracing::instrument(level = "debug", skip(bytes))]
 fn unmarshal_record_branch(bytes: &[u8]) -> RecordLayer {
     let mut r = Cursor::new(bytes);
     RecordLayer::unmarshal(&mut r).unwrap()
@@ -105,6 +115,7 @@ fn unmarshal_record_branch(bytes: &[u8]) -> RecordLayer {
 // Benchmark groups
 // ---------------------------------------------------------------------------
 
+#[tracing::instrument(level = "debug", skip(c))]
 fn bench_write(c: &mut Criterion) {
     let header = make_record_layer_header();
 
@@ -138,6 +149,7 @@ fn bench_write(c: &mut Criterion) {
     group.finish();
 }
 
+#[tracing::instrument(level = "debug", skip(c))]
 fn bench_read(c: &mut Criterion) {
     // Pre-build canonical byte payloads so the bench measures only deserialization.
 

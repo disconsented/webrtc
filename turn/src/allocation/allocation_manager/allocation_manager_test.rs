@@ -17,6 +17,7 @@ use crate::relay::relay_static::RelayAddressGeneratorStatic;
 use crate::server::config::{ConnConfig, ServerConfig};
 use crate::server::Server;
 
+#[tracing::instrument(level = "debug", skip())]
 fn new_test_manager() -> Manager {
     let config = ManagerConfig {
         relay_addr_generator: Box::new(RelayAddressGeneratorNone {
@@ -28,6 +29,7 @@ fn new_test_manager() -> Manager {
     Manager::new(config)
 }
 
+#[tracing::instrument(level = "debug", skip())]
 fn random_five_tuple() -> FiveTuple {
     /* #nosec */
     FiveTuple {
@@ -398,11 +400,13 @@ async fn test_delete_allocation_by_username() -> Result<()> {
 
 struct TestAuthHandler;
 impl AuthHandler for TestAuthHandler {
+    #[tracing::instrument(level = "debug", skip(self, username, realm, _src_addr))]
     fn auth_handle(&self, username: &str, realm: &str, _src_addr: SocketAddr) -> Result<Vec<u8>> {
         Ok(generate_auth_key(username, realm, "pass"))
     }
 }
 
+#[tracing::instrument(level = "debug", skip(alloc_close_notify))]
 async fn create_server(
     alloc_close_notify: Option<Sender<AllocationInfo>>,
 ) -> Result<(Server, u16)> {
@@ -428,6 +432,7 @@ async fn create_server(
     Ok((server, server_port))
 }
 
+#[tracing::instrument(level = "debug", skip(username, server_port))]
 async fn create_client(username: String, server_port: u16) -> Result<Client> {
     let conn = Arc::new(UdpSocket::bind("0.0.0.0:0").await?);
 

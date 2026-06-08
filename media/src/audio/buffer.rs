@@ -40,6 +40,7 @@ pub struct BufferRef<'a, T, L> {
 }
 
 impl<'a, T, L> BufferRef<'a, T, L> {
+    #[tracing::instrument(level = "debug", skip(samples, channels))]
     pub fn new(samples: &'a [T], channels: usize) -> Self {
         debug_assert_eq!(samples.len() % channels, 0);
         let info = {
@@ -58,6 +59,7 @@ pub struct Buffer<T, L> {
 }
 
 impl<T, L> Buffer<T, L> {
+    #[tracing::instrument(level = "debug", skip(samples, channels))]
     pub fn new(samples: Vec<T>, channels: usize) -> Self {
         debug_assert_eq!(samples.len() % channels, 0);
         let info = {
@@ -67,6 +69,7 @@ impl<T, L> Buffer<T, L> {
         Self { samples, info }
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     pub fn as_ref(&'_ self) -> BufferRef<'_, T, L> {
         BufferRef {
             samples: &self.samples[..],
@@ -74,6 +77,7 @@ impl<T, L> Buffer<T, L> {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self, range))]
     pub fn sub_range(&'_ self, range: Range<usize>) -> BufferRef<'_, T, L> {
         let samples_len = range.len();
         let samples = &self.samples[range];
@@ -91,6 +95,7 @@ impl<T> From<Buffer<T, Deinterleaved>> for Buffer<T, Interleaved>
 where
     T: Default + Copy,
 {
+    #[tracing::instrument(level = "debug", skip(buffer))]
     fn from(buffer: Buffer<T, Deinterleaved>) -> Self {
         Self::from(buffer.as_ref())
     }
@@ -100,6 +105,7 @@ impl<'a, T> From<BufferRef<'a, T, Deinterleaved>> for Buffer<T, Interleaved>
 where
     T: Default + Copy,
 {
+    #[tracing::instrument(level = "debug", skip(buffer))]
     fn from(buffer: BufferRef<'a, T, Deinterleaved>) -> Self {
         // Writing into a vec of uninitialized `samples` is about 10% faster than
         // cloning it or creating a default-initialized one and over-writing it.
@@ -135,6 +141,7 @@ impl<T> From<Buffer<T, Interleaved>> for Buffer<T, Deinterleaved>
 where
     T: Default + Copy,
 {
+    #[tracing::instrument(level = "debug", skip(buffer))]
     fn from(buffer: Buffer<T, Interleaved>) -> Self {
         Self::from(buffer.as_ref())
     }
@@ -144,6 +151,7 @@ impl<'a, T> From<BufferRef<'a, T, Interleaved>> for Buffer<T, Deinterleaved>
 where
     T: Default + Copy,
 {
+    #[tracing::instrument(level = "debug", skip(buffer))]
     fn from(buffer: BufferRef<'a, T, Interleaved>) -> Self {
         // Writing into a vec of uninitialized `samples` is about 10% faster than
         // cloning it or creating a default-initialized one and over-writing it.
@@ -178,6 +186,7 @@ where
 impl FromBytes<Interleaved> for Buffer<i16, Interleaved> {
     type Error = ();
 
+    #[tracing::instrument(level = "debug", skip(bytes, channels))]
     fn from_bytes<B: ByteOrder>(bytes: &[u8], channels: usize) -> Result<Self, Self::Error> {
         const STRIDE: usize = std::mem::size_of::<i16>();
         assert_eq!(bytes.len() % STRIDE, 0);
@@ -201,6 +210,7 @@ impl FromBytes<Interleaved> for Buffer<i16, Interleaved> {
 impl FromBytes<Deinterleaved> for Buffer<i16, Interleaved> {
     type Error = ();
 
+    #[tracing::instrument(level = "debug", skip(bytes, channels))]
     fn from_bytes<B: ByteOrder>(bytes: &[u8], channels: usize) -> Result<Self, Self::Error> {
         const STRIDE: usize = std::mem::size_of::<i16>();
         assert_eq!(bytes.len() % STRIDE, 0);
@@ -238,6 +248,7 @@ impl FromBytes<Deinterleaved> for Buffer<i16, Interleaved> {
 impl FromBytes<Deinterleaved> for Buffer<i16, Deinterleaved> {
     type Error = ();
 
+    #[tracing::instrument(level = "debug", skip(bytes, channels))]
     fn from_bytes<B: ByteOrder>(bytes: &[u8], channels: usize) -> Result<Self, Self::Error> {
         const STRIDE: usize = std::mem::size_of::<i16>();
         assert_eq!(bytes.len() % STRIDE, 0);
@@ -261,6 +272,7 @@ impl FromBytes<Deinterleaved> for Buffer<i16, Deinterleaved> {
 impl FromBytes<Interleaved> for Buffer<i16, Deinterleaved> {
     type Error = ();
 
+    #[tracing::instrument(level = "debug", skip(bytes, channels))]
     fn from_bytes<B: ByteOrder>(bytes: &[u8], channels: usize) -> Result<Self, Self::Error> {
         const STRIDE: usize = std::mem::size_of::<i16>();
         assert_eq!(bytes.len() % STRIDE, 0);
@@ -295,6 +307,7 @@ impl FromBytes<Interleaved> for Buffer<i16, Deinterleaved> {
     }
 }
 
+#[tracing::instrument(level = "debug", skip(len, f))]
 /// Creates a vec with deferred initialization.
 ///
 /// # Safety

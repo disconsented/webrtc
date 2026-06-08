@@ -13,6 +13,7 @@ pub struct Addr {
 }
 
 impl Default for Addr {
+    #[tracing::instrument(level = "debug", skip())]
     fn default() -> Self {
         Addr {
             ip: IpAddr::V4(Ipv4Addr::new(0, 0, 0, 0)),
@@ -22,17 +23,20 @@ impl Default for Addr {
 }
 
 impl fmt::Display for Addr {
+    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}:{}", self.ip, self.port)
     }
 }
 
 impl Addr {
+    #[tracing::instrument(level = "debug", skip(self))]
     /// Returns this network.
     pub fn network(&self) -> String {
         "turn".to_owned()
     }
 
+    #[tracing::instrument(level = "debug", skip(n))]
     /// Creates a new [`Addr`] from `n`.
     pub fn from_socket_addr(n: &SocketAddr) -> Self {
         let ip = n.ip();
@@ -41,6 +45,7 @@ impl Addr {
         Addr { ip, port }
     }
 
+    #[tracing::instrument(level = "debug", skip(self, other))]
     /// Returns `true` if the `other` has the same IP address.
     pub fn equal_ip(&self, other: &Addr) -> bool {
         self.ip == other.ip
@@ -56,6 +61,7 @@ pub struct FiveTuple {
 }
 
 impl fmt::Display for FiveTuple {
+    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}->{} ({})", self.client, self.server, self.proto)
     }

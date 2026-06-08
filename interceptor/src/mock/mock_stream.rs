@@ -36,6 +36,7 @@ struct MockStreamInternal {
 }
 
 impl MockStream {
+    #[tracing::instrument(level = "debug", skip(info, interceptor))]
     /// new creates a new MockStream
     pub async fn new(
         info: &StreamInfo,
@@ -130,6 +131,7 @@ impl MockStream {
         stream
     }
 
+    #[tracing::instrument(level = "debug", skip(self, pkt))]
     /// write_rtcp writes a batch of rtcp packet to the stream, using the interceptor
     pub async fn write_rtcp(
         &self,
@@ -144,6 +146,7 @@ impl MockStream {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self, pkt))]
     /// write_rtp writes an rtp packet to the stream, using the interceptor
     pub async fn write_rtp(&self, pkt: &rtp::packet::Packet) -> Result<usize> {
         let a = Attributes::new();
@@ -155,6 +158,7 @@ impl MockStream {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self, pkts))]
     /// receive_rtcp schedules a new rtcp batch, so it can be read be the stream
     pub async fn receive_rtcp(&self, pkts: Vec<Box<dyn rtcp::packet::Packet + Send + Sync>>) {
         let rtcp_in_tx = self.internal.rtcp_in_tx.lock().await;
@@ -163,6 +167,7 @@ impl MockStream {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self, pkt))]
     /// receive_rtp schedules a rtp packet, so it can be read be the stream
     pub async fn receive_rtp(&self, pkt: rtp::packet::Packet) {
         let rtp_in_tx = self.internal.rtp_in_tx.lock().await;
@@ -171,12 +176,14 @@ impl MockStream {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// written_rtcp returns a channel containing the rtcp batches written, modified by the interceptor
     pub async fn written_rtcp(&self) -> Option<Vec<Box<dyn rtcp::packet::Packet + Send + Sync>>> {
         let mut rtcp_out_modified_rx = self.internal.rtcp_out_modified_rx.lock().await;
         rtcp_out_modified_rx.recv().await
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// Returns the last rtcp packet bacth that was written, modified by the interceptor.
     ///
     /// NB: This method discards all other previously recoreded packet batches.
@@ -193,12 +200,14 @@ impl MockStream {
         last
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// written_rtp returns a channel containing rtp packets written, modified by the interceptor
     pub async fn written_rtp(&self) -> Option<rtp::packet::Packet> {
         let mut rtp_out_modified_rx = self.internal.rtp_out_modified_rx.lock().await;
         rtp_out_modified_rx.recv().await
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// read_rtcp returns a channel containing the rtcp batched read, modified by the interceptor
     pub async fn read_rtcp(
         &self,
@@ -207,12 +216,14 @@ impl MockStream {
         rtcp_in_modified_rx.recv().await
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// read_rtp returns a channel containing the rtp packets read, modified by the interceptor
     pub async fn read_rtp(&self) -> Option<Result<rtp::packet::Packet>> {
         let mut rtp_in_modified_rx = self.internal.rtp_in_modified_rx.lock().await;
         rtp_in_modified_rx.recv().await
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// close closes the stream
     pub async fn close(&self) -> Result<()> {
         {
@@ -229,6 +240,7 @@ impl MockStream {
 
 #[async_trait]
 impl RTCPWriter for MockStreamInternal {
+    #[tracing::instrument(level = "debug", skip(self, pkts, _attributes))]
     async fn write(
         &self,
         pkts: &[Box<dyn rtcp::packet::Packet + Send + Sync>],
@@ -242,6 +254,7 @@ impl RTCPWriter for MockStreamInternal {
 
 #[async_trait]
 impl RTCPReader for MockStreamInternal {
+    #[tracing::instrument(level = "debug", skip(self, buf, a))]
     async fn read(
         &self,
         buf: &mut [u8],
@@ -265,6 +278,7 @@ impl RTCPReader for MockStreamInternal {
 
 #[async_trait]
 impl RTPWriter for MockStreamInternal {
+    #[tracing::instrument(level = "debug", skip(self, pkt, _a))]
     async fn write(&self, pkt: &rtp::packet::Packet, _a: &Attributes) -> Result<usize> {
         let _ = self.rtp_out_modified_tx.send(pkt.clone()).await;
         Ok(0)
@@ -273,6 +287,7 @@ impl RTPWriter for MockStreamInternal {
 
 #[async_trait]
 impl RTPReader for MockStreamInternal {
+    #[tracing::instrument(level = "debug", skip(self, buf, a))]
     async fn read(
         &self,
         buf: &mut [u8],

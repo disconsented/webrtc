@@ -41,6 +41,7 @@ pub struct AudioLevelExtension {
 }
 
 impl Unmarshal for AudioLevelExtension {
+    #[tracing::instrument(level = "debug", skip(raw_packet))]
     /// Unmarshal parses the passed byte slice and stores the result in the members
     fn unmarshal<B>(raw_packet: &mut B) -> Result<Self, util::Error>
     where
@@ -61,6 +62,7 @@ impl Unmarshal for AudioLevelExtension {
 }
 
 impl MarshalSize for AudioLevelExtension {
+    #[tracing::instrument(level = "debug", skip(self))]
     /// MarshalSize returns the size of the AudioLevelExtension once marshaled.
     fn marshal_size(&self) -> usize {
         AUDIO_LEVEL_EXTENSION_SIZE
@@ -68,6 +70,7 @@ impl MarshalSize for AudioLevelExtension {
 }
 
 impl Marshal for AudioLevelExtension {
+    #[tracing::instrument(level = "debug", skip(self, buf))]
     /// MarshalTo serializes the members to buffer
     fn marshal_to(&self, mut buf: &mut [u8]) -> Result<usize, util::Error> {
         if buf.remaining_mut() < AUDIO_LEVEL_EXTENSION_SIZE {

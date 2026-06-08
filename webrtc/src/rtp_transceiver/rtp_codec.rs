@@ -19,6 +19,7 @@ pub enum RTPCodecType {
 }
 
 impl From<&str> for RTPCodecType {
+    #[tracing::instrument(level = "debug", skip(raw))]
     fn from(raw: &str) -> Self {
         match raw {
             "audio" => RTPCodecType::Audio,
@@ -29,6 +30,7 @@ impl From<&str> for RTPCodecType {
 }
 
 impl From<u8> for RTPCodecType {
+    #[tracing::instrument(level = "debug", skip(v))]
     fn from(v: u8) -> Self {
         match v {
             1 => RTPCodecType::Audio,
@@ -39,6 +41,7 @@ impl From<u8> for RTPCodecType {
 }
 
 impl fmt::Display for RTPCodecType {
+    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let s = match *self {
             RTPCodecType::Audio => "audio",
@@ -66,6 +69,7 @@ pub struct RTCRtpCodecCapability {
 }
 
 impl RTCRtpCodecCapability {
+    #[tracing::instrument(level = "debug", skip(self))]
     /// Turn codec capability into a `packetizer::Payloader`
     pub fn payloader_for_codec(&self) -> Result<Box<dyn rtp::packetizer::Payloader + Send + Sync>> {
         let mime_type = self.mime_type.to_lowercase();
@@ -137,6 +141,7 @@ pub(crate) enum CodecMatch {
     Exact = 2,
 }
 
+#[tracing::instrument(level = "debug", skip(needle, haystack))]
 /// Do a fuzzy find for a codec in the list of codecs
 /// Used for lookup up a codec in an existing list to find a match
 /// Returns codecMatchExact, codecMatchPartial, or codecMatchNone
@@ -169,6 +174,7 @@ pub(crate) fn codec_parameters_fuzzy_search(
     (RTCRtpCodecParameters::default(), CodecMatch::None)
 }
 
+#[tracing::instrument(level = "debug", skip(original_codec, available_codecs))]
 pub(crate) fn codec_rtx_search(
     original_codec: &RTCRtpCodecParameters,
     available_codecs: &[RTCRtpCodecParameters],

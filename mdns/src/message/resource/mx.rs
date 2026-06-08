@@ -11,6 +11,7 @@ pub struct MxResource {
 }
 
 impl fmt::Display for MxResource {
+    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
@@ -21,11 +22,13 @@ impl fmt::Display for MxResource {
 }
 
 impl ResourceBody for MxResource {
+    #[tracing::instrument(level = "debug", skip(self))]
     fn real_type(&self) -> DnsType {
         DnsType::Mx
     }
 
     // pack appends the wire format of the MXResource to msg.
+    #[tracing::instrument(level = "debug", skip(self, msg, compression, compression_off))]
     fn pack(
         &self,
         mut msg: Vec<u8>,
@@ -37,6 +40,7 @@ impl ResourceBody for MxResource {
         Ok(msg)
     }
 
+    #[tracing::instrument(level = "debug", skip(self, msg, off, _length))]
     fn unpack(&mut self, msg: &[u8], off: usize, _length: usize) -> Result<usize> {
         let (pref, off) = unpack_uint16(msg, off)?;
         self.pref = pref;

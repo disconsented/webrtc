@@ -1,5 +1,6 @@
 use super::*;
 
+#[tracing::instrument(level = "debug", skip())]
 fn decoded_packet() -> ExtendedReport {
     ExtendedReport {
         sender_ssrc: 0x01020304,
@@ -100,6 +101,7 @@ fn decoded_packet() -> ExtendedReport {
     }
 }
 
+#[tracing::instrument(level = "debug", skip())]
 fn encoded_packet() -> Bytes {
     Bytes::from_static(&[
         // RTP Header

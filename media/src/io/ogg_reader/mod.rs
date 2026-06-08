@@ -54,6 +54,7 @@ pub struct OggPageHeader {
 }
 
 impl<R: Read> OggReader<R> {
+    #[tracing::instrument(level = "debug", skip(reader, do_checksum))]
     /// new returns a new Ogg reader and Ogg header
     /// with an io.Reader input
     pub fn new(reader: R, do_checksum: bool) -> Result<(OggReader<R>, OggHeader)> {
@@ -69,6 +70,7 @@ impl<R: Read> OggReader<R> {
         Ok((r, header))
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn read_headers(&mut self) -> Result<OggHeader> {
         let (payload, page_header) = self.parse_next_page()?;
 
@@ -109,6 +111,7 @@ impl<R: Read> OggReader<R> {
 
     // parse_next_page reads from stream and returns Ogg page payload, header,
     // and an error if there is incomplete page data.
+    #[tracing::instrument(level = "debug", skip(self))]
     pub fn parse_next_page(&mut self) -> Result<(BytesMut, OggPageHeader)> {
         let mut h = [0u8; PAGE_HEADER_SIZE];
         self.reader.read_exact(&mut h)?;
@@ -173,6 +176,7 @@ impl<R: Read> OggReader<R> {
         Ok((payload, page_header))
     }
 
+    #[tracing::instrument(level = "debug", skip(self, reset))]
     /// reset_reader resets the internal stream of OggReader. This is useful
     /// for live streams, where the end of the file might be read without the
     /// data being finished.
@@ -180,11 +184,13 @@ impl<R: Read> OggReader<R> {
         self.reader = reset(self.bytes_read);
     }
 
+    #[tracing::instrument(level = "debug", skip(self, v, sum))]
     fn update_checksum(&self, v: u8, sum: u32) -> u32 {
         (sum << 8) ^ self.checksum_table[(((sum >> 24) as u8) ^ v) as usize]
     }
 }
 
+#[tracing::instrument(level = "debug", skip())]
 pub(crate) fn generate_checksum_table() -> [u32; 256] {
     let mut table = [0u32; 256];
     const POLY: u32 = 0x04c11db7;

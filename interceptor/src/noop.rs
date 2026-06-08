@@ -7,6 +7,7 @@ pub struct NoOp;
 
 #[async_trait]
 impl Interceptor for NoOp {
+    #[tracing::instrument(level = "debug", skip(self, reader))]
     /// bind_rtcp_reader lets you modify any incoming RTCP packets. It is called once per sender/receiver, however this might
     /// change in the future. The returned method will be called once per packet batch.
     async fn bind_rtcp_reader(
@@ -16,6 +17,7 @@ impl Interceptor for NoOp {
         reader
     }
 
+    #[tracing::instrument(level = "debug", skip(self, writer))]
     /// bind_rtcp_writer lets you modify any outgoing RTCP packets. It is called once per PeerConnection. The returned method
     /// will be called once per packet batch.
     async fn bind_rtcp_writer(
@@ -25,6 +27,7 @@ impl Interceptor for NoOp {
         writer
     }
 
+    #[tracing::instrument(level = "debug", skip(self, _info, writer))]
     /// bind_local_stream lets you modify any outgoing RTP packets. It is called once for per LocalStream. The returned method
     /// will be called once per rtp packet.
     async fn bind_local_stream(
@@ -35,9 +38,11 @@ impl Interceptor for NoOp {
         writer
     }
 
+    #[tracing::instrument(level = "debug", skip(self, _info))]
     /// unbind_local_stream is called when the Stream is removed. It can be used to clean up any data related to that track.
     async fn unbind_local_stream(&self, _info: &StreamInfo) {}
 
+    #[tracing::instrument(level = "debug", skip(self, _info, reader))]
     /// bind_remote_stream lets you modify any incoming RTP packets. It is called once for per RemoteStream. The returned method
     /// will be called once per rtp packet.
     async fn bind_remote_stream(
@@ -48,9 +53,11 @@ impl Interceptor for NoOp {
         reader
     }
 
+    #[tracing::instrument(level = "debug", skip(self, _info))]
     /// unbind_remote_stream is called when the Stream is removed. It can be used to clean up any data related to that track.
     async fn unbind_remote_stream(&self, _info: &StreamInfo) {}
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// close closes the Interceptor, cleaning up any data if necessary.
     async fn close(&self) -> Result<()> {
         Ok(())
@@ -59,6 +66,7 @@ impl Interceptor for NoOp {
 
 #[async_trait]
 impl RTPReader for NoOp {
+    #[tracing::instrument(level = "debug", skip(self, _buf, a))]
     async fn read(
         &self,
         _buf: &mut [u8],
@@ -70,6 +78,7 @@ impl RTPReader for NoOp {
 
 #[async_trait]
 impl RTCPReader for NoOp {
+    #[tracing::instrument(level = "debug", skip(self, _buf, a))]
     async fn read(
         &self,
         _buf: &mut [u8],

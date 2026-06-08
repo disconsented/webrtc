@@ -35,6 +35,7 @@ pub enum Error {
     Other(String),
 }
 
+#[tracing::instrument(level = "debug", skip(errs))]
 /// flatten_errs flattens multiple errors into one
 pub fn flatten_errs(errs: Vec<Error>) -> Result<()> {
     if errs.is_empty() {

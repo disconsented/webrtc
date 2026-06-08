@@ -66,6 +66,7 @@ pub struct RTCIceGatherer {
 }
 
 impl RTCIceGatherer {
+    #[tracing::instrument(level = "debug", skip(validated_servers, gather_policy, setting_engine))]
     pub(crate) fn new(
         validated_servers: Vec<Url>,
         gather_policy: RTCIceTransportPolicy,
@@ -80,6 +81,7 @@ impl RTCIceGatherer {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     pub(crate) async fn create_agent(&self) -> Result<()> {
         // NOTE: A lock is held for the duration of this function in order to
         // avoid potential double-agent creations. Care should be taken to
@@ -151,6 +153,7 @@ impl RTCIceGatherer {
         Ok(())
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// Gather ICE candidates.
     pub async fn gather(&self) -> Result<()> {
         self.create_agent().await?;
@@ -205,6 +208,7 @@ impl RTCIceGatherer {
         Ok(())
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// Close prunes all local candidates, and closes the ports.
     pub async fn close(&self) -> Result<()> {
         self.set_state(RTCIceGathererState::Closed).await;
@@ -221,6 +225,7 @@ impl RTCIceGatherer {
         Ok(())
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// get_local_parameters returns the ICE parameters of the ICEGatherer.
     pub async fn get_local_parameters(&self) -> Result<RTCIceParameters> {
         self.create_agent().await?;
@@ -238,6 +243,7 @@ impl RTCIceGatherer {
         })
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// get_local_candidates returns the sequence of valid local candidates associated with the ICEGatherer.
     pub async fn get_local_candidates(&self) -> Result<Vec<RTCIceCandidate>> {
         self.create_agent().await?;
@@ -251,6 +257,7 @@ impl RTCIceGatherer {
         Ok(rtc_ice_candidates_from_ice_candidates(&ice_candidates))
     }
 
+    #[tracing::instrument(level = "debug", skip(self, f))]
     /// on_local_candidate sets an event handler which fires when a new local ICE candidate is available
     /// Take note that the handler is gonna be called with a nil pointer when gathering is finished.
     pub fn on_local_candidate(&self, f: OnLocalCandidateHdlrFn) {
@@ -258,23 +265,27 @@ impl RTCIceGatherer {
             .store(Some(Arc::new(Mutex::new(f))));
     }
 
+    #[tracing::instrument(level = "debug", skip(self, f))]
     /// on_state_change sets an event handler which fires any time the ICEGatherer changes
     pub fn on_state_change(&self, f: OnICEGathererStateChangeHdlrFn) {
         self.on_state_change_handler
             .store(Some(Arc::new(Mutex::new(f))));
     }
 
+    #[tracing::instrument(level = "debug", skip(self, f))]
     /// on_gathering_complete sets an event handler which fires any time the ICEGatherer changes
     pub fn on_gathering_complete(&self, f: OnGatheringCompleteHdlrFn) {
         self.on_gathering_complete_handler
             .store(Some(Arc::new(Mutex::new(f))));
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// State indicates the current state of the ICE gatherer.
     pub fn state(&self) -> RTCIceGathererState {
         self.state.load(Ordering::SeqCst).into()
     }
 
+    #[tracing::instrument(level = "debug", skip(self, s))]
     pub async fn set_state(&self, s: RTCIceGathererState) {
         self.state.store(s as u8, Ordering::SeqCst);
 
@@ -284,11 +295,13 @@ impl RTCIceGatherer {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     pub(crate) async fn get_agent(&self) -> Option<Arc<Agent>> {
         let agent = self.agent.lock().await;
         agent.clone()
     }
 
+    #[tracing::instrument(level = "debug", skip(self, collector))]
     pub(crate) async fn collect_stats(&self, collector: &StatsCollector) {
         if let Some(agent) = self.get_agent().await {
             let mut reports = HashMap::new();

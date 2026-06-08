@@ -12,6 +12,7 @@ struct GeneratorStreamInternal {
 }
 
 impl GeneratorStreamInternal {
+    #[tracing::instrument(level = "debug", skip(log2_size_minus_6))]
     fn new(log2_size_minus_6: u8) -> Self {
         GeneratorStreamInternal {
             packets: vec![0u64; 1 << log2_size_minus_6],
@@ -22,6 +23,7 @@ impl GeneratorStreamInternal {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self, seq))]
     fn add(&mut self, seq: u16) {
         if !self.started {
             self.set_received(seq);
@@ -62,6 +64,7 @@ impl GeneratorStreamInternal {
         self.set_received(seq);
     }
 
+    #[tracing::instrument(level = "debug", skip(self, seq))]
     fn get(&self, seq: u16) -> bool {
         let diff = self.end.wrapping_sub(seq);
         if diff >= UINT16SIZE_HALF {
@@ -75,6 +78,7 @@ impl GeneratorStreamInternal {
         self.get_received(seq)
     }
 
+    #[tracing::instrument(level = "debug", skip(self, skip_last_n))]
     fn missing_seq_numbers(&self, skip_last_n: u16) -> Vec<u16> {
         let until = self.end.wrapping_sub(skip_last_n);
         let diff = until.wrapping_sub(self.last_consecutive);
@@ -96,21 +100,25 @@ impl GeneratorStreamInternal {
         missing_packet_seq_nums
     }
 
+    #[tracing::instrument(level = "debug", skip(self, seq))]
     fn set_received(&mut self, seq: u16) {
         let pos = (seq % self.size) as usize;
         self.packets[pos / 64] |= 1u64 << (pos % 64);
     }
 
+    #[tracing::instrument(level = "debug", skip(self, seq))]
     fn del_received(&mut self, seq: u16) {
         let pos = (seq % self.size) as usize;
         self.packets[pos / 64] &= u64::MAX ^ (1u64 << (pos % 64));
     }
 
+    #[tracing::instrument(level = "debug", skip(self, seq))]
     fn get_received(&self, seq: u16) -> bool {
         let pos = (seq % self.size) as usize;
         (self.packets[pos / 64] & (1u64 << (pos % 64))) != 0
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn fix_last_consecutive(&mut self) {
         let mut i = self.last_consecutive.wrapping_add(1);
         while i != self.end.wrapping_add(1) && self.get_received(i) {
@@ -128,6 +136,7 @@ pub(super) struct GeneratorStream {
 }
 
 impl GeneratorStream {
+    #[tracing::instrument(level = "debug", skip(log2_size_minus_6, reader))]
     pub(super) fn new(log2_size_minus_6: u8, reader: Arc<dyn RTPReader + Send + Sync>) -> Self {
         GeneratorStream {
             parent_rtp_reader: reader,
@@ -135,11 +144,13 @@ impl GeneratorStream {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self, skip_last_n))]
     pub(super) fn missing_seq_numbers(&self, skip_last_n: u16) -> Vec<u16> {
         let internal = self.internal.lock();
         internal.missing_seq_numbers(skip_last_n)
     }
 
+    #[tracing::instrument(level = "debug", skip(self, seq))]
     pub(super) fn add(&self, seq: u16) {
         let mut internal = self.internal.lock();
         internal.add(seq);
@@ -149,6 +160,7 @@ impl GeneratorStream {
 /// RTPReader is used by Interceptor.bind_remote_stream.
 #[async_trait]
 impl RTPReader for GeneratorStream {
+    #[tracing::instrument(level = "debug", skip(self, buf, a))]
     /// read a rtp packet
     async fn read(
         &self,

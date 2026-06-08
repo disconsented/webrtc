@@ -77,6 +77,7 @@ pub(crate) enum AssociationState {
 }
 
 impl From<u8> for AssociationState {
+    #[tracing::instrument(level = "debug", skip(v))]
     fn from(v: u8) -> AssociationState {
         match v {
             1 => AssociationState::CookieWait,
@@ -92,6 +93,7 @@ impl From<u8> for AssociationState {
 }
 
 impl fmt::Display for AssociationState {
+    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let s = match *self {
             AssociationState::Closed => "Closed",
@@ -119,6 +121,7 @@ pub(crate) enum RtxTimerId {
 }
 
 impl fmt::Display for RtxTimerId {
+    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let s = match *self {
             RtxTimerId::T1Init => "T1Init",
@@ -141,6 +144,7 @@ pub(crate) enum AckMode {
 }
 
 impl fmt::Display for AckMode {
+    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let s = match *self {
             AckMode::Normal => "Normal",
@@ -161,6 +165,7 @@ pub(crate) enum AckState {
 }
 
 impl fmt::Display for AckState {
+    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let s = match *self {
             AckState::Idle => "Idle",
@@ -222,6 +227,7 @@ pub struct Association {
 }
 
 impl Association {
+    #[tracing::instrument(level = "debug", skip(config))]
     /// server accepts a SCTP stream over a conn
     pub async fn server(config: Config) -> Result<Self> {
         let (a, mut handshake_completed_ch_rx) = Association::new(config, false).await?;
@@ -237,6 +243,7 @@ impl Association {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(config))]
     /// Client opens a SCTP stream over a conn
     pub async fn client(config: Config) -> Result<Self> {
         let (a, mut handshake_completed_ch_rx) = Association::new(config, true).await?;
@@ -252,6 +259,7 @@ impl Association {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// Shutdown initiates the shutdown sequence. The method blocks until the
     /// shutdown sequence is completed and the connection is closed, or until the
     /// passed context is done, in which case the context's error is returned.
@@ -281,6 +289,7 @@ impl Association {
         Ok(())
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// Close ends the SCTP Association and cleans up any state
     pub async fn close(&self) -> Result<()> {
         log::debug!("[{}] closing association..", self.name);
@@ -291,6 +300,7 @@ impl Association {
         ai.close().await
     }
 
+    #[tracing::instrument(level = "debug", skip(config, is_client))]
     async fn new(config: Config, is_client: bool) -> Result<(Self, mpsc::Receiver<Option<Error>>)> {
         let net_conn = Arc::clone(&config.net_conn);
 
@@ -406,6 +416,7 @@ impl Association {
         ))
     }
 
+    #[tracing::instrument(level = "debug", skip(name, bytes_received, net_conn, close_loop_ch, association_internal))]
     async fn read_loop(
         name: String,
         bytes_received: Arc<AtomicUsize>,
@@ -461,6 +472,7 @@ impl Association {
         log::debug!("[{name}] read_loop exited");
     }
 
+    #[tracing::instrument(level = "debug", skip(name, bytes_sent, net_conn, close_loop_ch, association_internal, awake_write_loop_ch))]
     async fn write_loop(
         name: String,
         bytes_sent: Arc<AtomicUsize>,
@@ -552,16 +564,19 @@ impl Association {
         log::debug!("[{name}] write_loop exited");
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// bytes_sent returns the number of bytes sent
     pub fn bytes_sent(&self) -> usize {
         self.bytes_sent.load(Ordering::SeqCst)
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// bytes_received returns the number of bytes received
     pub fn bytes_received(&self) -> usize {
         self.bytes_received.load(Ordering::SeqCst)
     }
 
+    #[tracing::instrument(level = "debug", skip(self, stream_identifier, default_payload_type))]
     /// open_stream opens a stream
     pub async fn open_stream(
         &self,
@@ -572,23 +587,27 @@ impl Association {
         ai.open_stream(stream_identifier, default_payload_type)
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// accept_stream accepts a stream
     pub async fn accept_stream(&self) -> Option<Arc<Stream>> {
         let mut accept_ch_rx = self.accept_ch_rx.lock().await;
         accept_ch_rx.recv().await
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// max_message_size returns the maximum message size you can send.
     pub fn max_message_size(&self) -> u32 {
         self.max_message_size.load(Ordering::SeqCst)
     }
 
+    #[tracing::instrument(level = "debug", skip(self, max_message_size))]
     /// set_max_message_size sets the maximum message size you can send.
     pub fn set_max_message_size(&self, max_message_size: u32) {
         self.max_message_size
             .store(max_message_size, Ordering::SeqCst);
     }
 
+    #[tracing::instrument(level = "debug", skip(self, new_state))]
     /// set_state atomically sets the state of the Association.
     fn set_state(&self, new_state: AssociationState) {
         let old_state = AssociationState::from(self.state.swap(new_state as u8, Ordering::SeqCst));
@@ -602,6 +621,7 @@ impl Association {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// get_state atomically returns the state of the Association.
     fn get_state(&self) -> AssociationState {
         self.state.load(Ordering::SeqCst).into()

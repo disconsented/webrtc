@@ -36,6 +36,7 @@ use crate::signature_hash_algorithm::*;
 pub(crate) struct Flight4;
 
 impl fmt::Display for Flight4 {
+    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "Flight 4")
     }
@@ -43,6 +44,7 @@ impl fmt::Display for Flight4 {
 
 #[async_trait]
 impl Flight for Flight4 {
+    #[tracing::instrument(level = "debug", skip(self, tx, state, cache, cfg))]
     async fn parse(
         &self,
         tx: &mut mpsc::Sender<mpsc::Sender<()>>,
@@ -498,6 +500,7 @@ impl Flight for Flight4 {
         Ok(Box::new(Flight6 {}) as Box<dyn Flight + Send + Sync>)
     }
 
+    #[tracing::instrument(level = "debug", skip(self, state, _cache, cfg))]
     async fn generate(
         &self,
         state: &mut State,
@@ -739,26 +742,33 @@ mod tests {
     struct MockCipherSuite {}
 
     impl CipherSuite for MockCipherSuite {
+        #[tracing::instrument(level = "debug", skip(self))]
         fn to_string(&self) -> String {
             "MockCipherSuite".into()
         }
+        #[tracing::instrument(level = "debug", skip(self))]
         fn id(&self) -> CipherSuiteId {
             unimplemented!();
         }
+        #[tracing::instrument(level = "debug", skip(self))]
         fn certificate_type(&self) -> ClientCertificateType {
             unimplemented!();
         }
+        #[tracing::instrument(level = "debug", skip(self))]
         fn hash_func(&self) -> CipherSuiteHash {
             unimplemented!();
         }
+        #[tracing::instrument(level = "debug", skip(self))]
         fn is_psk(&self) -> bool {
             false
         }
+        #[tracing::instrument(level = "debug", skip(self))]
         fn is_initialized(&self) -> bool {
             panic!("is_initialized called with Certificate but not CertificateVerify");
         }
 
         // Generate the internal encryption state
+        #[tracing::instrument(level = "debug", skip(self, _master_secret, _client_random, _server_random, _is_client))]
         fn init(
             &mut self,
             _master_secret: &[u8],
@@ -769,9 +779,11 @@ mod tests {
             unimplemented!();
         }
 
+        #[tracing::instrument(level = "debug", skip(self, _pkt_rlh, _raw))]
         fn encrypt(&self, _pkt_rlh: &RecordLayerHeader, _raw: &[u8]) -> Result<Vec<u8>> {
             unimplemented!();
         }
+        #[tracing::instrument(level = "debug", skip(self, _input))]
         fn decrypt(&self, _input: &[u8]) -> Result<Vec<u8>> {
             unimplemented!();
         }

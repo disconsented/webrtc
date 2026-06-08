@@ -10,6 +10,7 @@ pub struct EphemeralUDP {
 }
 
 impl EphemeralUDP {
+    #[tracing::instrument(level = "debug", skip(port_min, port_max))]
     pub fn new(port_min: u16, port_max: u16) -> Result<Self, Error> {
         let mut s = Self::default();
         s.set_ports(port_min, port_max)?;
@@ -17,14 +18,17 @@ impl EphemeralUDP {
         Ok(s)
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     pub fn port_min(&self) -> u16 {
         self.port_min
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     pub fn port_max(&self) -> u16 {
         self.port_max
     }
 
+    #[tracing::instrument(level = "debug", skip(self, port_min, port_max))]
     pub fn set_ports(&mut self, port_min: u16, port_max: u16) -> Result<(), Error> {
         if port_max < port_min {
             return Err(Error::ErrPort);
@@ -57,16 +61,19 @@ pub enum UDPNetwork {
 }
 
 impl Default for UDPNetwork {
+    #[tracing::instrument(level = "debug", skip())]
     fn default() -> Self {
         Self::Ephemeral(Default::default())
     }
 }
 
 impl UDPNetwork {
+    #[tracing::instrument(level = "debug", skip(self))]
     fn is_ephemeral(&self) -> bool {
         matches!(self, Self::Ephemeral(_))
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn is_muxed(&self) -> bool {
         matches!(self, Self::Muxed(_))
     }

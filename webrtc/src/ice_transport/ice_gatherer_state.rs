@@ -34,6 +34,7 @@ const ICE_GATHERED_STATE_COMPLETE_STR: &str = "complete";
 const ICE_GATHERED_STATE_CLOSED_STR: &str = "closed";
 
 impl From<&str> for RTCIceGathererState {
+    #[tracing::instrument(level = "debug", skip(raw))]
     fn from(raw: &str) -> Self {
         match raw {
             ICE_GATHERED_STATE_NEW_STR => RTCIceGathererState::New,
@@ -46,6 +47,7 @@ impl From<&str> for RTCIceGathererState {
 }
 
 impl From<u8> for RTCIceGathererState {
+    #[tracing::instrument(level = "debug", skip(v))]
     fn from(v: u8) -> Self {
         match v {
             1 => RTCIceGathererState::New,
@@ -58,6 +60,7 @@ impl From<u8> for RTCIceGathererState {
 }
 
 impl fmt::Display for RTCIceGathererState {
+    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match *self {
             RTCIceGathererState::New => write!(f, "{ICE_GATHERED_STATE_NEW_STR}"),

@@ -34,6 +34,7 @@ pub enum ReliabilityType {
 }
 
 impl fmt::Display for ReliabilityType {
+    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let s = match *self {
             ReliabilityType::Reliable => "Reliable",
@@ -45,6 +46,7 @@ impl fmt::Display for ReliabilityType {
 }
 
 impl From<u8> for ReliabilityType {
+    #[tracing::instrument(level = "debug", skip(v))]
     fn from(v: u8) -> ReliabilityType {
         match v {
             1 => ReliabilityType::Rexmit,
@@ -84,6 +86,7 @@ pub struct Stream {
 }
 
 impl fmt::Debug for Stream {
+    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Stream")
             .field("max_payload_size", &self.max_payload_size)
@@ -107,6 +110,7 @@ impl fmt::Debug for Stream {
 }
 
 impl Stream {
+    #[tracing::instrument(level = "debug", skip(name, stream_identifier, max_payload_size, max_message_size, state, awake_write_loop_ch, pending_queue))]
     pub(crate) fn new(
         name: String,
         stream_identifier: u16,
@@ -140,17 +144,20 @@ impl Stream {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// stream_identifier returns the Stream identifier associated to the stream.
     pub fn stream_identifier(&self) -> u16 {
         self.stream_identifier
     }
 
+    #[tracing::instrument(level = "debug", skip(self, default_payload_type))]
     /// set_default_payload_type sets the default payload type used by write.
     pub fn set_default_payload_type(&self, default_payload_type: PayloadProtocolIdentifier) {
         self.default_payload_type
             .store(default_payload_type as u32, Ordering::SeqCst);
     }
 
+    #[tracing::instrument(level = "debug", skip(self, unordered, rel_type, rel_val))]
     /// set_reliability_params sets reliability parameters for this stream.
     pub fn set_reliability_params(&self, unordered: bool, rel_type: ReliabilityType, rel_val: u32) {
         log::debug!(
@@ -166,6 +173,7 @@ impl Stream {
         self.reliability_value.store(rel_val, Ordering::SeqCst);
     }
 
+    #[tracing::instrument(level = "debug", skip(self, p))]
     /// Reads a packet of len(p) bytes, dropping the Payload Protocol Identifier.
     ///
     /// Returns `Error::ErrShortBuffer` if `p` is too short.
@@ -175,6 +183,7 @@ impl Stream {
         Ok(n)
     }
 
+    #[tracing::instrument(level = "debug", skip(self, p))]
     /// Reads a packet of len(p) bytes and returns the associated Payload Protocol Identifier.
     ///
     /// Returns `Error::ErrShortBuffer` if `p` is too short.
@@ -200,6 +209,7 @@ impl Stream {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self, pd))]
     pub(crate) async fn handle_data(&self, pd: ChunkPayloadData) {
         let readable = {
             let mut reassembly_queue = self.reassembly_queue.lock().await;
@@ -219,6 +229,7 @@ impl Stream {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self, ssn))]
     pub(crate) async fn handle_forward_tsn_for_ordered(&self, ssn: u16) {
         if self.unordered.load(Ordering::SeqCst) {
             return; // unordered chunks are handled by handleForwardUnordered method
@@ -238,6 +249,7 @@ impl Stream {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self, new_cumulative_tsn))]
     pub(crate) async fn handle_forward_tsn_for_unordered(&self, new_cumulative_tsn: u32) {
         if !self.unordered.load(Ordering::SeqCst) {
             return; // ordered chunks are handled by handleForwardTSNOrdered method
@@ -257,6 +269,7 @@ impl Stream {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self, p))]
     /// Writes `p` to the DTLS connection with the default Payload Protocol Identifier.
     ///
     /// Returns an error if the write half of this stream is shutdown or `p` is too large.
@@ -265,6 +278,7 @@ impl Stream {
             .await
     }
 
+    #[tracing::instrument(level = "debug", skip(self, p, ppi))]
     /// Writes `p` to the DTLS connection with the given Payload Protocol Identifier.
     ///
     /// Returns an error if the write half of this stream is shutdown or `p` is too large.
@@ -275,6 +289,7 @@ impl Stream {
         Ok(p.len())
     }
 
+    #[tracing::instrument(level = "debug", skip(self, p, ppi))]
     /// common stuff for write and try_write
     fn prepare_write(
         &self,
@@ -301,6 +316,7 @@ impl Stream {
         Ok(self.packetize(p, ppi))
     }
 
+    #[tracing::instrument(level = "debug", skip(self, raw, ppi))]
     fn packetize(&self, raw: &Bytes, ppi: PayloadProtocolIdentifier) -> Vec<ChunkPayloadData> {
         let mut i = 0;
         let mut remaining = raw.len();
@@ -356,6 +372,7 @@ impl Stream {
         chunks
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// Closes both read and write halves of this stream.
     ///
     /// Use [`Stream::shutdown`] instead.
@@ -364,6 +381,7 @@ impl Stream {
         self.shutdown(Shutdown::Both).await
     }
 
+    #[tracing::instrument(level = "debug", skip(self, how))]
     /// Shuts down the read, write, or both halves of this stream.
     ///
     /// This function will cause all pending and future I/O on the specified portions to return
@@ -397,23 +415,27 @@ impl Stream {
         Ok(())
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// buffered_amount returns the number of bytes of data currently queued to be sent over this stream.
     pub fn buffered_amount(&self) -> usize {
         self.buffered_amount.load(Ordering::SeqCst)
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// buffered_amount_low_threshold returns the number of bytes of buffered outgoing data that is
     /// considered "low." Defaults to 0.
     pub fn buffered_amount_low_threshold(&self) -> usize {
         self.buffered_amount_low.load(Ordering::SeqCst)
     }
 
+    #[tracing::instrument(level = "debug", skip(self, th))]
     /// set_buffered_amount_low_threshold is used to update the threshold.
     /// See buffered_amount_low_threshold().
     pub fn set_buffered_amount_low_threshold(&self, th: usize) {
         self.buffered_amount_low.store(th, Ordering::SeqCst);
     }
 
+    #[tracing::instrument(level = "debug", skip(self, f))]
     /// on_buffered_amount_low sets the callback handler which would be called when the number of
     /// bytes of outgoing data buffered is lower than the threshold.
     pub fn on_buffered_amount_low(&self, f: OnBufferedAmountLowFn) {
@@ -421,6 +443,7 @@ impl Stream {
             .store(Some(Arc::new(Mutex::new(f))));
     }
 
+    #[tracing::instrument(level = "debug", skip(self, n_bytes_released))]
     /// This method is called by association's read_loop (go-)routine to notify this stream
     /// of the specified amount of outgoing data has been delivered to the peer.
     pub(crate) async fn on_buffer_released(&self, n_bytes_released: i64) {
@@ -463,6 +486,7 @@ impl Stream {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// get_num_bytes_in_reassembly_queue returns the number of bytes of data currently queued to
     /// be read (once chunk is complete).
     pub(crate) async fn get_num_bytes_in_reassembly_queue(&self) -> usize {
@@ -471,16 +495,19 @@ impl Stream {
         reassembly_queue.get_num_bytes()
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// get_state atomically returns the state of the Association.
     fn get_state(&self) -> AssociationState {
         self.state.load(Ordering::SeqCst).into()
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn awake_write_loop(&self) {
         //log::debug!("[{}] awake_write_loop_ch.notify_one", self.name);
         let _ = self.awake_write_loop_ch.try_send(());
     }
 
+    #[tracing::instrument(level = "debug", skip(self, chunks))]
     async fn send_payload_data(&self, chunks: Vec<ChunkPayloadData>) -> Result<()> {
         let state = self.get_state();
         if state != AssociationState::Established {
@@ -494,6 +521,7 @@ impl Stream {
         Ok(())
     }
 
+    #[tracing::instrument(level = "debug", skip(self, stream_identifier))]
     async fn send_reset_request(&self, stream_identifier: u16) -> Result<()> {
         let state = self.get_state();
         if state != AssociationState::Established {
@@ -541,6 +569,7 @@ enum ShutdownFut {
 }
 
 impl ReadFut {
+    #[tracing::instrument(level = "debug", skip(self))]
     /// Gets a mutable reference to the future stored inside `Reading(future)`.
     ///
     /// # Panics
@@ -555,6 +584,7 @@ impl ReadFut {
 }
 
 impl ShutdownFut {
+    #[tracing::instrument(level = "debug", skip(self))]
     /// Gets a mutable reference to the future stored inside `ShuttingDown(future)`.
     ///
     /// # Panics
@@ -586,6 +616,7 @@ pub struct PollStream {
 }
 
 impl PollStream {
+    #[tracing::instrument(level = "debug", skip(stream))]
     /// Constructs a new `PollStream`.
     pub fn new(stream: Arc<Stream>) -> Self {
         Self {
@@ -597,34 +628,40 @@ impl PollStream {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// Get back the inner stream.
     #[must_use]
     pub fn into_inner(self) -> Arc<Stream> {
         self.stream
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// Obtain a clone of the inner stream.
     #[must_use]
     pub fn clone_inner(&self) -> Arc<Stream> {
         self.stream.clone()
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// stream_identifier returns the Stream identifier associated to the stream.
     pub fn stream_identifier(&self) -> u16 {
         self.stream.stream_identifier
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// buffered_amount returns the number of bytes of data currently queued to be sent over this stream.
     pub fn buffered_amount(&self) -> usize {
         self.stream.buffered_amount.load(Ordering::SeqCst)
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// buffered_amount_low_threshold returns the number of bytes of buffered outgoing data that is
     /// considered "low." Defaults to 0.
     pub fn buffered_amount_low_threshold(&self) -> usize {
         self.stream.buffered_amount_low.load(Ordering::SeqCst)
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// get_num_bytes_in_reassembly_queue returns the number of bytes of data currently queued to
     /// be read (once chunk is complete).
     pub(crate) async fn get_num_bytes_in_reassembly_queue(&self) -> usize {
@@ -633,6 +670,7 @@ impl PollStream {
         reassembly_queue.get_num_bytes()
     }
 
+    #[tracing::instrument(level = "debug", skip(self, capacity))]
     /// Set the capacity of the temporary read buffer (default: 8192).
     pub fn set_read_buf_capacity(&mut self, capacity: usize) {
         self.read_buf_cap = capacity
@@ -640,6 +678,7 @@ impl PollStream {
 }
 
 impl AsyncRead for PollStream {
+    #[tracing::instrument(level = "debug", skip(self, cx, buf))]
     fn poll_read(
         mut self: Pin<&mut Self>,
         cx: &mut Context<'_>,
@@ -711,6 +750,7 @@ impl AsyncRead for PollStream {
 }
 
 impl AsyncWrite for PollStream {
+    #[tracing::instrument(level = "debug", skip(self, cx, buf))]
     fn poll_write(
         mut self: Pin<&mut Self>,
         cx: &mut Context<'_>,
@@ -768,6 +808,7 @@ impl AsyncWrite for PollStream {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self, cx))]
     fn poll_flush(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<io::Result<()>> {
         match self.write_fut.as_mut() {
             Some(fut) => match fut.as_mut().poll(cx) {
@@ -785,6 +826,7 @@ impl AsyncWrite for PollStream {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self, cx))]
     fn poll_shutdown(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<io::Result<()>> {
         match self.as_mut().poll_flush(cx) {
             Poll::Pending => return Poll::Pending,
@@ -818,12 +860,14 @@ impl AsyncWrite for PollStream {
 }
 
 impl Clone for PollStream {
+    #[tracing::instrument(level = "debug", skip(self))]
     fn clone(&self) -> PollStream {
         PollStream::new(self.clone_inner())
     }
 }
 
 impl fmt::Debug for PollStream {
+    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("PollStream")
             .field("stream", &self.stream)
@@ -833,6 +877,7 @@ impl fmt::Debug for PollStream {
 }
 
 impl AsRef<Stream> for PollStream {
+    #[tracing::instrument(level = "debug", skip(self))]
     fn as_ref(&self) -> &Stream {
         &self.stream
     }

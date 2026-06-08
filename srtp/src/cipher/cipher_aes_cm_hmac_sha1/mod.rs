@@ -32,6 +32,7 @@ pub(crate) struct CipherInner {
 }
 
 impl CipherInner {
+    #[tracing::instrument(level = "debug", skip(profile, kdf, master_key, master_salt))]
     pub fn new(
         profile: ProtectionProfile,
         kdf: Kdf,
@@ -83,6 +84,7 @@ impl CipherInner {
         })
     }
 
+    #[tracing::instrument(level = "debug", skip(self, buf, roc))]
     /// https://tools.ietf.org/html/rfc3711#section-4.2
     /// In the case of SRTP, M SHALL consist of the Authenticated
     /// Portion of the packet (as specified in Figure 1) concatenated with
@@ -108,6 +110,7 @@ impl CipherInner {
         signer.finalize().into_bytes().into()
     }
 
+    #[tracing::instrument(level = "debug", skip(self, buf))]
     /// https://tools.ietf.org/html/rfc3711#section-4.2
     ///
     /// The pre-defined authentication transform for SRTP is HMAC-SHA1
@@ -127,6 +130,7 @@ impl CipherInner {
         signer.finalize().into_bytes().into()
     }
 
+    #[tracing::instrument(level = "debug", skip(self, input))]
     fn get_rtcp_index(&self, input: &[u8]) -> usize {
         let tail_offset = input.len() - (self.profile.rtcp_auth_tag_len() + SRTCP_INDEX_SIZE);
         (BigEndian::read_u32(&input[tail_offset..tail_offset + SRTCP_INDEX_SIZE]) & !(1 << 31))

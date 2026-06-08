@@ -10,6 +10,7 @@ use crate::packetizer::{Depacketizer, Payloader};
 pub struct OpusPayloader;
 
 impl Payloader for OpusPayloader {
+    #[tracing::instrument(level = "debug", skip(self, mtu, payload))]
     fn payload(&mut self, mtu: usize, payload: &Bytes) -> Result<Vec<Bytes>> {
         if payload.is_empty() || mtu == 0 {
             return Ok(vec![]);
@@ -18,6 +19,7 @@ impl Payloader for OpusPayloader {
         Ok(vec![payload.clone()])
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn clone_to(&self) -> Box<dyn Payloader + Send + Sync> {
         Box::new(*self)
     }
@@ -28,6 +30,7 @@ impl Payloader for OpusPayloader {
 pub struct OpusPacket;
 
 impl Depacketizer for OpusPacket {
+    #[tracing::instrument(level = "debug", skip(self, packet))]
     fn depacketize(&mut self, packet: &Bytes) -> Result<Bytes> {
         if packet.is_empty() {
             Err(Error::ErrShortPacket)
@@ -36,10 +39,12 @@ impl Depacketizer for OpusPacket {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self, _payload))]
     fn is_partition_head(&self, _payload: &Bytes) -> bool {
         true
     }
 
+    #[tracing::instrument(level = "debug", skip(self, _marker, _payload))]
     fn is_partition_tail(&self, _marker: bool, _payload: &Bytes) -> bool {
         true
     }

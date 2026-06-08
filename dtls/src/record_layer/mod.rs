@@ -41,6 +41,7 @@ pub struct RecordLayer {
 }
 
 impl RecordLayer {
+    #[tracing::instrument(level = "debug", skip(protocol_version, epoch, content))]
     pub fn new(protocol_version: ProtocolVersion, epoch: u16, content: Content) -> Self {
         RecordLayer {
             record_layer_header: RecordLayerHeader {
@@ -54,12 +55,14 @@ impl RecordLayer {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self, writer))]
     pub fn marshal<W: Write>(&self, writer: &mut W) -> Result<()> {
         self.record_layer_header.marshal(writer)?;
         self.content.marshal(writer)?;
         Ok(())
     }
 
+    #[tracing::instrument(level = "debug", skip(reader))]
     pub fn unmarshal<R: Read>(reader: &mut R) -> Result<Self> {
         let record_layer_header = RecordLayerHeader::unmarshal(reader)?;
         let content = match record_layer_header.content_type {
@@ -87,6 +90,7 @@ impl RecordLayer {
 // two DTLS messages into the same datagram: in the same record or in
 // separate records.
 // https://tools.ietf.org/html/rfc6347#section-4.2.3
+#[tracing::instrument(level = "debug", skip(buf))]
 pub(crate) fn unpack_datagram(buf: &[u8]) -> Result<Vec<Vec<u8>>> {
     let mut out = vec![];
 

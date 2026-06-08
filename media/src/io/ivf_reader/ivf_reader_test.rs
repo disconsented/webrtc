@@ -4,6 +4,7 @@ use bytes::Bytes;
 
 use super::*;
 
+#[tracing::instrument(level = "debug", skip(frames))]
 /// build_ivf_container takes frames and prepends valid IVF file header
 fn build_ivf_container(frames: &[Bytes]) -> Bytes {
     // Valid IVF file header taken from: https://github.com/webmproject/...

@@ -18,10 +18,12 @@ pub struct HandshakeHeader {
 }
 
 impl HandshakeHeader {
+    #[tracing::instrument(level = "debug", skip(self))]
     pub fn size(&self) -> usize {
         1 + 3 + 2 + 3 + 3
     }
 
+    #[tracing::instrument(level = "debug", skip(self, writer))]
     pub fn marshal<W: Write>(&self, writer: &mut W) -> Result<()> {
         writer.write_u8(self.handshake_type as u8)?;
         writer.write_u24::<BigEndian>(self.length)?;
@@ -32,6 +34,7 @@ impl HandshakeHeader {
         Ok(writer.flush()?)
     }
 
+    #[tracing::instrument(level = "debug", skip(reader))]
     pub fn unmarshal<R: Read>(reader: &mut R) -> Result<Self> {
         let handshake_type = reader.read_u8()?.into();
         let length = reader.read_u24::<BigEndian>()?;

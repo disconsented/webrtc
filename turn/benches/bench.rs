@@ -9,6 +9,7 @@ use turn::proto::channum::{ChannelNumber, MIN_CHANNEL_NUMBER};
 use turn::proto::data::Data;
 use turn::proto::lifetime::Lifetime;
 
+#[tracing::instrument(level = "debug", skip(g))]
 fn benchmark_chan_data(g: &mut BenchmarkGroup<WallTime>) {
     {
         let buf = [64, 0, 0, 0, 0, 4, 0, 0, 1, 2, 3];
@@ -56,6 +57,7 @@ fn benchmark_chan_data(g: &mut BenchmarkGroup<WallTime>) {
 }
 
 // BenchmarkChannelNumber
+#[tracing::instrument(level = "debug", skip(g))]
 fn benchmark_chan(g: &mut BenchmarkGroup<WallTime>) {
     {
         let mut m = Message::new();
@@ -83,6 +85,7 @@ fn benchmark_chan(g: &mut BenchmarkGroup<WallTime>) {
 }
 
 // BenchmarkData
+#[tracing::instrument(level = "debug", skip(g))]
 fn benchmark_data(g: &mut BenchmarkGroup<WallTime>) {
     {
         let mut m = Message::new();
@@ -108,6 +111,7 @@ fn benchmark_data(g: &mut BenchmarkGroup<WallTime>) {
 }
 
 // BenchmarkLifetime
+#[tracing::instrument(level = "debug", skip(g))]
 fn benchmark_lifetime(g: &mut BenchmarkGroup<WallTime>) {
     {
         let mut m = Message::new();
@@ -134,6 +138,7 @@ fn benchmark_lifetime(g: &mut BenchmarkGroup<WallTime>) {
     }
 }
 
+#[tracing::instrument(level = "debug", skip())]
 fn benches() {
     let mut c = Criterion::default().configure_from_args();
     let mut g = c.benchmark_group("TURN");

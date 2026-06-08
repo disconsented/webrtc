@@ -27,6 +27,7 @@ pub struct Vp9Payloader {
 }
 
 impl fmt::Debug for Vp9Payloader {
+    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Vp9Payloader")
             .field("picture_id", &self.picture_id)
@@ -36,6 +37,7 @@ impl fmt::Debug for Vp9Payloader {
 }
 
 impl Payloader for Vp9Payloader {
+    #[tracing::instrument(level = "debug", skip(self, mtu, payload))]
     /// Payload fragments an Vp9Payloader packet across one or more byte arrays
     fn payload(&mut self, mtu: usize, payload: &Bytes) -> Result<Vec<Bytes>> {
         /*
@@ -135,6 +137,7 @@ impl Payloader for Vp9Payloader {
         Ok(payloads)
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     fn clone_to(&self) -> Box<dyn Payloader + Send + Sync> {
         Box::new(self.clone())
     }
@@ -200,6 +203,7 @@ pub struct Vp9Packet {
 }
 
 impl Depacketizer for Vp9Packet {
+    #[tracing::instrument(level = "debug", skip(self, packet))]
     /// depacketize parses the passed byte slice and stores the result in the Vp9Packet this method is called upon
     fn depacketize(&mut self, packet: &Bytes) -> Result<Bytes> {
         if packet.is_empty() {
@@ -239,6 +243,7 @@ impl Depacketizer for Vp9Packet {
         Ok(packet.slice(payload_index..))
     }
 
+    #[tracing::instrument(level = "debug", skip(self, payload))]
     /// is_partition_head checks whether if this is a head of the VP9 partition
     fn is_partition_head(&self, payload: &Bytes) -> bool {
         if payload.is_empty() {
@@ -248,6 +253,7 @@ impl Depacketizer for Vp9Packet {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self, marker, _payload))]
     fn is_partition_tail(&self, marker: bool, _payload: &Bytes) -> bool {
         marker
     }
@@ -262,6 +268,7 @@ impl Vp9Packet {
     // M:   | EXTENDED PID  |
     //      +-+-+-+-+-+-+-+-+
     //
+    #[tracing::instrument(level = "debug", skip(self, reader, payload_index))]
     fn parse_picture_id(
         &mut self,
         reader: &mut dyn Buf,
@@ -287,6 +294,7 @@ impl Vp9Packet {
         Ok(payload_index)
     }
 
+    #[tracing::instrument(level = "debug", skip(self, reader, payload_index))]
     fn parse_layer_info(
         &mut self,
         reader: &mut dyn Buf,
@@ -307,6 +315,7 @@ impl Vp9Packet {
     // L:   |  T  |U|  S  |D|
     //      +-+-+-+-+-+-+-+-+
     //
+    #[tracing::instrument(level = "debug", skip(self, reader, payload_index))]
     fn parse_layer_info_common(
         &mut self,
         reader: &mut dyn Buf,
@@ -338,6 +347,7 @@ impl Vp9Packet {
     //      |   tl0picidx   |
     //      +-+-+-+-+-+-+-+-+
     //
+    #[tracing::instrument(level = "debug", skip(self, reader, payload_index))]
     fn parse_layer_info_non_flexible_mode(
         &mut self,
         reader: &mut dyn Buf,
@@ -358,6 +368,7 @@ impl Vp9Packet {
     //      +-+-+-+-+-+-+-+-+                    N=1: An additional P_DIFF follows
     //                                                current P_DIFF.
     //
+    #[tracing::instrument(level = "debug", skip(self, reader, payload_index))]
     fn parse_ref_indices(
         &mut self,
         reader: &mut dyn Buf,
@@ -400,6 +411,7 @@ impl Vp9Packet {
     //      |    P_DIFF     | (OPTIONAL)    . R times    .
     //      +-+-+-+-+-+-+-+-+              -|           -|
     //
+    #[tracing::instrument(level = "debug", skip(self, reader, payload_index))]
     fn parse_ssdata(&mut self, reader: &mut dyn Buf, mut payload_index: usize) -> Result<usize> {
         if reader.remaining() == 0 {
             return Err(Error::ErrShortPacket);

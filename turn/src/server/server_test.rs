@@ -19,6 +19,7 @@ struct TestAuthHandler {
 }
 
 impl TestAuthHandler {
+    #[tracing::instrument(level = "debug", skip())]
     fn new() -> Self {
         let mut cred_map = HashMap::new();
         cred_map.insert(
@@ -31,6 +32,7 @@ impl TestAuthHandler {
 }
 
 impl AuthHandler for TestAuthHandler {
+    #[tracing::instrument(level = "debug", skip(self, username, _realm, _src_addr))]
     fn auth_handle(&self, username: &str, _realm: &str, _src_addr: SocketAddr) -> Result<Vec<u8>> {
         if let Some(pw) = self.cred_map.get(username) {
             Ok(pw.to_vec())
@@ -104,6 +106,7 @@ struct VNet {
     server: Server,
 }
 
+#[tracing::instrument(level = "debug", skip())]
 async fn build_vnet() -> Result<VNet> {
     // WAN
     let wan = Arc::new(Mutex::new(router::Router::new(router::RouterConfig {

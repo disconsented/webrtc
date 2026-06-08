@@ -7,6 +7,7 @@ use util::conn::*;
 use super::*;
 use crate::error::Result;
 
+#[tracing::instrument(level = "debug", skip(br))]
 async fn bridge_process_at_least_one(br: &Arc<Bridge>) {
     let mut n_sum = 0;
     loop {
@@ -18,6 +19,7 @@ async fn bridge_process_at_least_one(br: &Arc<Bridge>) {
     }
 }
 
+#[tracing::instrument(level = "debug", skip(br, ca, cb))]
 async fn create_new_association_pair(
     br: &Arc<Bridge>,
     ca: Arc<dyn Conn + Send + Sync>,
@@ -102,6 +104,7 @@ async fn create_new_association_pair(
     Ok((Arc::new(client.unwrap()), Arc::new(server.unwrap())))
 }
 
+#[tracing::instrument(level = "debug", skip(br, client, server))]
 async fn close_association_pair(
     br: &Arc<Bridge>,
     client: Arc<Association>,
@@ -156,6 +159,7 @@ async fn close_association_pair(
 
 //use std::io::Write;
 
+#[tracing::instrument(level = "debug", skip(channel_type, is_ordered))]
 async fn pr_ordered_unordered_test(channel_type: ChannelType, is_ordered: bool) -> Result<()> {
     /*env_logger::Builder::new()
     .format(|buf, record| {

@@ -34,6 +34,7 @@ pub struct Server {
 }
 
 impl Server {
+    #[tracing::instrument(level = "debug", skip(config))]
     /// creates a new TURN server
     pub async fn new(config: ServerConfig) -> Result<Self> {
         config.validate()?;
@@ -77,6 +78,7 @@ impl Server {
         Ok(s)
     }
 
+    #[tracing::instrument(level = "debug", skip(self, username))]
     /// Deletes all existing [`Allocation`][`Allocation`]s by the provided `username`.
     ///
     /// [`Allocation`]: crate::allocation::Allocation
@@ -95,6 +97,7 @@ impl Server {
         Ok(())
     }
 
+    #[tracing::instrument(level = "debug", skip(self, five_tuples))]
     /// Get information of [`Allocation`][`Allocation`]s by specified [`FiveTuple`]s.
     ///
     /// If `five_tuples` is:
@@ -134,6 +137,7 @@ impl Server {
         Ok(info)
     }
 
+    #[tracing::instrument(level = "debug", skip(conn, allocation_manager, nonces, auth_handler, realm, channel_bind_timeout, handle_rx))]
     async fn read_loop(
         conn: Arc<dyn Conn + Send + Sync>,
         allocation_manager: Arc<Manager>,
@@ -212,6 +216,7 @@ impl Server {
         let _ = conn.close().await;
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     /// Close stops the TURN Server. It cleans up any associated state and closes all connections it is managing.
     pub async fn close(&self) -> Result<()> {
         let tx = {

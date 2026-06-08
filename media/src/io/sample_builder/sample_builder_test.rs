@@ -29,6 +29,7 @@ pub struct FakeDepacketizer {
 }
 
 impl FakeDepacketizer {
+    #[tracing::instrument(level = "debug", skip())]
     fn new() -> Self {
         Self {
             head_checker: false,
@@ -38,10 +39,12 @@ impl FakeDepacketizer {
 }
 
 impl Depacketizer for FakeDepacketizer {
+    #[tracing::instrument(level = "debug", skip(self, b))]
     fn depacketize(&mut self, b: &Bytes) -> std::result::Result<bytes::Bytes, rtp::Error> {
         Ok(b.clone())
     }
 
+    #[tracing::instrument(level = "debug", skip(self, payload))]
     /// Checks if the packet is at the beginning of a partition.  This
     /// should return false if the result could not be determined, in
     /// which case the caller will detect timestamp discontinuities.
@@ -59,6 +62,7 @@ impl Depacketizer for FakeDepacketizer {
         false
     }
 
+    #[tracing::instrument(level = "debug", skip(self, marker, _payload))]
     /// Checks if the packet is at the end of a partition.  This should
     /// return false if the result could not be determined.
     fn is_partition_tail(&self, marker: bool, _payload: &Bytes) -> bool {

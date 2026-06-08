@@ -4,6 +4,7 @@ use nix::sys::socket::{AddressFamily, SockaddrLike, SockaddrStorage};
 use std::io::Error;
 use std::net::{SocketAddr, SocketAddrV4, SocketAddrV6};
 
+#[tracing::instrument(level = "debug", skip(ss))]
 fn ss_to_netsa(ss: &SockaddrStorage) -> Option<SocketAddr> {
     match ss.family() {
         Some(AddressFamily::Inet) => ss.as_sockaddr_in().map(|sin| {
@@ -24,6 +25,7 @@ fn ss_to_netsa(ss: &SockaddrStorage) -> Option<SocketAddr> {
     }
 }
 
+#[tracing::instrument(level = "debug", skip())]
 /// Query the local system for all interface addresses.
 pub fn ifaces() -> Result<Vec<Interface>, Error> {
     let mut ret = Vec::new();
