@@ -70,14 +70,12 @@ pub enum Error {
 }
 
 impl From<Error> for util::Error {
-    #[tracing::instrument(level = "debug", skip(e))]
     fn from(e: Error) -> Self {
         util::Error::from_std(e)
     }
 }
 
 impl PartialEq<util::Error> for Error {
-    #[tracing::instrument(level = "debug", skip(self, other))]
     fn eq(&self, other: &util::Error) -> bool {
         if let Some(down) = other.downcast_ref::<Error>() {
             self == down

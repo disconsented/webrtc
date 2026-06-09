@@ -14,37 +14,30 @@ impl CipherSuiteTlsPskWithAes128GcmSha256 {
 }
 
 impl CipherSuite for CipherSuiteTlsPskWithAes128GcmSha256 {
-    #[tracing::instrument(level = "debug", skip(self))]
     fn to_string(&self) -> String {
         "TLS_PSK_WITH_AES_128_GCM_SHA256".to_owned()
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn id(&self) -> CipherSuiteId {
         CipherSuiteId::Tls_Psk_With_Aes_128_Gcm_Sha256
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn certificate_type(&self) -> ClientCertificateType {
         ClientCertificateType::Unsupported
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn hash_func(&self) -> CipherSuiteHash {
         CipherSuiteHash::Sha256
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn is_psk(&self) -> bool {
         true
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn is_initialized(&self) -> bool {
         self.gcm.is_some()
     }
 
-    #[tracing::instrument(level = "debug", skip(self, master_secret, client_random, server_random, is_client))]
     fn init(
         &mut self,
         master_secret: &[u8],
@@ -81,7 +74,6 @@ impl CipherSuite for CipherSuiteTlsPskWithAes128GcmSha256 {
         Ok(())
     }
 
-    #[tracing::instrument(level = "debug", skip(self, pkt_rlh, raw))]
     fn encrypt(&self, pkt_rlh: &RecordLayerHeader, raw: &[u8]) -> Result<Vec<u8>> {
         let cg = self.gcm.as_ref().ok_or(Error::Other(
             "CipherSuite has not been initialized, unable to encrypt".to_owned(),
@@ -89,7 +81,6 @@ impl CipherSuite for CipherSuiteTlsPskWithAes128GcmSha256 {
         cg.encrypt(pkt_rlh, raw)
     }
 
-    #[tracing::instrument(level = "debug", skip(self, input))]
     fn decrypt(&self, input: &[u8]) -> Result<Vec<u8>> {
         let cg = self.gcm.as_ref().ok_or(Error::Other(
             "CipherSuite has not been initialized, unable to decrypt".to_owned(),

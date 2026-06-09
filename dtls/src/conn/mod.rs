@@ -1,11 +1,11 @@
 #[cfg(test)]
 mod conn_test;
 
-#[cfg(feature = "dtls-buf-reader")]
-use std::io::BufReader;
 use std::io::BufWriter;
 #[cfg(not(feature = "dtls-buf-reader"))]
 use std::io::Cursor;
+#[cfg(feature = "dtls-buf-reader")]
+use std::io::BufReader;
 use std::marker::{Send, Sync};
 use std::net::SocketAddr;
 use std::sync::atomic::Ordering;
@@ -16,7 +16,6 @@ use log::*;
 use portable_atomic::{AtomicBool, AtomicU16};
 use tokio::sync::{mpsc, oneshot, Mutex};
 use tokio::time::Duration;
-use tracing::{info_span, Instrument};
 use util::replay_detector::*;
 use util::Conn;
 
@@ -49,13 +48,9 @@ use crate::state::*;
 macro_rules! make_reader {
     ($slice:expr) => {{
         #[cfg(not(feature = "dtls-buf-reader"))]
-        {
-            Cursor::new($slice)
-        }
+        { Cursor::new($slice) }
         #[cfg(feature = "dtls-buf-reader")]
-        {
-            BufReader::new($slice)
-        }
+        { BufReader::new($slice) }
     }};
 }
 
@@ -132,17 +127,14 @@ type UtilResult<T> = std::result::Result<T, util::Error>;
 
 #[async_trait]
 impl Conn for DTLSConn {
-    #[tracing::instrument(level = "debug", skip(self, _addr))]
     async fn connect(&self, _addr: SocketAddr) -> UtilResult<()> {
         Err(util::Error::Other("Not applicable".to_owned()))
     }
 
-    #[tracing::instrument(level = "debug", skip(self, buf))]
     async fn recv(&self, buf: &mut [u8]) -> UtilResult<usize> {
         self.read(buf, None).await.map_err(util::Error::from_std)
     }
 
-    #[tracing::instrument(level = "debug", skip(self, buf))]
     async fn recv_from(&self, buf: &mut [u8]) -> UtilResult<(usize, SocketAddr)> {
         if let Some(raddr) = self.conn.remote_addr() {
             let n = self.read(buf, None).await.map_err(util::Error::from_std)?;
@@ -154,39 +146,32 @@ impl Conn for DTLSConn {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, buf))]
     async fn send(&self, buf: &[u8]) -> UtilResult<usize> {
         self.write(buf, None).await.map_err(util::Error::from_std)
     }
 
-    #[tracing::instrument(level = "debug", skip(self, _buf, _target))]
     async fn send_to(&self, _buf: &[u8], _target: SocketAddr) -> UtilResult<usize> {
         Err(util::Error::Other("Not applicable".to_owned()))
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn local_addr(&self) -> UtilResult<SocketAddr> {
         self.conn.local_addr()
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn remote_addr(&self) -> Option<SocketAddr> {
         self.conn.remote_addr()
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     async fn close(&self) -> UtilResult<()> {
         self.close().await.map_err(util::Error::from_std)
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn as_any(&self) -> &(dyn std::any::Any + Send + Sync) {
         self
     }
 }
 
 impl DTLSConn {
-    #[tracing::instrument(level = "debug", skip(conn, config, is_client, initial_state))]
     pub async fn new(
         conn: Arc<dyn Conn + Send + Sync>,
         mut config: Config,
@@ -455,7 +440,6 @@ impl DTLSConn {
     }
 
     // Read reads data from the connection.
-    #[tracing::instrument(level = "debug", skip(self, p, duration))]
     pub async fn read(&self, p: &mut [u8], duration: Option<Duration>) -> Result<usize> {
         if !self.is_handshake_completed_successfully() {
             return Err(Error::ErrHandshakeInProgress);
@@ -494,7 +478,6 @@ impl DTLSConn {
     }
 
     // Write writes len(p) bytes from p to the DTLS connection
-    #[tracing::instrument(level = "debug", skip(self, p, duration))]
     pub async fn write(&self, p: &[u8], duration: Option<Duration>) -> Result<usize> {
         if self.is_connection_closed() {
             return Err(Error::ErrConnClosed);
@@ -532,7 +515,6 @@ impl DTLSConn {
     }
 
     // Close closes the connection.
-    #[tracing::instrument(level = "debug", skip(self))]
     pub async fn close(&self) -> Result<()> {
         if self
             .closed
@@ -554,20 +536,17 @@ impl DTLSConn {
         Ok(())
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// connection_state returns basic DTLS details about the connection.
     /// Note that this replaced the `Export` function of v1.
     pub async fn connection_state(&self) -> State {
         self.state.clone().await
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// selected_srtpprotection_profile returns the selected SRTPProtectionProfile
     pub fn selected_srtpprotection_profile(&self) -> SrtpProtectionProfile {
         self.state.srtp_protection_profile
     }
 
-    #[tracing::instrument(level = "debug", skip(self, level, desc))]
     pub(crate) async fn notify(&self, level: AlertLevel, desc: AlertDescription) -> Result<()> {
         self.write_packets(vec![Packet {
             record: RecordLayer::new(
@@ -584,7 +563,6 @@ impl DTLSConn {
         .await
     }
 
-    #[tracing::instrument(level = "debug", skip(self, pkts))]
     pub(crate) async fn write_packets(&self, pkts: Vec<Packet>) -> Result<()> {
         let (tx, mut rx) = mpsc::channel(1);
 
@@ -597,18 +575,6 @@ impl DTLSConn {
         }
     }
 
-    #[tracing::instrument(
-        level = "debug",
-        skip(
-            next_conn,
-            pkts,
-            cache,
-            is_client,
-            local_sequence_number,
-            cipher_suite,
-            maximum_transmission_unit
-        )
-    )]
     async fn handle_outgoing_packets(
         next_conn: &Arc<dyn util::Conn + Send + Sync>,
         mut pkts: Vec<Packet>,
@@ -677,7 +643,6 @@ impl DTLSConn {
         Ok(())
     }
 
-    #[tracing::instrument(level = "debug", skip(local_sequence_number, cipher_suite, p))]
     async fn process_packet(
         local_sequence_number: &Arc<Mutex<Vec<u64>>>,
         cipher_suite: &Arc<Mutex<Option<Box<dyn CipherSuite + Send + Sync>>>>,
@@ -685,10 +650,7 @@ impl DTLSConn {
     ) -> Result<Vec<u8>> {
         let epoch = p.record.record_layer_header.epoch as usize;
         let seq = {
-            let mut lsn = local_sequence_number
-                .lock()
-                .instrument(info_span!("lsn"))
-                .await;
+            let mut lsn = local_sequence_number.lock().await;
             while lsn.len() <= epoch {
                 lsn.push(0);
             }
@@ -711,20 +673,16 @@ impl DTLSConn {
         // the default pre-allocates 1200 bytes and marshals directly, avoiding the wrapper overhead.
         #[cfg(not(feature = "dtls-buf-writer"))]
         let mut raw_packet = {
-            let mut buf = info_span!("vec-capacity").in_scope(|| Vec::with_capacity(1200));
-            info_span!("marshal").in_scope(|| p.record.marshal(&mut buf))?;
-            if buf.len() > 1200 {
-                warn!("Packet marshalled exceeds 1200 bytes, consider increasing capacity or using dtls-buf-writer feature");
-            }
+            let mut buf = Vec::with_capacity(1200);
+            p.record.marshal(&mut buf)?;
             buf
         };
         #[cfg(feature = "dtls-buf-writer")]
         let mut raw_packet = {
             let mut buf = vec![];
             {
-                let mut w = info_span!("buf-writer")
-                    .in_scope(|| BufWriter::<&mut Vec<u8>>::new(buf.as_mut()));
-                info_span!("marshal").in_scope(|| p.record.marshal(&w))?;
+                let mut w = BufWriter::<&mut Vec<u8>>::new(buf.as_mut());
+                p.record.marshal(&mut w)?;
             }
             buf
         };
@@ -739,10 +697,6 @@ impl DTLSConn {
         Ok(raw_packet)
     }
 
-    #[tracing::instrument(
-        level = "debug",
-        skip(local_sequence_number, cipher_suite, maximum_transmission_unit, p, h)
-    )]
     async fn process_handshake_packet(
         local_sequence_number: &Arc<Mutex<Vec<u64>>>,
         cipher_suite: &Arc<Mutex<Option<Box<dyn CipherSuite + Send + Sync>>>>,
@@ -809,7 +763,6 @@ impl DTLSConn {
         Ok(raw_packets)
     }
 
-    #[tracing::instrument(level = "debug", skip(maximum_transmission_unit, h))]
     fn fragment_handshake(maximum_transmission_unit: usize, h: &Handshake) -> Result<Vec<Vec<u8>>> {
         let mut content = vec![];
         {
@@ -855,28 +808,15 @@ impl DTLSConn {
         Ok(fragmented_handshakes)
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     pub(crate) fn set_handshake_completed_successfully(&mut self) {
         self.handshake_completed_successfully
             .store(true, Ordering::SeqCst);
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     pub(crate) fn is_handshake_completed_successfully(&self) -> bool {
         self.handshake_completed_successfully.load(Ordering::SeqCst)
     }
 
-    #[tracing::instrument(
-        level = "debug",
-        skip(
-            ctx,
-            next_conn,
-            handle_queue_rx,
-            buf,
-            local_epoch,
-            handshake_completed_successfully
-        )
-    )]
     async fn read_and_buffer(
         ctx: &mut ConnReaderContext,
         next_conn: &Arc<dyn util::Conn + Send + Sync>,
@@ -967,10 +907,6 @@ impl DTLSConn {
         Ok(())
     }
 
-    #[tracing::instrument(
-        level = "debug",
-        skip(ctx, local_epoch, handshake_completed_successfully, pkts)
-    )]
     async fn handle_queued_packets(
         ctx: &mut ConnReaderContext,
         local_epoch: &Arc<AtomicU16>,
@@ -1019,7 +955,6 @@ impl DTLSConn {
         Ok(())
     }
 
-    #[tracing::instrument(level = "debug", skip(ctx, pkt, enqueue))]
     async fn handle_incoming_packet(
         ctx: &mut ConnReaderContext,
         mut pkt: Vec<u8>,
@@ -1281,23 +1216,19 @@ impl DTLSConn {
         (false, None, None)
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn is_connection_closed(&self) -> bool {
         self.closed.load(Ordering::SeqCst)
     }
 
-    #[tracing::instrument(level = "debug", skip(self, epoch))]
     pub(crate) fn set_local_epoch(&mut self, epoch: u16) {
         self.state.local_epoch.store(epoch, Ordering::SeqCst);
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     pub(crate) fn get_local_epoch(&self) -> u16 {
         self.state.local_epoch.load(Ordering::SeqCst)
     }
 }
 
-#[tracing::instrument(level = "debug", skip(raw_packets, maximum_transmission_unit))]
 fn compact_raw_packets(raw_packets: &[Vec<u8>], maximum_transmission_unit: usize) -> Vec<Vec<u8>> {
     let mut combined_raw_packets = vec![];
     let mut current_combined_raw_packet = vec![];
@@ -1317,7 +1248,6 @@ fn compact_raw_packets(raw_packets: &[Vec<u8>], maximum_transmission_unit: usize
     combined_raw_packets
 }
 
-#[tracing::instrument(level = "debug", skip(bytes, split_len))]
 fn split_bytes(bytes: &[u8], split_len: usize) -> Vec<Vec<u8>> {
     let mut splits = vec![];
     let num_bytes = bytes.len();

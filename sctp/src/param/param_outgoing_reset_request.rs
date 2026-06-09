@@ -49,7 +49,6 @@ pub(crate) struct ParamOutgoingResetRequest {
 }
 
 impl fmt::Display for ParamOutgoingResetRequest {
-    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
@@ -64,7 +63,6 @@ impl fmt::Display for ParamOutgoingResetRequest {
 }
 
 impl Param for ParamOutgoingResetRequest {
-    #[tracing::instrument(level = "debug", skip(self))]
     fn header(&self) -> ParamHeader {
         ParamHeader {
             typ: ParamType::OutSsnResetReq,
@@ -72,7 +70,6 @@ impl Param for ParamOutgoingResetRequest {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(raw))]
     fn unmarshal(raw: &Bytes) -> Result<Self> {
         let header = ParamHeader::unmarshal(raw)?;
 
@@ -102,7 +99,6 @@ impl Param for ParamOutgoingResetRequest {
         })
     }
 
-    #[tracing::instrument(level = "debug", skip(self, buf))]
     fn marshal_to(&self, buf: &mut BytesMut) -> Result<usize> {
         self.header().marshal_to(buf)?;
         buf.put_u32(self.reconfig_request_sequence_number);
@@ -114,17 +110,14 @@ impl Param for ParamOutgoingResetRequest {
         Ok(buf.len())
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn value_length(&self) -> usize {
         PARAM_OUTGOING_RESET_REQUEST_STREAM_IDENTIFIERS_OFFSET + self.stream_identifiers.len() * 2
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn clone_to(&self) -> Box<dyn Param + Send + Sync> {
         Box::new(self.clone())
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn as_any(&self) -> &(dyn Any + Send + Sync) {
         self
     }

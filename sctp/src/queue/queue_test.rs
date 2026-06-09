@@ -8,7 +8,6 @@ use crate::chunk::chunk_payload_data::{ChunkPayloadData, PayloadProtocolIdentifi
 use crate::chunk::chunk_selective_ack::GapAckBlock;
 use crate::error::{Error, Result};
 
-#[tracing::instrument(level = "debug", skip(tsn, n_bytes))]
 fn make_payload(tsn: u32, n_bytes: usize) -> ChunkPayloadData {
     ChunkPayloadData {
         tsn,
@@ -198,7 +197,6 @@ const FRAG_BEGIN: usize = 1;
 const FRAG_MIDDLE: usize = 2;
 const FRAG_END: usize = 3;
 
-#[tracing::instrument(level = "debug", skip(tsn, unordered, frag))]
 fn make_data_chunk(tsn: u32, unordered: bool, frag: usize) -> ChunkPayloadData {
     let mut b = false;
     let mut e = false;

@@ -64,7 +64,6 @@ pub struct Request {
 }
 
 impl Request {
-    #[tracing::instrument(level = "debug", skip(conn, src_addr, allocation_manager, auth_handler))]
     pub fn new(
         conn: Arc<dyn Conn + Send + Sync>,
         src_addr: SocketAddr,
@@ -83,7 +82,6 @@ impl Request {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// Processes the give [`Request`]
     pub async fn handle_request(&mut self) -> Result<()> {
         /*log::debug!(
@@ -100,7 +98,6 @@ impl Request {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     async fn handle_data_packet(&mut self) -> Result<()> {
         log::debug!("received DataPacket from {}", self.src_addr);
         let mut c = ChannelData {
@@ -111,7 +108,6 @@ impl Request {
         self.handle_channel_data(&c).await
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     async fn handle_turn_packet(&mut self) -> Result<()> {
         log::debug!("handle_turn_packet");
         let mut m = Message {
@@ -123,7 +119,6 @@ impl Request {
         self.process_message_handler(&m).await
     }
 
-    #[tracing::instrument(level = "debug", skip(self, m))]
     async fn process_message_handler(&mut self, m: &Message) -> Result<()> {
         if m.typ.class == CLASS_INDICATION {
             match m.typ.method {
@@ -144,7 +139,6 @@ impl Request {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, m, calling_method))]
     pub(crate) async fn authenticate_request(
         &mut self,
         m: &Message,
@@ -234,7 +228,6 @@ impl Request {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, m, calling_method, response_code))]
     async fn respond_with_nonce(
         &mut self,
         m: &Message,
@@ -268,7 +261,6 @@ impl Request {
         build_and_send(&self.conn, self.src_addr, msg).await
     }
 
-    #[tracing::instrument(level = "debug", skip(self, m))]
     pub(crate) async fn handle_binding_request(&mut self, m: &Message) -> Result<()> {
         log::debug!("received BindingRequest from {}", self.src_addr);
 
@@ -286,7 +278,6 @@ impl Request {
         build_and_send(&self.conn, self.src_addr, msg).await
     }
 
-    #[tracing::instrument(level = "debug", skip(self, m))]
     /// https://tools.ietf.org/html/rfc5766#section-6.2
     pub(crate) async fn handle_allocate_request(&mut self, m: &Message) -> Result<()> {
         log::debug!("received AllocateRequest from {}", self.src_addr);
@@ -623,7 +614,6 @@ impl Request {
         build_and_send(&self.conn, self.src_addr, msg).await
     }
 
-    #[tracing::instrument(level = "debug", skip(self, m))]
     pub(crate) async fn handle_refresh_request(&mut self, m: &Message) -> Result<()> {
         log::debug!("received RefreshRequest from {}", self.src_addr);
 
@@ -690,7 +680,6 @@ impl Request {
         build_and_send(&self.conn, self.src_addr, msg).await
     }
 
-    #[tracing::instrument(level = "debug", skip(self, m))]
     pub(crate) async fn handle_create_permission_request(&mut self, m: &Message) -> Result<()> {
         log::debug!("received CreatePermission from {}", self.src_addr);
 
@@ -780,7 +769,6 @@ impl Request {
         build_and_send(&self.conn, self.src_addr, msg).await
     }
 
-    #[tracing::instrument(level = "debug", skip(self, m))]
     pub(crate) async fn handle_send_indication(&mut self, m: &Message) -> Result<()> {
         log::debug!("received SendIndication from {}", self.src_addr);
 
@@ -819,7 +807,6 @@ impl Request {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, m))]
     pub(crate) async fn handle_channel_bind_request(&mut self, m: &Message) -> Result<()> {
         log::debug!("received ChannelBindRequest from {}", self.src_addr);
 
@@ -914,7 +901,6 @@ impl Request {
         build_and_send(&self.conn, self.src_addr, msg).await
     }
 
-    #[tracing::instrument(level = "debug", skip(self, c))]
     pub(crate) async fn handle_channel_data(&mut self, c: &ChannelData) -> Result<()> {
         log::debug!("received ChannelData from {}", self.src_addr);
 
@@ -945,14 +931,12 @@ impl Request {
     }
 }
 
-#[tracing::instrument(level = "debug", skip(n))]
 pub(crate) fn rand_seq(n: usize) -> String {
     use rand::distr::{Alphabetic, SampleString};
 
     Alphabetic.sample_string(&mut rand::rng(), n)
 }
 
-#[tracing::instrument(level = "debug", skip())]
 pub(crate) fn build_nonce() -> Result<String> {
     /* #nosec */
     let mut s = String::new();
@@ -972,7 +956,6 @@ pub(crate) fn build_nonce() -> Result<String> {
     Ok(format!("{:x}", h.finalize()))
 }
 
-#[tracing::instrument(level = "debug", skip(conn, dst, msg))]
 pub(crate) async fn build_and_send(
     conn: &Arc<dyn Conn + Send + Sync>,
     dst: SocketAddr,
@@ -982,7 +965,6 @@ pub(crate) async fn build_and_send(
     Ok(())
 }
 
-#[tracing::instrument(level = "debug", skip(conn, dst, msg, err))]
 /// Send a STUN packet and return the original error to the caller
 pub(crate) async fn build_and_send_err(
     conn: &Arc<dyn Conn + Send + Sync>,
@@ -995,7 +977,6 @@ pub(crate) async fn build_and_send_err(
     Err(err)
 }
 
-#[tracing::instrument(level = "debug", skip(transaction_id, msg_type, additional))]
 pub(crate) fn build_msg(
     transaction_id: TransactionId,
     msg_type: MessageType,
@@ -1016,7 +997,6 @@ pub(crate) fn build_msg(
     Ok(msg)
 }
 
-#[tracing::instrument(level = "debug", skip(m))]
 pub(crate) fn allocation_lifetime(m: &Message) -> Duration {
     let mut lifetime_duration = DEFAULT_LIFETIME;
 

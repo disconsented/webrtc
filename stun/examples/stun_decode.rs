@@ -3,7 +3,6 @@ use base64::Engine;
 use clap::{App, Arg};
 use stun::message::Message;
 
-#[tracing::instrument(level = "debug", skip())]
 fn main() {
     let mut app = App::new("STUN decode")
         .version("0.1.0")

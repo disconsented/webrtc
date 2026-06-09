@@ -53,7 +53,6 @@ pub struct StatisticsSummaryReportBlock {
 }
 
 impl fmt::Display for StatisticsSummaryReportBlock {
-    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{self:?}")
     }
@@ -70,7 +69,6 @@ pub enum TTLorHopLimitType {
 }
 
 impl From<u8> for TTLorHopLimitType {
-    #[tracing::instrument(level = "debug", skip(v))]
     fn from(v: u8) -> Self {
         match v {
             1 => TTLorHopLimitType::IPv4,
@@ -81,7 +79,6 @@ impl From<u8> for TTLorHopLimitType {
 }
 
 impl fmt::Display for TTLorHopLimitType {
-    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let s = match *self {
             TTLorHopLimitType::Missing => "[ToH Missing]",
@@ -93,7 +90,6 @@ impl fmt::Display for TTLorHopLimitType {
 }
 
 impl StatisticsSummaryReportBlock {
-    #[tracing::instrument(level = "debug", skip(self))]
     pub fn xr_header(&self) -> XRHeader {
         let mut type_specific = 0x00;
         if self.loss_reports {
@@ -116,48 +112,40 @@ impl StatisticsSummaryReportBlock {
 }
 
 impl Packet for StatisticsSummaryReportBlock {
-    #[tracing::instrument(level = "debug", skip(self))]
     fn header(&self) -> Header {
         Header::default()
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// destination_ssrc returns an array of ssrc values that this report block refers to.
     fn destination_ssrc(&self) -> Vec<u32> {
         vec![self.ssrc]
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn raw_size(&self) -> usize {
         XR_HEADER_LENGTH + SSR_REPORT_BLOCK_LENGTH as usize
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn as_any(&self) -> &(dyn Any + Send + Sync) {
         self
     }
-    #[tracing::instrument(level = "debug", skip(self, other))]
     fn equal(&self, other: &(dyn Packet + Send + Sync)) -> bool {
         other
             .as_any()
             .downcast_ref::<StatisticsSummaryReportBlock>()
             == Some(self)
     }
-    #[tracing::instrument(level = "debug", skip(self))]
     fn cloned(&self) -> Box<dyn Packet + Send + Sync> {
         Box::new(self.clone())
     }
 }
 
 impl MarshalSize for StatisticsSummaryReportBlock {
-    #[tracing::instrument(level = "debug", skip(self))]
     fn marshal_size(&self) -> usize {
         self.raw_size()
     }
 }
 
 impl Marshal for StatisticsSummaryReportBlock {
-    #[tracing::instrument(level = "debug", skip(self, buf))]
     /// marshal_to encodes the StatisticsSummaryReportBlock in binary
     fn marshal_to(&self, mut buf: &mut [u8]) -> Result<usize> {
         if buf.remaining_mut() < self.marshal_size() {
@@ -187,7 +175,6 @@ impl Marshal for StatisticsSummaryReportBlock {
 }
 
 impl Unmarshal for StatisticsSummaryReportBlock {
-    #[tracing::instrument(level = "debug", skip(raw_packet))]
     /// Unmarshal decodes the StatisticsSummaryReportBlock from binary
     fn unmarshal<B>(raw_packet: &mut B) -> Result<Self>
     where

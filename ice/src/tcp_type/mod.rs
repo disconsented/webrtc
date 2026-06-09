@@ -25,7 +25,6 @@ pub enum TcpType {
 
 // from creates a new TCPType from string.
 impl From<&str> for TcpType {
-    #[tracing::instrument(level = "debug", skip(raw))]
     fn from(raw: &str) -> Self {
         match raw {
             "active" => Self::Active,
@@ -37,7 +36,6 @@ impl From<&str> for TcpType {
 }
 
 impl fmt::Display for TcpType {
-    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let s = match *self {
             Self::Active => "active",

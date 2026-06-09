@@ -17,17 +17,14 @@ pub struct ExtensionSupportedSignatureAlgorithms {
 }
 
 impl ExtensionSupportedSignatureAlgorithms {
-    #[tracing::instrument(level = "debug", skip(self))]
     pub fn extension_value(&self) -> ExtensionValue {
         ExtensionValue::SupportedSignatureAlgorithms
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     pub fn size(&self) -> usize {
         2 + 2 + self.signature_hash_algorithms.len() * 2
     }
 
-    #[tracing::instrument(level = "debug", skip(self, writer))]
     pub fn marshal<W: Write>(&self, writer: &mut W) -> Result<()> {
         writer.write_u16::<BigEndian>(2 + 2 * self.signature_hash_algorithms.len() as u16)?;
         writer.write_u16::<BigEndian>(2 * self.signature_hash_algorithms.len() as u16)?;
@@ -39,7 +36,6 @@ impl ExtensionSupportedSignatureAlgorithms {
         Ok(writer.flush()?)
     }
 
-    #[tracing::instrument(level = "debug", skip(reader))]
     pub fn unmarshal<R: Read>(reader: &mut R) -> Result<Self> {
         let _ = reader.read_u16::<BigEndian>()?;
 

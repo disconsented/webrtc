@@ -48,7 +48,6 @@ pub struct RecordLayerHeader {
 }
 
 impl RecordLayerHeader {
-    #[tracing::instrument(level = "debug", skip(self, writer))]
     pub fn marshal<W: Write>(&self, writer: &mut W) -> Result<()> {
         if self.sequence_number > MAX_SEQUENCE_NUMBER {
             return Err(Error::ErrSequenceNumberOverflow);
@@ -67,7 +66,6 @@ impl RecordLayerHeader {
         Ok(writer.flush()?)
     }
 
-    #[tracing::instrument(level = "debug", skip(reader))]
     pub fn unmarshal<R: Read>(reader: &mut R) -> Result<Self> {
         let content_type = reader.read_u8()?.into();
         let major = reader.read_u8()?;

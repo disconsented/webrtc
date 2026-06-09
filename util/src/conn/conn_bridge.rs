@@ -23,12 +23,10 @@ struct BridgeConn {
 
 #[async_trait]
 impl Conn for BridgeConn {
-    #[tracing::instrument(level = "debug", skip(self, _addr))]
     async fn connect(&self, _addr: SocketAddr) -> Result<()> {
         Err(Error::other("Not applicable").into())
     }
 
-    #[tracing::instrument(level = "debug", skip(self, b))]
     async fn recv(&self, b: &mut [u8]) -> Result<usize> {
         let mut rd_rx = self.rd_rx.lock().await;
         let v = match rd_rx.recv().await {
@@ -40,13 +38,11 @@ impl Conn for BridgeConn {
         Ok(l)
     }
 
-    #[tracing::instrument(level = "debug", skip(self, buf))]
     async fn recv_from(&self, buf: &mut [u8]) -> Result<(usize, SocketAddr)> {
         let n = self.recv(buf).await?;
         Ok((n, SocketAddr::from_str("0.0.0.0:0")?))
     }
 
-    #[tracing::instrument(level = "debug", skip(self, b))]
     async fn send(&self, b: &[u8]) -> Result<usize> {
         if rand::random::<u8>() % 100 < self.loss_chance {
             return Ok(b.len());
@@ -55,27 +51,22 @@ impl Conn for BridgeConn {
         self.br.push(b, self.id).await
     }
 
-    #[tracing::instrument(level = "debug", skip(self, _buf, _target))]
     async fn send_to(&self, _buf: &[u8], _target: SocketAddr) -> Result<usize> {
         Err(Error::other("Not applicable").into())
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn local_addr(&self) -> Result<SocketAddr> {
         Err(Error::new(ErrorKind::AddrNotAvailable, "Addr Not Available").into())
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn remote_addr(&self) -> Option<SocketAddr> {
         None
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     async fn close(&self) -> Result<()> {
         Ok(())
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn as_any(&self) -> &(dyn std::any::Any + Send + Sync) {
         self
     }
@@ -97,7 +88,6 @@ pub struct Bridge {
 }
 
 impl Bridge {
-    #[tracing::instrument(level = "debug", skip(loss_chance, filter_cb0, filter_cb1))]
     pub fn new(
         loss_chance: u8,
         filter_cb0: Option<FilterCbFn>,
@@ -127,7 +117,6 @@ impl Bridge {
         (br, conn0, conn1)
     }
 
-    #[tracing::instrument(level = "debug", skip(self, id))]
     /// Len returns number of queued packets.
     #[allow(clippy::len_without_is_empty)]
     pub async fn len(&self, id: usize) -> usize {
@@ -135,7 +124,6 @@ impl Bridge {
         q.len()
     }
 
-    #[tracing::instrument(level = "debug", skip(self, b, id))]
     pub async fn push(&self, b: &[u8], id: usize) -> Result<usize> {
         // Push rate should be limited as same as Tick rate.
         // Otherwise, queue grows too fast on free running Write.
@@ -169,14 +157,12 @@ impl Bridge {
         Ok(b.len())
     }
 
-    #[tracing::instrument(level = "debug", skip(self, id))]
     /// Reorder inverses the order of packets currently in the specified queue.
     pub async fn reorder(&self, id: usize) -> bool {
         let mut queue = self.queue[id].lock().await;
         inverse(&mut queue)
     }
 
-    #[tracing::instrument(level = "debug", skip(self, id, offset, n))]
     /// Drop drops the specified number of packets from the given offset index
     /// of the specified queue.
     pub async fn drop_offset(&self, id: usize, offset: usize, n: usize) {
@@ -184,21 +170,18 @@ impl Bridge {
         queue.drain(offset..offset + n);
     }
 
-    #[tracing::instrument(level = "debug", skip(self, id, n))]
     /// drop_next_nwrites drops the next n packets that will be written
     /// to the specified queue.
     pub fn drop_next_nwrites(&self, id: usize, n: usize) {
         self.drop_nwrites[id].store(n, Ordering::SeqCst);
     }
 
-    #[tracing::instrument(level = "debug", skip(self, id, n))]
     /// reorder_next_nwrites drops the next n packets that will be written
     /// to the specified queue.
     pub fn reorder_next_nwrites(&self, id: usize, n: usize) {
         self.reorder_nwrites[id].store(n, Ordering::SeqCst);
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     pub async fn clear(&self) {
         for id in 0..2 {
             let mut queue = self.queue[id].lock().await;
@@ -206,7 +189,6 @@ impl Bridge {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// Tick attempts to hand a packet from the queue for each directions, to readers,
     /// if there are waiting on the queue. If there's no reader, it will return
     /// immediately.
@@ -226,7 +208,6 @@ impl Bridge {
         n
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// Process repeats tick() calls until no more outstanding packet in the queues.
     pub async fn process(&self) {
         loop {
@@ -239,7 +220,6 @@ impl Bridge {
     }
 }
 
-#[tracing::instrument(level = "debug", skip(s))]
 pub(crate) fn inverse(s: &mut VecDeque<Bytes>) -> bool {
     if s.len() < 2 {
         return false;

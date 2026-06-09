@@ -36,12 +36,10 @@ type Result<T> = std::result::Result<T, util::Error>;
 
 #[async_trait]
 impl Conn for MuxErrorConn {
-    #[tracing::instrument(level = "debug", skip(self, _addr))]
     async fn connect(&self, _addr: SocketAddr) -> Result<()> {
         Err(io::Error::other("Not applicable").into())
     }
 
-    #[tracing::instrument(level = "debug", skip(self, buf))]
     async fn recv(&self, buf: &mut [u8]) -> Result<usize> {
         let idx = self.idx.fetch_add(1, Ordering::SeqCst);
         if idx < self.data.len() {
@@ -53,37 +51,30 @@ impl Conn for MuxErrorConn {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, _buf))]
     async fn recv_from(&self, _buf: &mut [u8]) -> Result<(usize, SocketAddr)> {
         Err(io::Error::other("Not applicable").into())
     }
 
-    #[tracing::instrument(level = "debug", skip(self, _buf))]
     async fn send(&self, _buf: &[u8]) -> Result<usize> {
         Err(io::Error::other("Not applicable").into())
     }
 
-    #[tracing::instrument(level = "debug", skip(self, _buf, _target))]
     async fn send_to(&self, _buf: &[u8], _target: SocketAddr) -> Result<usize> {
         Err(io::Error::other("Not applicable").into())
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn local_addr(&self) -> Result<SocketAddr> {
         Err(io::Error::other("Not applicable").into())
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn remote_addr(&self) -> Option<SocketAddr> {
         None
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     async fn close(&self) -> Result<()> {
         Ok(())
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn as_any(&self) -> &(dyn std::any::Any + Send + Sync) {
         self
     }

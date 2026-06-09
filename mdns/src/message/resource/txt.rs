@@ -9,7 +9,6 @@ pub struct TxtResource {
 }
 
 impl fmt::Display for TxtResource {
-    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         if self.txt.is_empty() {
             write!(f, "dnsmessage.TXTResource{{txt: {{}}}}",)
@@ -20,13 +19,11 @@ impl fmt::Display for TxtResource {
 }
 
 impl ResourceBody for TxtResource {
-    #[tracing::instrument(level = "debug", skip(self))]
     fn real_type(&self) -> DnsType {
         DnsType::Txt
     }
 
     // pack appends the wire format of the TXTResource to msg.
-    #[tracing::instrument(level = "debug", skip(self, msg, _compression, _compression_off))]
     fn pack(
         &self,
         mut msg: Vec<u8>,
@@ -39,7 +36,6 @@ impl ResourceBody for TxtResource {
         Ok(msg)
     }
 
-    #[tracing::instrument(level = "debug", skip(self, msg, off, length))]
     fn unpack(&mut self, msg: &[u8], mut off: usize, length: usize) -> Result<usize> {
         let mut txts = vec![];
         let mut n = 0;

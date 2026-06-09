@@ -30,7 +30,6 @@ lazy_static! {
 
 pub(crate) type HardwareAddr = Vec<u8>;
 
-#[tracing::instrument(level = "debug", skip())]
 pub(crate) fn new_mac_address() -> HardwareAddr {
     let b = MAC_ADDR_COUNTER
         .fetch_add(1, Ordering::SeqCst)
@@ -46,7 +45,6 @@ pub(crate) struct VNetInternal {
 }
 
 impl VNetInternal {
-    #[tracing::instrument(level = "debug", skip(self, ifc_name))]
     fn get_interface(&self, ifc_name: &str) -> Option<&Interface> {
         self.interfaces.iter().find(|ifc| ifc.name == ifc_name)
     }
@@ -54,7 +52,6 @@ impl VNetInternal {
 
 #[async_trait]
 impl ConnObserver for VNetInternal {
-    #[tracing::instrument(level = "debug", skip(self, c))]
     async fn write(&self, c: Box<dyn Chunk + Send + Sync>) -> Result<()> {
         if c.network() == UDP_STR && c.get_destination_ip().is_loopback() {
             if let Some(conn) = self.udp_conns.find(&c.destination_addr()).await {
@@ -76,7 +73,6 @@ impl ConnObserver for VNetInternal {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, addr))]
     async fn on_closed(&self, addr: SocketAddr) {
         let _ = self.udp_conns.delete(&addr).await;
     }
@@ -85,7 +81,6 @@ impl ConnObserver for VNetInternal {
     // is any IP address ("0.0.0.0" or "::"). If locIP is a non-any addr,
     // this method simply returns locIP.
     // caller must hold the mutex
-    #[tracing::instrument(level = "debug", skip(self, loc_ip, dst_ip))]
     fn determine_source_ip(&self, loc_ip: IpAddr, dst_ip: IpAddr) -> Option<IpAddr> {
         if !loc_ip.is_unspecified() {
             return Some(loc_ip);
@@ -119,7 +114,6 @@ pub struct VNet {
 
 #[async_trait]
 impl Nic for VNet {
-    #[tracing::instrument(level = "debug", skip(self, ifc_name))]
     async fn get_interface(&self, ifc_name: &str) -> Option<Interface> {
         for ifc in &self.interfaces {
             if ifc.name == ifc_name {
@@ -129,7 +123,6 @@ impl Nic for VNet {
         None
     }
 
-    #[tracing::instrument(level = "debug", skip(self, ifc_name, addrs))]
     async fn add_addrs_to_interface(&mut self, ifc_name: &str, addrs: &[IpNet]) -> Result<()> {
         {
             let mut vi = self.vi.lock().await;
@@ -155,7 +148,6 @@ impl Nic for VNet {
         Err(Error::ErrNotFound)
     }
 
-    #[tracing::instrument(level = "debug", skip(self, r))]
     async fn set_router(&self, r: Arc<Mutex<Router>>) -> Result<()> {
         let mut vi = self.vi.lock().await;
         vi.router = Some(r);
@@ -163,7 +155,6 @@ impl Nic for VNet {
         Ok(())
     }
 
-    #[tracing::instrument(level = "debug", skip(self, c))]
     async fn on_inbound_chunk(&self, c: Box<dyn Chunk + Send + Sync>) {
         if c.network() == UDP_STR {
             let vi = self.vi.lock().await;
@@ -177,20 +168,17 @@ impl Nic for VNet {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     async fn get_static_ips(&self) -> Vec<IpAddr> {
         self.static_ips.clone()
     }
 }
 
 impl VNet {
-    #[tracing::instrument(level = "debug", skip(self))]
     pub(crate) fn get_interfaces(&self) -> &[Interface] {
         &self.interfaces
     }
 
     // caller must hold the mutex
-    #[tracing::instrument(level = "debug", skip(self, ipv6))]
     pub(crate) fn get_all_ipaddrs(&self, ipv6: bool) -> Vec<IpAddr> {
         let mut ips = vec![];
 
@@ -206,7 +194,6 @@ impl VNet {
     }
 
     // caller must hold the mutex
-    #[tracing::instrument(level = "debug", skip(self, ip))]
     pub(crate) fn has_ipaddr(&self, ip: IpAddr) -> bool {
         for ifc in &self.interfaces {
             for ipnet in ifc.addrs() {
@@ -236,7 +223,6 @@ impl VNet {
     }
 
     // caller must hold the mutex
-    #[tracing::instrument(level = "debug", skip(self, ip, port))]
     pub(crate) async fn allocate_local_addr(&self, ip: IpAddr, port: u16) -> Result<()> {
         // gather local IP addresses to bind
         let mut ips = vec![];
@@ -263,7 +249,6 @@ impl VNet {
     }
 
     // caller must hold the mutex
-    #[tracing::instrument(level = "debug", skip(self, ip, start, end))]
     pub(crate) async fn assign_port(&self, ip: IpAddr, start: u16, end: u16) -> Result<u16> {
         // choose randomly from the range between start and end (inclusive)
         if end < start {
@@ -283,7 +268,6 @@ impl VNet {
         Err(Error::ErrPortSpaceExhausted)
     }
 
-    #[tracing::instrument(level = "debug", skip(self, use_ipv4, address))]
     pub(crate) async fn resolve_addr(&self, use_ipv4: bool, address: &str) -> Result<SocketAddr> {
         let v: Vec<&str> = address.splitn(2, ':').collect();
         if v.len() != 2 {
@@ -334,7 +318,6 @@ impl VNet {
     }
 
     // caller must hold the mutex
-    #[tracing::instrument(level = "debug", skip(self, local_addr))]
     pub(crate) async fn bind(
         &self,
         mut local_addr: SocketAddr,
@@ -365,7 +348,6 @@ impl VNet {
         Ok(conn)
     }
 
-    #[tracing::instrument(level = "debug", skip(self, use_ipv4, remote_addr))]
     pub(crate) async fn dial(
         &self,
         use_ipv4: bool,
@@ -423,7 +405,6 @@ impl Net {
     // By design, it always have lo0 and eth0 interfaces.
     // The lo0 has the address 127.0.0.1 assigned by default.
     // IP address for eth0 will be assigned when this Net is added to a router.
-    #[tracing::instrument(level = "debug", skip(config))]
     pub fn new(config: Option<NetConfig>) -> Self {
         if let Some(config) = config {
             let mut lo0 = Interface::new(LO0_STR.to_owned(), vec![]);
@@ -487,7 +468,6 @@ impl Net {
     }
 
     // Interfaces returns a list of the system's network interfaces.
-    #[tracing::instrument(level = "debug", skip(self))]
     pub async fn get_interfaces(&self) -> Vec<Interface> {
         match self {
             Net::VNet(vnet) => {
@@ -499,7 +479,6 @@ impl Net {
     }
 
     // InterfaceByName returns the interface specified by name.
-    #[tracing::instrument(level = "debug", skip(self, ifc_name))]
     pub async fn get_interface(&self, ifc_name: &str) -> Option<Interface> {
         match self {
             Net::VNet(vnet) => {
@@ -518,7 +497,6 @@ impl Net {
     }
 
     // IsVirtual tests if the virtual network is enabled.
-    #[tracing::instrument(level = "debug", skip(self))]
     pub fn is_virtual(&self) -> bool {
         match self {
             Net::VNet(_) => true,
@@ -526,7 +504,6 @@ impl Net {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, use_ipv4, address))]
     pub async fn resolve_addr(&self, use_ipv4: bool, address: &str) -> Result<SocketAddr> {
         match self {
             Net::VNet(vnet) => {
@@ -537,7 +514,6 @@ impl Net {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, addr))]
     pub async fn bind(&self, addr: SocketAddr) -> Result<Arc<dyn Conn + Send + Sync>> {
         match self {
             Net::VNet(vnet) => {
@@ -548,7 +524,6 @@ impl Net {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, use_ipv4, remote_addr))]
     pub async fn dial(
         &self,
         use_ipv4: bool,
@@ -575,7 +550,6 @@ impl Net {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     pub fn get_nic(&self) -> Result<Arc<Mutex<dyn Nic + Send + Sync>>> {
         match self {
             Net::VNet(vnet) => Ok(Arc::clone(vnet) as Arc<Mutex<dyn Nic + Send + Sync>>),

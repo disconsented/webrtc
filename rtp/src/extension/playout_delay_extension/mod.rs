@@ -23,7 +23,6 @@ pub struct PlayoutDelayExtension {
 }
 
 impl Unmarshal for PlayoutDelayExtension {
-    #[tracing::instrument(level = "debug", skip(buf))]
     /// Unmarshal parses the passed byte slice and stores the result in the members.
     fn unmarshal<B>(buf: &mut B) -> util::Result<Self>
     where
@@ -49,7 +48,6 @@ impl Unmarshal for PlayoutDelayExtension {
 }
 
 impl MarshalSize for PlayoutDelayExtension {
-    #[tracing::instrument(level = "debug", skip(self))]
     /// MarshalSize returns the size of the PlayoutDelayExtension once marshaled.
     fn marshal_size(&self) -> usize {
         PLAYOUT_DELAY_EXTENSION_SIZE
@@ -57,7 +55,6 @@ impl MarshalSize for PlayoutDelayExtension {
 }
 
 impl Marshal for PlayoutDelayExtension {
-    #[tracing::instrument(level = "debug", skip(self, buf))]
     /// MarshalTo serializes the members to buffer
     fn marshal_to(&self, mut buf: &mut [u8]) -> util::Result<usize> {
         if buf.remaining_mut() < PLAYOUT_DELAY_EXTENSION_SIZE {
@@ -76,7 +73,6 @@ impl Marshal for PlayoutDelayExtension {
 }
 
 impl PlayoutDelayExtension {
-    #[tracing::instrument(level = "debug", skip(min_delay, max_delay))]
     pub fn new(min_delay: u16, max_delay: u16) -> Self {
         PlayoutDelayExtension {
             min_delay,

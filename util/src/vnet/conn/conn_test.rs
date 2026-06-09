@@ -13,7 +13,6 @@ struct DummyObserver {
 
 #[async_trait]
 impl ConnObserver for DummyObserver {
-    #[tracing::instrument(level = "debug", skip(self, c))]
     async fn write(&self, c: Box<dyn Chunk + Send + Sync>) -> Result<()> {
         let mut chunk = ChunkUdp::new(c.destination_addr(), c.source_addr());
         chunk.user_data = c.user_data();
@@ -27,12 +26,10 @@ impl ConnObserver for DummyObserver {
         Ok(())
     }
 
-    #[tracing::instrument(level = "debug", skip(self, _addr))]
     async fn on_closed(&self, _addr: SocketAddr) {
         self.nclosed.fetch_add(1, Ordering::SeqCst);
     }
 
-    #[tracing::instrument(level = "debug", skip(self, loc_ip, _dst_ip))]
     fn determine_source_ip(&self, loc_ip: IpAddr, _dst_ip: IpAddr) -> Option<IpAddr> {
         Some(loc_ip)
     }

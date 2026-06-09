@@ -27,7 +27,6 @@ pub struct Manager {
 }
 
 impl Manager {
-    #[tracing::instrument(level = "debug", skip(config))]
     /// Creates a new [`Manager`].
     pub fn new(config: ManagerConfig) -> Self {
         Manager {
@@ -38,7 +37,6 @@ impl Manager {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// Closes this [`manager`] and closes all [`Allocation`]s it manages.
     pub async fn close(&self) -> Result<()> {
         let allocations = self.allocations.lock().await;
@@ -48,7 +46,6 @@ impl Manager {
         Ok(())
     }
 
-    #[tracing::instrument(level = "debug", skip(self, five_tuples))]
     /// Returns the information about the all [`Allocation`]s associated with
     /// the specified [`FiveTuple`]s.
     pub async fn get_allocations_info(
@@ -77,14 +74,12 @@ impl Manager {
         infos
     }
 
-    #[tracing::instrument(level = "debug", skip(self, five_tuple))]
     /// Fetches the [`Allocation`] matching the passed [`FiveTuple`].
     pub async fn get_allocation(&self, five_tuple: &FiveTuple) -> Option<Arc<Allocation>> {
         let allocations = self.allocations.lock().await;
         allocations.get(five_tuple).cloned()
     }
 
-    #[tracing::instrument(level = "debug", skip(self, five_tuple, turn_socket, requested_port, lifetime, username, use_ipv4))]
     /// Creates a new [`Allocation`] and starts relaying.
     pub async fn create_allocation(
         &self,
@@ -130,7 +125,6 @@ impl Manager {
         Ok(a)
     }
 
-    #[tracing::instrument(level = "debug", skip(self, five_tuple))]
     /// Removes an [`Allocation`].
     pub async fn delete_allocation(&self, five_tuple: &FiveTuple) {
         let allocation = self.allocations.lock().await.remove(five_tuple);
@@ -142,7 +136,6 @@ impl Manager {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, name))]
     /// Deletes the [`Allocation`]s according to the specified username `name`.
     pub async fn delete_allocations_by_username(&self, name: &str) {
         let to_delete = {
@@ -172,7 +165,6 @@ impl Manager {
         .await;
     }
 
-    #[tracing::instrument(level = "debug", skip(self, reservation_token, port))]
     /// Stores the reservation for the token+port.
     pub async fn create_reservation(&self, reservation_token: String, port: u16) {
         let reservations = Arc::clone(&self.reservations);
@@ -193,14 +185,12 @@ impl Manager {
         reservations.insert(reservation_token, port);
     }
 
-    #[tracing::instrument(level = "debug", skip(self, reservation_token))]
     /// Returns the port for a given reservation if it exists.
     pub async fn get_reservation(&self, reservation_token: &str) -> Option<u16> {
         let reservations = self.reservations.lock().await;
         reservations.get(reservation_token).copied()
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// Returns a random un-allocated udp4 port.
     pub async fn get_random_even_port(&self) -> Result<u16> {
         let (_, addr) = self.relay_addr_generator.allocate_conn(true, 0).await?;

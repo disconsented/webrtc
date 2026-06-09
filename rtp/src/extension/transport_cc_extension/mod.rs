@@ -25,7 +25,6 @@ pub struct TransportCcExtension {
 }
 
 impl Unmarshal for TransportCcExtension {
-    #[tracing::instrument(level = "debug", skip(raw_packet))]
     /// Unmarshal parses the passed byte slice and stores the result in the members
     fn unmarshal<B>(raw_packet: &mut B) -> Result<Self, util::Error>
     where
@@ -44,7 +43,6 @@ impl Unmarshal for TransportCcExtension {
 }
 
 impl MarshalSize for TransportCcExtension {
-    #[tracing::instrument(level = "debug", skip(self))]
     /// MarshalSize returns the size of the TransportCcExtension once marshaled.
     fn marshal_size(&self) -> usize {
         TRANSPORT_CC_EXTENSION_SIZE
@@ -52,7 +50,6 @@ impl MarshalSize for TransportCcExtension {
 }
 
 impl Marshal for TransportCcExtension {
-    #[tracing::instrument(level = "debug", skip(self, buf))]
     /// Marshal serializes the members to buffer
     fn marshal_to(&self, mut buf: &mut [u8]) -> Result<usize, util::Error> {
         if buf.remaining_mut() < TRANSPORT_CC_EXTENSION_SIZE {

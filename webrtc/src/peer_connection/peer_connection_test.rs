@@ -22,7 +22,6 @@ use crate::track::track_local::track_local_static_rtp::TrackLocalStaticRTP;
 use crate::track::track_local::track_local_static_sample::TrackLocalStaticSample;
 use crate::Error;
 
-#[tracing::instrument(level = "debug", skip())]
 pub(crate) async fn create_vnet_pair(
 ) -> Result<(RTCPeerConnection, RTCPeerConnection, Arc<Mutex<Router>>)> {
     // Create a root router
@@ -108,7 +107,6 @@ pub(crate) async fn create_vnet_pair(
     Ok((offer_peer_connection, answer_peer_connection, wan))
 }
 
-#[tracing::instrument(level = "debug", skip(api))]
 /// new_pair creates two new peer connections (an offerer and an answerer)
 /// *without* using an api (i.e. using the default settings).
 pub(crate) async fn new_pair(api: &API) -> Result<(RTCPeerConnection, RTCPeerConnection)> {
@@ -118,7 +116,6 @@ pub(crate) async fn new_pair(api: &API) -> Result<(RTCPeerConnection, RTCPeerCon
     Ok((pca, pcb))
 }
 
-#[tracing::instrument(level = "debug", skip(pc_offer, pc_answer))]
 pub(crate) async fn signal_pair(
     pc_offer: &mut RTCPeerConnection,
     pc_answer: &mut RTCPeerConnection,
@@ -164,7 +161,6 @@ pub(crate) async fn signal_pair(
         .await
 }
 
-#[tracing::instrument(level = "debug", skip(pc1, pc2))]
 pub(crate) async fn close_pair_now(pc1: &RTCPeerConnection, pc2: &RTCPeerConnection) {
     let mut fail = false;
     if let Err(err) = pc1.close().await {
@@ -179,7 +175,6 @@ pub(crate) async fn close_pair_now(pc1: &RTCPeerConnection, pc2: &RTCPeerConnect
     assert!(!fail);
 }
 
-#[tracing::instrument(level = "debug", skip(pc1, pc2, done_rx))]
 pub(crate) async fn close_pair(
     pc1: &RTCPeerConnection,
     pc2: &RTCPeerConnection,
@@ -214,7 +209,6 @@ func offerMediaHasDirection(offer SessionDescription, kind RTPCodecType, directi
     return false
 }*/
 
-#[tracing::instrument(level = "debug", skip(done_rx, tracks, data, max_sends))]
 pub(crate) async fn send_video_until_done(
     mut done_rx: mpsc::Receiver<()>,
     tracks: Vec<Arc<TrackLocalStaticSample>>,
@@ -256,7 +250,6 @@ pub(crate) async fn send_video_until_done(
     }
 }
 
-#[tracing::instrument(level = "debug", skip(pc, wg, state))]
 pub(crate) async fn until_connection_state(
     pc: &mut RTCPeerConnection,
     wg: &WaitGroup,
@@ -485,7 +478,6 @@ async fn test_set_get_configuration() {
     assert_eq!(updated_config.ice_servers, new_config.ice_servers);
 }
 
-#[tracing::instrument(level = "debug", skip())]
 async fn peer() -> Result<()> {
     let mut m = MediaEngine::default();
     m.register_default_codecs()?;
@@ -520,7 +512,6 @@ async fn peer() -> Result<()> {
     Ok(())
 }
 
-#[tracing::instrument(level = "debug", skip())]
 pub(crate) fn on_connected() -> (OnPeerConnectionStateChangeHdlrFn, mpsc::Receiver<()>) {
     let (done_tx, done_rx) = mpsc::channel::<()>(1);
     let done_tx = Arc::new(Mutex::new(Some(done_tx)));

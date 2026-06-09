@@ -16,7 +16,6 @@ pub struct Vp8Payloader {
 }
 
 impl Payloader for Vp8Payloader {
-    #[tracing::instrument(level = "debug", skip(self, mtu, payload))]
     /// Payload fragments a VP8 packet across one or more byte arrays
     fn payload(&mut self, mtu: usize, payload: &Bytes) -> Result<Vec<Bytes>> {
         if payload.is_empty() || mtu == 0 {
@@ -104,7 +103,6 @@ impl Payloader for Vp8Payloader {
         Ok(payloads)
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn clone_to(&self) -> Box<dyn Payloader + Send + Sync> {
         Box::new(*self)
     }
@@ -147,7 +145,6 @@ pub struct Vp8Packet {
 }
 
 impl Depacketizer for Vp8Packet {
-    #[tracing::instrument(level = "debug", skip(self, packet))]
     /// depacketize parses the passed byte slice and stores the result in the VP8Packet this method is called upon
     fn depacketize(&mut self, packet: &Bytes) -> Result<Bytes> {
         let payload_len = packet.len();
@@ -234,7 +231,6 @@ impl Depacketizer for Vp8Packet {
         Ok(packet.slice(payload_index..))
     }
 
-    #[tracing::instrument(level = "debug", skip(self, payload))]
     /// is_partition_head checks whether if this is a head of the VP8 partition
     fn is_partition_head(&self, payload: &Bytes) -> bool {
         if payload.is_empty() {
@@ -244,7 +240,6 @@ impl Depacketizer for Vp8Packet {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, marker, _payload))]
     fn is_partition_tail(&self, marker: bool, _payload: &Bytes) -> bool {
         marker
     }

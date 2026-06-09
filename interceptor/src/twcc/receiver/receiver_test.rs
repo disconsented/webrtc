@@ -100,7 +100,6 @@ async fn test_twcc_receiver_interceptor_after_rtp_packets() -> Result<()> {
     Ok(())
 }
 
-#[tracing::instrument(level = "debug", skip())]
 #[tokio::test(start_paused = true)]
 async fn test_twcc_receiver_interceptor_different_delays_between_rtp_packets() -> Result<()> {
     let builder = Receiver::builder().with_interval(Duration::from_millis(500));
@@ -173,7 +172,6 @@ async fn test_twcc_receiver_interceptor_different_delays_between_rtp_packets() -
     Ok(())
 }
 
-#[tracing::instrument(level = "debug", skip())]
 #[tokio::test(start_paused = true)]
 async fn test_twcc_receiver_interceptor_packet_loss() -> Result<()> {
     let builder = Receiver::builder().with_interval(Duration::from_secs(2));

@@ -12,18 +12,15 @@ pub struct Registry {
 }
 
 impl Registry {
-    #[tracing::instrument(level = "debug", skip())]
     pub fn new() -> Self {
         Registry { builders: vec![] }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, builder))]
     /// add adds a new InterceptorBuilder to the registry.
     pub fn add(&mut self, builder: Box<dyn InterceptorBuilder + Send + Sync>) {
         self.builders.push(builder);
     }
 
-    #[tracing::instrument(level = "debug", skip(self, id))]
     /// build constructs a single Interceptor from an InterceptorRegistry
     pub fn build(&self, id: &str) -> Result<Arc<dyn Interceptor + Send + Sync>> {
         if self.builders.is_empty() {
@@ -34,7 +31,6 @@ impl Registry {
             .map(|c| Arc::new(c) as Arc<dyn Interceptor + Send + Sync>)
     }
 
-    #[tracing::instrument(level = "debug", skip(self, id))]
     /// build_chain constructs a non-type erased Chain from an Interceptor registry.
     pub fn build_chain(&self, id: &str) -> Result<Chain> {
         if self.builders.is_empty() {

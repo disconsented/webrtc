@@ -14,7 +14,6 @@ pub struct Question {
 }
 
 impl fmt::Display for Question {
-    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
@@ -26,7 +25,6 @@ impl fmt::Display for Question {
 
 impl Question {
     // pack appends the wire format of the question to msg.
-    #[tracing::instrument(level = "debug", skip(self, msg, compression, compression_off))]
     pub fn pack(
         &self,
         mut msg: Vec<u8>,

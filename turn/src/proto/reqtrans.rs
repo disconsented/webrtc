@@ -22,7 +22,6 @@ pub struct RequestedTransport {
 }
 
 impl fmt::Display for RequestedTransport {
-    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "protocol: {}", self.protocol)
     }
@@ -31,7 +30,6 @@ impl fmt::Display for RequestedTransport {
 const REQUESTED_TRANSPORT_SIZE: usize = 4;
 
 impl Setter for RequestedTransport {
-    #[tracing::instrument(level = "debug", skip(self, m))]
     /// Adds `REQUESTED-TRANSPORT` to message.
     fn add_to(&self, m: &mut Message) -> Result<(), stun::Error> {
         let mut v = vec![0; REQUESTED_TRANSPORT_SIZE];
@@ -45,7 +43,6 @@ impl Setter for RequestedTransport {
 }
 
 impl Getter for RequestedTransport {
-    #[tracing::instrument(level = "debug", skip(self, m))]
     /// Decodes `REQUESTED-TRANSPORT` from message.
     fn get_from(&mut self, m: &Message) -> Result<(), stun::Error> {
         let v = m.get(ATTR_REQUESTED_TRANSPORT)?;

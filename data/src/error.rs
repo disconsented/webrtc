@@ -34,14 +34,12 @@ pub enum Error {
 }
 
 impl From<Error> for util::Error {
-    #[tracing::instrument(level = "debug", skip(e))]
     fn from(e: Error) -> Self {
         util::Error::from_std(e)
     }
 }
 
 impl From<Error> for io::Error {
-    #[tracing::instrument(level = "debug", skip(error))]
     fn from(error: Error) -> Self {
         match error {
             e @ Error::Sctp(sctp::Error::ErrEof) => {
@@ -56,7 +54,6 @@ impl From<Error> for io::Error {
 }
 
 impl PartialEq<util::Error> for Error {
-    #[tracing::instrument(level = "debug", skip(self, other))]
     fn eq(&self, other: &util::Error) -> bool {
         if let Some(down) = other.downcast_ref::<Error>() {
             return self == down;
@@ -66,7 +63,6 @@ impl PartialEq<util::Error> for Error {
 }
 
 impl PartialEq<Error> for util::Error {
-    #[tracing::instrument(level = "debug", skip(self, other))]
     fn eq(&self, other: &Error) -> bool {
         if let Some(down) = self.downcast_ref::<Error>() {
             return other == down;

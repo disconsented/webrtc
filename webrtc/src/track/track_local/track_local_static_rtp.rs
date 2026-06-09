@@ -19,7 +19,6 @@ pub struct TrackLocalStaticRTP {
 }
 
 impl TrackLocalStaticRTP {
-    #[tracing::instrument(level = "debug", skip(codec, id, stream_id))]
     /// returns a TrackLocalStaticRTP without rid.
     pub fn new(codec: RTCRtpCodecCapability, id: String, stream_id: String) -> Self {
         TrackLocalStaticRTP {
@@ -31,7 +30,6 @@ impl TrackLocalStaticRTP {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(codec, id, rid, stream_id))]
     /// returns a TrackLocalStaticRTP with rid.
     pub fn new_with_rid(
         codec: RTCRtpCodecCapability,
@@ -48,13 +46,11 @@ impl TrackLocalStaticRTP {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// codec gets the Codec of the track
     pub fn codec(&self) -> RTCRtpCodecCapability {
         self.codec.clone()
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     pub async fn any_binding_paused(&self) -> bool {
         let bindings = self.bindings.lock().await;
         bindings
@@ -62,7 +58,6 @@ impl TrackLocalStaticRTP {
             .any(|b| b.sender_paused.load(Ordering::SeqCst))
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     pub async fn all_binding_paused(&self) -> bool {
         let bindings = self.bindings.lock().await;
         bindings
@@ -70,7 +65,6 @@ impl TrackLocalStaticRTP {
             .all(|b| b.sender_paused.load(Ordering::SeqCst))
     }
 
-    #[tracing::instrument(level = "debug", skip(self, p, extensions))]
     /// write_rtp_with_extensions writes a RTP Packet to the TrackLocalStaticRTP
     /// If one PeerConnection fails the packets will still be sent to
     /// all PeerConnections. The error message will contain the ID of the failed
@@ -93,7 +87,6 @@ impl TrackLocalStaticRTP {
             .await
     }
 
-    #[tracing::instrument(level = "debug", skip(self, p, extensions, attr))]
     pub async fn write_rtp_with_extensions_attributes(
         &self,
         p: &rtp::packet::Packet,
@@ -174,7 +167,6 @@ impl TrackLocalStaticRTP {
 
 #[async_trait]
 impl TrackLocal for TrackLocalStaticRTP {
-    #[tracing::instrument(level = "debug", skip(self, t))]
     /// bind is called by the PeerConnection after negotiation is complete
     /// This asserts that the code requested is supported by the remote peer.
     /// If so it setups all the state (SSRC and PayloadType) to have a call
@@ -231,7 +223,6 @@ impl TrackLocal for TrackLocalStaticRTP {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, t))]
     /// unbind implements the teardown logic when the track is no longer needed. This happens
     /// because a track has been stopped.
     async fn unbind(&self, t: &TrackLocalContext) -> Result<()> {
@@ -251,7 +242,6 @@ impl TrackLocal for TrackLocalStaticRTP {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// id is the unique identifier for this Track. This should be unique for the
     /// stream, but doesn't have to globally unique. A common example would be 'audio' or 'video'
     /// and StreamID would be 'desktop' or 'webcam'
@@ -259,19 +249,16 @@ impl TrackLocal for TrackLocalStaticRTP {
         self.id.as_str()
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// RID is the RTP Stream ID for this track.
     fn rid(&self) -> Option<&str> {
         self.rid.as_deref()
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// stream_id is the group this track belongs too. This must be unique
     fn stream_id(&self) -> &str {
         self.stream_id.as_str()
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// kind controls if this TrackLocal is audio or video
     fn kind(&self) -> RTPCodecType {
         if self.codec.mime_type.starts_with("audio/") {
@@ -283,7 +270,6 @@ impl TrackLocal for TrackLocalStaticRTP {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn as_any(&self) -> &dyn Any {
         self
     }
@@ -291,7 +277,6 @@ impl TrackLocal for TrackLocalStaticRTP {
 
 #[async_trait]
 impl TrackLocalWriter for TrackLocalStaticRTP {
-    #[tracing::instrument(level = "debug", skip(self, pkt, attr))]
     /// `write_rtp_with_attributes` writes a RTP Packet to the TrackLocalStaticRTP
     /// If one PeerConnection fails the packets will still be sent to
     /// all PeerConnections. The error message will contain the ID of the failed
@@ -310,7 +295,6 @@ impl TrackLocalWriter for TrackLocalStaticRTP {
             .await
     }
 
-    #[tracing::instrument(level = "debug", skip(self, b))]
     /// write writes a RTP Packet as a buffer to the TrackLocalStaticRTP
     /// If one PeerConnection fails the packets will still be sent to
     /// all PeerConnections. The error message will contain the ID of the failed

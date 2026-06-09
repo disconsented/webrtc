@@ -10,7 +10,6 @@ pub(super) struct ReceiverStream {
 }
 
 impl ReceiverStream {
-    #[tracing::instrument(level = "debug", skip(parent_rtp_reader, hdr_ext_id, ssrc, packet_chan_tx, start_time))]
     pub(super) fn new(
         parent_rtp_reader: Arc<dyn RTPReader + Send + Sync>,
         hdr_ext_id: u8,
@@ -30,7 +29,6 @@ impl ReceiverStream {
 
 #[async_trait]
 impl RTPReader for ReceiverStream {
-    #[tracing::instrument(level = "debug", skip(self, buf, attributes))]
     /// read a rtp packet
     async fn read(
         &self,

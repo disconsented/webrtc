@@ -15,14 +15,12 @@ pub struct ParamUnrecognized {
 }
 
 impl ParamUnrecognized {
-    #[tracing::instrument(level = "debug", skip(param))]
     pub(crate) fn wrap(param: Box<dyn Param + Send + Sync>) -> Self {
         Self { param }
     }
 }
 
 impl Display for ParamUnrecognized {
-    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         f.write_str("UnrecognizedParam")?;
         Display::fmt(&self.param, f)
@@ -30,7 +28,6 @@ impl Display for ParamUnrecognized {
 }
 
 impl Param for ParamUnrecognized {
-    #[tracing::instrument(level = "debug", skip(self))]
     fn header(&self) -> ParamHeader {
         ParamHeader {
             typ: ParamType::UnrecognizedParam,
@@ -38,12 +35,10 @@ impl Param for ParamUnrecognized {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn as_any(&self) -> &(dyn Any + Send + Sync) {
         self
     }
 
-    #[tracing::instrument(level = "debug", skip(raw))]
     fn unmarshal(raw: &Bytes) -> crate::error::Result<Self>
     where
         Self: Sized,
@@ -54,19 +49,16 @@ impl Param for ParamUnrecognized {
         Ok(Self { param })
     }
 
-    #[tracing::instrument(level = "debug", skip(self, buf))]
     fn marshal_to(&self, buf: &mut BytesMut) -> crate::error::Result<usize> {
         self.header().marshal_to(buf)?;
         self.param.marshal_to(buf)?;
         Ok(buf.len())
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn value_length(&self) -> usize {
         self.param.value_length() + PARAM_HEADER_LENGTH
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn clone_to(&self) -> Box<dyn Param + Send + Sync> {
         Box::new(self.clone())
     }

@@ -131,7 +131,6 @@ async fn test_invalid_fingerprint_causes_failed() -> Result<()> {
     Ok(())
 }
 
-#[tracing::instrument(level = "debug", skip(r))]
 async fn run_test(r: DTLSRole) -> Result<()> {
     let mut offer_s = SettingEngine::default();
     offer_s.set_answering_dtls_role(r)?;

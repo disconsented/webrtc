@@ -50,7 +50,6 @@ const SDP_TYPE_ROLLBACK_STR: &str = "rollback";
 
 /// creates an SDPType from a string
 impl From<&str> for RTCSdpType {
-    #[tracing::instrument(level = "debug", skip(raw))]
     fn from(raw: &str) -> Self {
         match raw {
             SDP_TYPE_OFFER_STR => RTCSdpType::Offer,
@@ -63,7 +62,6 @@ impl From<&str> for RTCSdpType {
 }
 
 impl fmt::Display for RTCSdpType {
-    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match *self {
             RTCSdpType::Offer => write!(f, "{SDP_TYPE_OFFER_STR}"),

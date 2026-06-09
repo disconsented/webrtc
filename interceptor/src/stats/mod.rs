@@ -8,7 +8,6 @@ mod interceptor;
 
 pub use self::interceptor::StatsInterceptor;
 
-#[tracing::instrument(level = "debug", skip(id))]
 pub fn make_stats_interceptor(id: &str) -> Arc<StatsInterceptor> {
     Arc::new(StatsInterceptor::new(id.to_owned()))
 }
@@ -55,7 +54,6 @@ mod inbound {
     }
 
     impl Default for StreamStats {
-        #[tracing::instrument(level = "debug", skip())]
         fn default() -> Self {
             Self {
                 rtp_stats: RTPStats::default(),
@@ -72,29 +70,24 @@ mod inbound {
     }
 
     impl StreamStats {
-        #[tracing::instrument(level = "debug", skip(self))]
         pub(super) fn snapshot(&self) -> StatsSnapshot {
             self.into()
         }
 
-        #[tracing::instrument(level = "debug", skip(self))]
         pub(super) fn mark_updated(&mut self) {
             self.last_update = Instant::now();
         }
 
-        #[tracing::instrument(level = "debug", skip(self))]
         pub(super) fn duration_since_last_update(&self) -> Duration {
             self.last_update.elapsed()
         }
 
-        #[tracing::instrument(level = "debug", skip(self, packets_sent, bytes_sent))]
         pub(super) fn record_sender_report(&mut self, packets_sent: u32, bytes_sent: u32) {
             self.remote_reports_sent += 1;
             self.remote_packets_sent = packets_sent;
             self.remote_bytes_sent = bytes_sent;
         }
 
-        #[tracing::instrument(level = "debug", skip(self, round_trip_time))]
         pub(super) fn record_remote_round_trip_time(&mut self, round_trip_time: Option<f64>) {
             // Store the latest measurement, even if it's None.
             self.remote_round_trip_time = round_trip_time;
@@ -138,73 +131,59 @@ mod inbound {
     }
 
     impl StatsSnapshot {
-        #[tracing::instrument(level = "debug", skip(self))]
         pub fn packets_received(&self) -> u64 {
             self.rtp_stats.packets
         }
 
-        #[tracing::instrument(level = "debug", skip(self))]
         pub fn payload_bytes_received(&self) -> u64 {
             self.rtp_stats.payload_bytes
         }
 
-        #[tracing::instrument(level = "debug", skip(self))]
         pub fn header_bytes_received(&self) -> u64 {
             self.rtp_stats.header_bytes
         }
 
-        #[tracing::instrument(level = "debug", skip(self))]
         pub fn last_packet_received_timestamp(&self) -> Option<SystemTime> {
             self.rtp_stats.last_packet_timestamp
         }
 
-        #[tracing::instrument(level = "debug", skip(self))]
         pub fn nacks_sent(&self) -> u64 {
             self.rtcp_stats.nack_count
         }
 
-        #[tracing::instrument(level = "debug", skip(self))]
         pub fn firs_sent(&self) -> u64 {
             self.rtcp_stats.fir_count
         }
 
-        #[tracing::instrument(level = "debug", skip(self))]
         pub fn plis_sent(&self) -> u64 {
             self.rtcp_stats.pli_count
         }
-        #[tracing::instrument(level = "debug", skip(self))]
         pub fn remote_packets_sent(&self) -> u32 {
             self.remote_packets_sent
         }
 
-        #[tracing::instrument(level = "debug", skip(self))]
         pub fn remote_bytes_sent(&self) -> u32 {
             self.remote_bytes_sent
         }
 
-        #[tracing::instrument(level = "debug", skip(self))]
         pub fn remote_reports_sent(&self) -> u64 {
             self.remote_reports_sent
         }
 
-        #[tracing::instrument(level = "debug", skip(self))]
         pub fn remote_round_trip_time(&self) -> Option<f64> {
             self.remote_round_trip_time
         }
 
-        #[tracing::instrument(level = "debug", skip(self))]
         pub fn remote_total_round_trip_time(&self) -> f64 {
             self.remote_total_round_trip_time
         }
 
-        #[tracing::instrument(level = "debug", skip(self))]
         pub fn remote_round_trip_time_measurements(&self) -> u64 {
             self.remote_round_trip_time_measurements
         }
     }
 
     impl From<&StreamStats> for StatsSnapshot {
-        #[tracing::instrument(level = "debug", skip(stream_stats))]
         fn from(stream_stats: &StreamStats) -> Self {
             Self {
                 rtp_stats: stream_stats.rtp_stats.clone(),
@@ -272,7 +251,6 @@ mod outbound {
     }
 
     impl Default for StreamStats {
-        #[tracing::instrument(level = "debug", skip())]
         fn default() -> Self {
             Self {
                 rtp_stats: RTPStats::default(),
@@ -291,22 +269,18 @@ mod outbound {
     }
 
     impl StreamStats {
-        #[tracing::instrument(level = "debug", skip(self))]
         pub(super) fn snapshot(&self) -> StatsSnapshot {
             self.into()
         }
 
-        #[tracing::instrument(level = "debug", skip(self))]
         pub(super) fn mark_updated(&mut self) {
             self.last_update = Instant::now();
         }
 
-        #[tracing::instrument(level = "debug", skip(self))]
         pub(super) fn duration_since_last_update(&self) -> Duration {
             self.last_update.elapsed()
         }
 
-        #[tracing::instrument(level = "debug", skip(self, rr_ext_seq_num, rr_total_lost))]
         pub(super) fn update_remote_inbound_packets_received(
             &mut self,
             rr_ext_seq_num: u32,
@@ -327,7 +301,6 @@ mod outbound {
             }
         }
 
-        #[tracing::instrument(level = "debug", skip(self, seq_num))]
         #[inline(always)]
         pub(super) fn record_sr_ext_seq_num(&mut self, seq_num: u32) {
             // Only record the initial value
@@ -336,7 +309,6 @@ mod outbound {
             }
         }
 
-        #[tracing::instrument(level = "debug", skip(self, round_trip_time))]
         pub(super) fn record_remote_round_trip_time(&mut self, round_trip_time: Option<f64>) {
             // Store the latest measurement, even if it's None.
             self.remote_round_trip_time = round_trip_time;
@@ -348,17 +320,14 @@ mod outbound {
             }
         }
 
-        #[tracing::instrument(level = "debug", skip(self, fraction_lost))]
         pub(super) fn update_remote_fraction_lost(&mut self, fraction_lost: u8) {
             self.remote_fraction_lost = Some(fraction_lost);
         }
 
-        #[tracing::instrument(level = "debug", skip(self, jitter))]
         pub(super) fn update_remote_jitter(&mut self, jitter: u32) {
             self.remote_jitter = jitter;
         }
 
-        #[tracing::instrument(level = "debug", skip(self, lost))]
         pub(super) fn update_remote_total_lost(&mut self, lost: u32) {
             self.remote_total_lost = lost;
         }
@@ -398,78 +367,64 @@ mod outbound {
     }
 
     impl StatsSnapshot {
-        #[tracing::instrument(level = "debug", skip(self))]
         pub fn packets_sent(&self) -> u64 {
             self.rtp_stats.packets
         }
 
-        #[tracing::instrument(level = "debug", skip(self))]
         pub fn payload_bytes_sent(&self) -> u64 {
             self.rtp_stats.payload_bytes
         }
 
-        #[tracing::instrument(level = "debug", skip(self))]
         pub fn header_bytes_sent(&self) -> u64 {
             self.rtp_stats.header_bytes
         }
 
-        #[tracing::instrument(level = "debug", skip(self))]
         pub fn last_packet_sent_timestamp(&self) -> Option<SystemTime> {
             self.rtp_stats.last_packet_timestamp
         }
 
-        #[tracing::instrument(level = "debug", skip(self))]
         pub fn nacks_received(&self) -> u64 {
             self.rtcp_stats.nack_count
         }
 
-        #[tracing::instrument(level = "debug", skip(self))]
         pub fn firs_received(&self) -> u64 {
             self.rtcp_stats.fir_count
         }
 
-        #[tracing::instrument(level = "debug", skip(self))]
         pub fn plis_received(&self) -> u64 {
             self.rtcp_stats.pli_count
         }
 
-        #[tracing::instrument(level = "debug", skip(self))]
         /// Packets received on the remote side.
         pub fn remote_packets_received(&self) -> u64 {
             self.remote_packets_received
         }
 
-        #[tracing::instrument(level = "debug", skip(self))]
         /// The number of lost packets reported by the remote for this tream.
         pub fn remote_total_lost(&self) -> u32 {
             self.remote_total_lost
         }
 
-        #[tracing::instrument(level = "debug", skip(self))]
         /// The estimated remote jitter for this stream in timestamp units.
         pub fn remote_jitter(&self) -> u32 {
             self.remote_jitter
         }
 
-        #[tracing::instrument(level = "debug", skip(self))]
         /// The latest RTT in ms if enough data is available to measure it.
         pub fn remote_round_trip_time(&self) -> Option<f64> {
             self.remote_round_trip_time
         }
 
-        #[tracing::instrument(level = "debug", skip(self))]
         /// Total RTT in ms.
         pub fn remote_total_round_trip_time(&self) -> f64 {
             self.remote_total_round_trip_time
         }
 
-        #[tracing::instrument(level = "debug", skip(self))]
         /// The number of RTT measurements so far.
         pub fn remote_round_trip_time_measurements(&self) -> u64 {
             self.remote_round_trip_time_measurements
         }
 
-        #[tracing::instrument(level = "debug", skip(self))]
         /// The latest fraction lost value from the remote or None if it hasn't been reported yet.
         pub fn remote_fraction_lost(&self) -> Option<f64> {
             self.remote_fraction_lost
@@ -477,7 +432,6 @@ mod outbound {
     }
 
     impl From<&StreamStats> for StatsSnapshot {
-        #[tracing::instrument(level = "debug", skip(stream_stats))]
         fn from(stream_stats: &StreamStats) -> Self {
             Self {
                 rtp_stats: stream_stats.rtp_stats.clone(),
@@ -504,27 +458,22 @@ struct StatsContainer {
 }
 
 impl StatsContainer {
-    #[tracing::instrument(level = "debug", skip(self, ssrc))]
     fn get_or_create_inbound_stream_stats(&mut self, ssrc: u32) -> &mut inbound::StreamStats {
         self.inbound_stats.entry(ssrc).or_default()
     }
 
-    #[tracing::instrument(level = "debug", skip(self, ssrc))]
     fn get_or_create_outbound_stream_stats(&mut self, ssrc: u32) -> &mut outbound::StreamStats {
         self.outbound_stats.entry(ssrc).or_default()
     }
 
-    #[tracing::instrument(level = "debug", skip(self, ssrc))]
     fn get_inbound_stats(&self, ssrc: u32) -> Option<&inbound::StreamStats> {
         self.inbound_stats.get(&ssrc)
     }
 
-    #[tracing::instrument(level = "debug", skip(self, ssrc))]
     fn get_outbound_stats(&self, ssrc: u32) -> Option<&outbound::StreamStats> {
         self.outbound_stats.get(&ssrc)
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn remove_stale_entries(&mut self) {
         const MAX_AGE: Duration = Duration::from_secs(60);
 
@@ -553,7 +502,6 @@ pub struct RTPStats {
 }
 
 impl RTPStats {
-    #[tracing::instrument(level = "debug", skip(self, header_bytes, payload_bytes, packets, now))]
     fn update(&mut self, header_bytes: u64, payload_bytes: u64, packets: u64, now: SystemTime) {
         self.header_bytes += header_bytes;
         self.payload_bytes += payload_bytes;
@@ -561,22 +509,18 @@ impl RTPStats {
         self.last_packet_timestamp = Some(now);
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     pub fn header_bytes(&self) -> u64 {
         self.header_bytes
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     pub fn payload_bytes(&self) -> u64 {
         self.payload_bytes
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     pub fn packets(&self) -> u64 {
         self.packets
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     pub fn last_packet_timestamp(&self) -> Option<SystemTime> {
         self.last_packet_timestamp
     }
@@ -595,7 +539,6 @@ pub struct RTCPStats {
 }
 
 impl RTCPStats {
-    #[tracing::instrument(level = "debug", skip(self, fir_count, pli_count, nack_count))]
     #[allow(clippy::too_many_arguments)]
     fn update(&mut self, fir_count: Option<u64>, pli_count: Option<u64>, nack_count: Option<u64>) {
         if let Some(fir_count) = fir_count {
@@ -611,17 +554,14 @@ impl RTCPStats {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     pub fn fir_count(&self) -> u64 {
         self.fir_count
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     pub fn pli_count(&self) -> u64 {
         self.pli_count
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     pub fn nack_count(&self) -> u64 {
         self.nack_count
     }
@@ -665,14 +605,12 @@ mod test {
 
     #[test]
     fn test_rtp_stats_send_sync() {
-        #[tracing::instrument(level = "debug", skip())]
         fn test_send_sync<T: Send + Sync>() {}
         test_send_sync::<RTPStats>();
     }
 
     #[test]
     fn test_rtcp_stats_send_sync() {
-        #[tracing::instrument(level = "debug", skip())]
         fn test_send_sync<T: Send + Sync>() {}
         test_send_sync::<RTCPStats>();
     }

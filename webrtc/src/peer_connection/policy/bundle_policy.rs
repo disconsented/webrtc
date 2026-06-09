@@ -43,7 +43,6 @@ const BUNDLE_POLICY_MAX_COMPAT_STR: &str = "max-compat";
 const BUNDLE_POLICY_MAX_BUNDLE_STR: &str = "max-bundle";
 
 impl From<&str> for RTCBundlePolicy {
-    #[tracing::instrument(level = "debug", skip(raw))]
     /// NewSchemeType defines a procedure for creating a new SchemeType from a raw
     /// string naming the scheme type.
     fn from(raw: &str) -> Self {
@@ -57,7 +56,6 @@ impl From<&str> for RTCBundlePolicy {
 }
 
 impl fmt::Display for RTCBundlePolicy {
-    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match *self {
             RTCBundlePolicy::Balanced => write!(f, "{BUNDLE_POLICY_BALANCED_STR}"),

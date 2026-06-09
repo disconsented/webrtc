@@ -35,17 +35,14 @@ pub struct HandshakeMessageHelloVerifyRequest {
 }
 
 impl HandshakeMessageHelloVerifyRequest {
-    #[tracing::instrument(level = "debug", skip(self))]
     pub fn handshake_type(&self) -> HandshakeType {
         HandshakeType::HelloVerifyRequest
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     pub fn size(&self) -> usize {
         1 + 1 + 1 + self.cookie.len()
     }
 
-    #[tracing::instrument(level = "debug", skip(self, writer))]
     pub fn marshal<W: Write>(&self, writer: &mut W) -> Result<()> {
         if self.cookie.len() > 255 {
             return Err(Error::ErrCookieTooLong);
@@ -59,7 +56,6 @@ impl HandshakeMessageHelloVerifyRequest {
         Ok(writer.flush()?)
     }
 
-    #[tracing::instrument(level = "debug", skip(reader))]
     pub fn unmarshal<R: Read>(reader: &mut R) -> Result<Self> {
         let major = reader.read_u8()?;
         let minor = reader.read_u8()?;

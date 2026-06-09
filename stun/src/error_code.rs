@@ -16,7 +16,6 @@ pub struct ErrorCodeAttribute {
 }
 
 impl fmt::Display for ErrorCodeAttribute {
-    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let reason = match String::from_utf8(self.reason.clone()) {
             Ok(reason) => reason,
@@ -36,7 +35,6 @@ const ERROR_CODE_MODULO: u16 = 100;
 
 impl Setter for ErrorCodeAttribute {
     // add_to adds ERROR-CODE to m.
-    #[tracing::instrument(level = "debug", skip(self, m))]
     fn add_to(&self, m: &mut Message) -> Result<()> {
         check_overflow(
             ATTR_ERROR_CODE,
@@ -61,7 +59,6 @@ impl Setter for ErrorCodeAttribute {
 
 impl Getter for ErrorCodeAttribute {
     // GetFrom decodes ERROR-CODE from m. Reason is valid until m.Raw is valid.
-    #[tracing::instrument(level = "debug", skip(self, m))]
     fn get_from(&mut self, m: &Message) -> Result<()> {
         let v = m.get(ATTR_ERROR_CODE)?;
 
@@ -86,7 +83,6 @@ pub struct ErrorCode(pub u16);
 impl Setter for ErrorCode {
     // add_to adds ERROR-CODE with default reason to m. If there
     // is no default reason, returns ErrNoDefaultReason.
-    #[tracing::instrument(level = "debug", skip(self, m))]
     fn add_to(&self, m: &mut Message) -> Result<()> {
         if let Some(reason) = ERROR_REASONS.get(self) {
             let a = ErrorCodeAttribute {

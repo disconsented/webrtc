@@ -21,7 +21,6 @@ pub trait Payloader: fmt::Debug {
 }
 
 impl Clone for Box<dyn Payloader + Send + Sync> {
-    #[tracing::instrument(level = "debug", skip(self))]
     fn clone(&self) -> Box<dyn Payloader + Send + Sync> {
         self.clone_to()
     }
@@ -36,7 +35,6 @@ pub trait Packetizer: fmt::Debug {
 }
 
 impl Clone for Box<dyn Packetizer + Send + Sync> {
-    #[tracing::instrument(level = "debug", skip(self))]
     fn clone(&self) -> Box<dyn Packetizer + Send + Sync> {
         self.clone_to()
     }
@@ -75,7 +73,6 @@ pub(crate) struct PacketizerImpl {
 }
 
 impl fmt::Debug for PacketizerImpl {
-    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("PacketizerImpl")
             .field("mtu", &self.mtu)
@@ -88,7 +85,6 @@ impl fmt::Debug for PacketizerImpl {
     }
 }
 
-#[tracing::instrument(level = "debug", skip(mtu, payload_type, ssrc, payloader, sequencer, clock_rate))]
 pub fn new_packetizer(
     mtu: usize,
     payload_type: u8,
@@ -111,12 +107,10 @@ pub fn new_packetizer(
 }
 
 impl Packetizer for PacketizerImpl {
-    #[tracing::instrument(level = "debug", skip(self, value))]
     fn enable_abs_send_time(&mut self, value: u8) {
         self.abs_send_time = value
     }
 
-    #[tracing::instrument(level = "debug", skip(self, payload, samples))]
     fn packetize(&mut self, payload: &Bytes, samples: u32) -> Result<Vec<Packet>> {
         let payloads = self.payloader.payload(self.mtu - 12, payload)?;
         let payloads_len = payloads.len();
@@ -159,14 +153,12 @@ impl Packetizer for PacketizerImpl {
         Ok(packets)
     }
 
-    #[tracing::instrument(level = "debug", skip(self, skipped_samples))]
     /// skip_samples causes a gap in sample count between Packetize requests so the
     /// RTP payloads produced have a gap in timestamps
     fn skip_samples(&mut self, skipped_samples: u32) {
         self.timestamp = self.timestamp.wrapping_add(skipped_samples);
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn clone_to(&self) -> Box<dyn Packetizer + Send + Sync> {
         Box::new(self.clone())
     }

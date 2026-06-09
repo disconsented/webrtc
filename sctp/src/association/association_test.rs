@@ -16,7 +16,6 @@ use super::*;
 use crate::chunk::chunk_selective_ack::GapAckBlock;
 use crate::stream::*;
 
-#[tracing::instrument(level = "debug", skip(br, ca, cb, ack_mode, recv_buf_size))]
 async fn create_new_association_pair(
     br: &Arc<Bridge>,
     ca: Arc<dyn Conn + Send + Sync>,
@@ -113,7 +112,6 @@ async fn create_new_association_pair(
     Ok((client, server))
 }
 
-#[tracing::instrument(level = "debug", skip(br, client, server))]
 async fn close_association_pair(br: &Arc<Bridge>, client: Association, server: Association) {
     let (handshake0ch_tx, mut handshake0ch_rx) = mpsc::channel(1);
     let (handshake1ch_tx, mut handshake1ch_rx) = mpsc::channel(1);
@@ -162,7 +160,6 @@ async fn close_association_pair(br: &Arc<Bridge>, client: Association, server: A
     drop(closed_tx);
 }
 
-#[tracing::instrument(level = "debug", skip(br, client, server))]
 async fn flush_buffers(br: &Arc<Bridge>, client: &Association, server: &Association) {
     loop {
         loop {
@@ -185,7 +182,6 @@ async fn flush_buffers(br: &Arc<Bridge>, client: &Association, server: &Associat
     }
 }
 
-#[tracing::instrument(level = "debug", skip(br, client, server, si))]
 async fn establish_session_pair(
     br: &Arc<Bridge>,
     client: &Association,
@@ -297,7 +293,6 @@ async fn test_assoc_reliable_simple() -> Result<()> {
 
 //use std::io::Write;
 
-#[tracing::instrument(level = "debug", skip(buf))]
 fn fill(buf: &mut [u8]) {
     for i in 0..buf.len() {
         buf[i] = (i & 0xff) as u8;
@@ -2084,14 +2079,12 @@ struct FakeEchoConn {
 }
 
 impl FakeEchoConn {
-    #[tracing::instrument(level = "debug", skip())]
     fn type_erased() -> impl Conn {
         Self::default()
     }
 }
 
 impl Default for FakeEchoConn {
-    #[tracing::instrument(level = "debug", skip())]
     fn default() -> Self {
         let (wr_tx, rd_rx) = mpsc::channel(1);
         FakeEchoConn {
@@ -2107,12 +2100,10 @@ type UResult<T> = std::result::Result<T, util::Error>;
 
 #[async_trait]
 impl Conn for FakeEchoConn {
-    #[tracing::instrument(level = "debug", skip(self, _addr))]
     async fn connect(&self, _addr: SocketAddr) -> UResult<()> {
         Err(io::Error::other("Not applicable").into())
     }
 
-    #[tracing::instrument(level = "debug", skip(self, b))]
     async fn recv(&self, b: &mut [u8]) -> UResult<usize> {
         let mut rd_rx = self.rd_rx.lock().await;
         let v = match rd_rx.recv().await {
@@ -2127,12 +2118,10 @@ impl Conn for FakeEchoConn {
         Ok(l)
     }
 
-    #[tracing::instrument(level = "debug", skip(self, _buf))]
     async fn recv_from(&self, _buf: &mut [u8]) -> UResult<(usize, SocketAddr)> {
         Err(io::Error::other("Not applicable").into())
     }
 
-    #[tracing::instrument(level = "debug", skip(self, b))]
     async fn send(&self, b: &[u8]) -> UResult<usize> {
         let wr_tx = self.wr_tx.lock().await;
         match wr_tx.send(b.to_vec()).await {
@@ -2143,27 +2132,22 @@ impl Conn for FakeEchoConn {
         Ok(b.len())
     }
 
-    #[tracing::instrument(level = "debug", skip(self, _buf, _target))]
     async fn send_to(&self, _buf: &[u8], _target: SocketAddr) -> UResult<usize> {
         Err(io::Error::other("Not applicable").into())
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn local_addr(&self) -> UResult<SocketAddr> {
         Err(io::Error::other("Not applicable").into())
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn remote_addr(&self) -> Option<SocketAddr> {
         None
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     async fn close(&self) -> UResult<()> {
         Ok(())
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn as_any(&self) -> &(dyn std::any::Any + Send + Sync) {
         self
     }
@@ -2212,7 +2196,6 @@ async fn test_stats() -> Result<()> {
     Ok(())
 }
 
-#[tracing::instrument(level = "debug", skip())]
 async fn create_assocs() -> Result<(Association, Association)> {
     let addr1 = SocketAddr::from_str("0.0.0.0:0").unwrap();
     let addr2 = SocketAddr::from_str("0.0.0.0:0").unwrap();

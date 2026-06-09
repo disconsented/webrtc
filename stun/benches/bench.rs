@@ -31,7 +31,6 @@ use tokio::time::Instant;
 // sufficient to make function zero-alloc in most cases.
 const AGENT_COLLECT_CAP: usize = 100;
 
-#[tracing::instrument(level = "debug", skip(g))]
 fn benchmark_addr(g: &mut BenchmarkGroup<WallTime>) {
     let mut m = Message::new();
 
@@ -60,7 +59,6 @@ fn benchmark_addr(g: &mut BenchmarkGroup<WallTime>) {
     });
 }
 
-#[tracing::instrument(level = "debug", skip(g))]
 fn benchmark_agent(g: &mut BenchmarkGroup<WallTime>) {
     let deadline = Instant::now().add(Duration::from_secs(60 * 60 * 24));
     let gc_deadline = deadline.sub(Duration::from_secs(1));
@@ -100,7 +98,6 @@ fn benchmark_agent(g: &mut BenchmarkGroup<WallTime>) {
     }
 }
 
-#[tracing::instrument(level = "debug", skip(g))]
 fn benchmark_attributes(g: &mut BenchmarkGroup<WallTime>) {
     {
         let m = Message::new();
@@ -126,7 +123,6 @@ fn benchmark_attributes(g: &mut BenchmarkGroup<WallTime>) {
 
 //TODO: add benchmark_client
 
-#[tracing::instrument(level = "debug", skip(g))]
 fn benchmark_error_code(g: &mut BenchmarkGroup<WallTime>) {
     {
         let mut m = Message::new();
@@ -170,7 +166,6 @@ fn benchmark_error_code(g: &mut BenchmarkGroup<WallTime>) {
     }
 }
 
-#[tracing::instrument(level = "debug", skip(g))]
 fn benchmark_fingerprint(g: &mut BenchmarkGroup<WallTime>) {
     {
         let mut m = Message::new();
@@ -215,7 +210,6 @@ fn benchmark_fingerprint(g: &mut BenchmarkGroup<WallTime>) {
 }
 
 // BenchmarkBuildOverhead
-#[tracing::instrument(level = "debug", skip(g))]
 fn benchmark_message_build_overhead(g: &mut BenchmarkGroup<WallTime>) {
     let t = BINDING_REQUEST;
     let username = Username::new(ATTR_USERNAME, "username".to_owned());
@@ -252,7 +246,6 @@ fn benchmark_message_build_overhead(g: &mut BenchmarkGroup<WallTime>) {
     }
 }
 
-#[tracing::instrument(level = "debug", skip(g))]
 fn benchmark_message_integrity(g: &mut BenchmarkGroup<WallTime>) {
     {
         let mut m = Message::new();
@@ -286,7 +279,6 @@ fn benchmark_message_integrity(g: &mut BenchmarkGroup<WallTime>) {
     }
 }
 
-#[tracing::instrument(level = "debug", skip(g))]
 fn benchmark_message(g: &mut BenchmarkGroup<WallTime>) {
     {
         let mut m = Message::new();
@@ -544,7 +536,6 @@ fn benchmark_message(g: &mut BenchmarkGroup<WallTime>) {
     }
 }
 
-#[tracing::instrument(level = "debug", skip(g))]
 fn benchmark_text_attributes(g: &mut BenchmarkGroup<WallTime>) {
     {
         let mut m = Message::new();
@@ -610,7 +601,6 @@ fn benchmark_text_attributes(g: &mut BenchmarkGroup<WallTime>) {
 }
 
 // BenchmarkUnknownAttributes
-#[tracing::instrument(level = "debug", skip(g))]
 fn benchmark_unknown_attributes(g: &mut BenchmarkGroup<WallTime>) {
     let mut m = Message::new();
     let a = UnknownAttributes(vec![
@@ -641,7 +631,6 @@ fn benchmark_unknown_attributes(g: &mut BenchmarkGroup<WallTime>) {
     }
 }
 
-#[tracing::instrument(level = "debug", skip(g))]
 fn benchmark_xor(g: &mut BenchmarkGroup<WallTime>) {
     let mut r = StdRng::seed_from_u64(666);
     let mut a = [0u8; 1024];
@@ -657,7 +646,6 @@ fn benchmark_xor(g: &mut BenchmarkGroup<WallTime>) {
     });
 }
 
-#[tracing::instrument(level = "debug", skip(g))]
 fn benchmark_xoraddr(g: &mut BenchmarkGroup<WallTime>) {
     {
         let mut m = Message::new();
@@ -689,7 +677,6 @@ fn benchmark_xoraddr(g: &mut BenchmarkGroup<WallTime>) {
     }
 }
 
-#[tracing::instrument(level = "debug", skip())]
 fn benches() {
     let mut c = Criterion::default().configure_from_args();
     let mut g = c.benchmark_group("STUN");

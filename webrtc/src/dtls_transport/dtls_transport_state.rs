@@ -44,7 +44,6 @@ const DTLS_TRANSPORT_STATE_CLOSED_STR: &str = "closed";
 const DTLS_TRANSPORT_STATE_FAILED_STR: &str = "failed";
 
 impl From<&str> for RTCDtlsTransportState {
-    #[tracing::instrument(level = "debug", skip(raw))]
     fn from(raw: &str) -> Self {
         match raw {
             DTLS_TRANSPORT_STATE_NEW_STR => RTCDtlsTransportState::New,
@@ -58,7 +57,6 @@ impl From<&str> for RTCDtlsTransportState {
 }
 
 impl From<u8> for RTCDtlsTransportState {
-    #[tracing::instrument(level = "debug", skip(v))]
     fn from(v: u8) -> Self {
         match v {
             1 => RTCDtlsTransportState::New,
@@ -72,7 +70,6 @@ impl From<u8> for RTCDtlsTransportState {
 }
 
 impl fmt::Display for RTCDtlsTransportState {
-    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let s = match *self {
             RTCDtlsTransportState::New => DTLS_TRANSPORT_STATE_NEW_STR,

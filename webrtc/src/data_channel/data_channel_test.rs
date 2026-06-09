@@ -32,7 +32,6 @@ use crate::sctp_transport::sctp_transport_capabilities::SCTPTransportCapabilitie
 // bindings this is a requirement).
 const EXPECTED_LABEL: &str = "data";
 
-#[tracing::instrument(level = "debug", skip(api, options))]
 async fn set_up_data_channel_parameters_test(
     api: &API,
     options: Option<RTCDataChannelInit>,
@@ -52,7 +51,6 @@ async fn set_up_data_channel_parameters_test(
     Ok((offer_pc, answer_pc, dc, done_tx, done_rx))
 }
 
-#[tracing::instrument(level = "debug", skip(pc1, pc2, done_rx))]
 async fn close_reliability_param_test(
     pc1: &mut RTCPeerConnection,
     pc2: &mut RTCPeerConnection,
@@ -1378,7 +1376,6 @@ async fn test_data_channel_non_standard_session_description() -> Result<()> {
     Ok(())
 }
 
-#[tracing::instrument(level = "debug", skip(remote_max_message_size, can_send_max_message_size))]
 async fn create_data_channel_with_max_message_size(
     remote_max_message_size: Option<u32>,
     can_send_max_message_size: Option<SctpMaxMessageSize>,
@@ -1479,7 +1476,6 @@ async fn test_given_remote_max_message_size_is_none_when_data_channel_can_send_m
     Ok(())
 }
 
-#[tracing::instrument(level = "debug", skip(remote_max_message_size, can_send_max_message_size))]
 async fn run_data_channel_config_max_message_size(
     remote_max_message_size: Option<u32>,
     can_send_max_message_size: Option<SctpMaxMessageSize>,
@@ -1593,7 +1589,6 @@ struct TestOrtcSignal {
 }
 
 impl TestOrtcStack {
-    #[tracing::instrument(level = "debug", skip(api))]
     async fn new(api: &API) -> Result<Self> {
         // Create the ICE gatherer
         let gatherer = Arc::new(api.new_ice_gatherer(RTCIceGatherOptions::default())?);
@@ -1615,7 +1610,6 @@ impl TestOrtcStack {
         })
     }
 
-    #[tracing::instrument(level = "debug", skip(self, sig, is_offer))]
     async fn set_signal(&self, sig: &TestOrtcSignal, is_offer: bool) -> Result<()> {
         let ice_role = if is_offer {
             RTCIceRole::Controlling
@@ -1637,7 +1631,6 @@ impl TestOrtcStack {
         Ok(())
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     async fn get_signal(&self) -> Result<TestOrtcSignal> {
         let (gather_finished_tx, mut gather_finished_rx) = mpsc::channel::<()>(1);
         let gather_finished_tx = Arc::new(gather_finished_tx);
@@ -1671,7 +1664,6 @@ impl TestOrtcStack {
         })
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     async fn close(&self) -> Result<()> {
         let mut close_errs = vec![];
 
@@ -1687,14 +1679,12 @@ impl TestOrtcStack {
     }
 }
 
-#[tracing::instrument(level = "debug", skip(api))]
 async fn new_ortc_pair(api: &API) -> Result<(Arc<TestOrtcStack>, Arc<TestOrtcStack>)> {
     let sa = Arc::new(TestOrtcStack::new(api).await?);
     let sb = Arc::new(TestOrtcStack::new(api).await?);
     Ok((sa, sb))
 }
 
-#[tracing::instrument(level = "debug", skip(stack_a, stack_b))]
 async fn signal_ortc_pair(stack_a: Arc<TestOrtcStack>, stack_b: Arc<TestOrtcStack>) -> Result<()> {
     let sig_a = stack_a.get_signal().await?;
     let sig_b = stack_b.get_signal().await?;

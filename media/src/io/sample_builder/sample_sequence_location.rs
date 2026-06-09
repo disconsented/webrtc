@@ -17,7 +17,6 @@ pub(crate) struct Iterator<'a, T> {
 impl<'a, T> std::iter::Iterator for Iterator<'a, T> {
     type Item = Option<&'a T>;
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn next(&mut self) -> Option<Self::Item> {
         if self.sample.compare(self.i) == Comparison::Inside {
             let old_i = self.i as usize;
@@ -39,27 +38,22 @@ pub(crate) struct SampleSequenceLocation {
 }
 
 impl SampleSequenceLocation {
-    #[tracing::instrument(level = "debug", skip())]
     pub(crate) fn new() -> Self {
         Self { head: 0, tail: 0 }
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     pub(crate) fn empty(&self) -> bool {
         self.head == self.tail
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     pub(crate) fn has_data(&self) -> bool {
         self.head != self.tail
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     pub(crate) fn count(&self) -> u16 {
         seqnum_distance(self.head, self.tail)
     }
 
-    #[tracing::instrument(level = "debug", skip(self, pos))]
     pub(crate) fn compare(&self, pos: u16) -> Comparison {
         if self.head == self.tail {
             return Comparison::Void;
@@ -77,7 +71,6 @@ impl SampleSequenceLocation {
         Comparison::After
     }
 
-    #[tracing::instrument(level = "debug", skip(self, data))]
     pub(crate) fn range<'a, T>(&self, data: &'a [Option<T>]) -> Iterator<'a, T> {
         Iterator {
             data,

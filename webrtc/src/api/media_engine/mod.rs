@@ -67,7 +67,6 @@ pub(crate) struct MediaEngineHeaderExtension {
 }
 
 impl MediaEngineHeaderExtension {
-    #[tracing::instrument(level = "debug", skip(self, dir))]
     pub fn is_matching_direction(&self, dir: RTCRtpTransceiverDirection) -> bool {
         if let Some(allowed_direction) = self.allowed_direction {
             use RTCRtpTransceiverDirection::*;
@@ -102,7 +101,6 @@ pub struct MediaEngine {
 }
 
 impl MediaEngine {
-    #[tracing::instrument(level = "debug", skip(self))]
     /// register_default_codecs registers the default codecs supported by Pion WebRTC.
     /// register_default_codecs is not safe for concurrent use.
     pub fn register_default_codecs(&mut self) -> Result<()> {
@@ -382,7 +380,6 @@ impl MediaEngine {
         Ok(())
     }
 
-    #[tracing::instrument(level = "debug", skip(codecs, codec))]
     /// add_codec will append codec if it not exists
     fn add_codec(codecs: &mut Vec<RTCRtpCodecParameters>, codec: RTCRtpCodecParameters) {
         for c in codecs.iter() {
@@ -395,7 +392,6 @@ impl MediaEngine {
         codecs.push(codec);
     }
 
-    #[tracing::instrument(level = "debug", skip(self, codec, typ))]
     /// register_codec adds codec to the MediaEngine
     /// These are the list of codecs supported by this PeerConnection.
     /// register_codec is not safe for concurrent use.
@@ -424,7 +420,6 @@ impl MediaEngine {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, extension, typ, allowed_direction))]
     /// Adds a header extension to the MediaEngine
     /// To determine the negotiated value use [`MediaEngine::get_header_extension_id`] after signaling is complete.
     ///
@@ -475,7 +470,6 @@ impl MediaEngine {
         Ok(())
     }
 
-    #[tracing::instrument(level = "debug", skip(self, feedback, typ))]
     /// register_feedback adds feedback mechanism to already registered codecs.
     pub fn register_feedback(&mut self, feedback: RTCPFeedback, typ: RTPCodecType) {
         match typ {
@@ -493,7 +487,6 @@ impl MediaEngine {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, extension))]
     /// get_header_extension_id returns the negotiated ID for a header extension.
     /// If the Header Extension isn't enabled ok will be false
     pub async fn get_header_extension_id(
@@ -514,7 +507,6 @@ impl MediaEngine {
         (0, false, false)
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// clone_to copies any user modifiable state of the MediaEngine
     /// all internal state is reset
     pub(crate) fn clone_to(&self) -> Self {
@@ -526,20 +518,17 @@ impl MediaEngine {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, negotiate_multi_codecs))]
     /// set_multi_codec_negotiation enables or disables the negotiation of multiple codecs.
     pub(crate) fn set_multi_codec_negotiation(&self, negotiate_multi_codecs: bool) {
         self.negotiate_multi_codecs
             .store(negotiate_multi_codecs, Ordering::SeqCst);
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// multi_codec_negotiation returns the current state of the negotiation of multiple codecs.
     pub(crate) fn multi_codec_negotiation(&self) -> bool {
         self.negotiate_multi_codecs.load(Ordering::SeqCst)
     }
 
-    #[tracing::instrument(level = "debug", skip(self, payload_type))]
     pub(crate) async fn get_codec_by_payload(
         &self,
         payload_type: PayloadType,
@@ -578,7 +567,6 @@ impl MediaEngine {
         Err(Error::ErrCodecNotFound)
     }
 
-    #[tracing::instrument(level = "debug", skip(self, collector))]
     pub(crate) async fn collect_stats(&self, collector: &StatsCollector) {
         let mut reports = HashMap::new();
 
@@ -593,7 +581,6 @@ impl MediaEngine {
         collector.merge(reports);
     }
 
-    #[tracing::instrument(level = "debug", skip(self, remote_codec, typ, exact_matches, partial_matches))]
     /// Look up a codec and enable if it exists
     pub(crate) fn match_remote_codec(
         &self,
@@ -665,7 +652,6 @@ impl MediaEngine {
         Ok(match_type)
     }
 
-    #[tracing::instrument(level = "debug", skip(self, id, extension, typ))]
     /// Look up a header extension and enable if it exists
     pub(crate) async fn update_header_extension(
         &self,
@@ -717,7 +703,6 @@ impl MediaEngine {
         Ok(())
     }
 
-    #[tracing::instrument(level = "debug", skip(self, codecs, typ))]
     pub(crate) async fn push_codecs(&self, codecs: Vec<RTCRtpCodecParameters>, typ: RTPCodecType) {
         for codec in codecs {
             if typ == RTPCodecType::Audio {
@@ -730,7 +715,6 @@ impl MediaEngine {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, desc))]
     /// Update the MediaEngine from a remote description
     pub(crate) async fn update_from_remote_description(
         &self,
@@ -789,7 +773,6 @@ impl MediaEngine {
         Ok(())
     }
 
-    #[tracing::instrument(level = "debug", skip(self, typ))]
     pub(crate) fn get_codecs_by_kind(&self, typ: RTPCodecType) -> Vec<RTCRtpCodecParameters> {
         if typ == RTPCodecType::Video {
             if self.negotiated_video.load(Ordering::SeqCst) {
@@ -810,7 +793,6 @@ impl MediaEngine {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, typ, direction))]
     pub(crate) fn get_rtp_parameters_by_kind(
         &self,
         typ: RTPCodecType,
@@ -909,7 +891,6 @@ impl MediaEngine {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, payload_type))]
     pub(crate) async fn get_rtp_parameters_by_payload_type(
         &self,
         payload_type: PayloadType,

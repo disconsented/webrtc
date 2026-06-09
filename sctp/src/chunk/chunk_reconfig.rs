@@ -32,7 +32,6 @@ pub(crate) struct ChunkReconfig {
 }
 
 impl Clone for ChunkReconfig {
-    #[tracing::instrument(level = "debug", skip(self))]
     fn clone(&self) -> Self {
         ChunkReconfig {
             param_a: self.param_a.as_ref().cloned(),
@@ -43,7 +42,6 @@ impl Clone for ChunkReconfig {
 
 /// makes chunkReconfig printable
 impl fmt::Display for ChunkReconfig {
-    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut res = String::new();
         if let Some(param_a) = &self.param_a {
@@ -57,7 +55,6 @@ impl fmt::Display for ChunkReconfig {
 }
 
 impl Chunk for ChunkReconfig {
-    #[tracing::instrument(level = "debug", skip(self))]
     fn header(&self) -> ChunkHeader {
         ChunkHeader {
             typ: CT_RECONFIG,
@@ -66,7 +63,6 @@ impl Chunk for ChunkReconfig {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(raw))]
     fn unmarshal(raw: &Bytes) -> Result<Self> {
         let header = ChunkHeader::unmarshal(raw)?;
 
@@ -93,7 +89,6 @@ impl Chunk for ChunkReconfig {
         })
     }
 
-    #[tracing::instrument(level = "debug", skip(self, writer))]
     fn marshal_to(&self, writer: &mut BytesMut) -> Result<usize> {
         self.header().marshal_to(writer)?;
 
@@ -113,12 +108,10 @@ impl Chunk for ChunkReconfig {
         Ok(writer.len())
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn check(&self) -> Result<()> {
         Ok(())
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn value_length(&self) -> usize {
         let mut l = PARAM_HEADER_LENGTH;
         let param_a_value_length = if let Some(param_a) = &self.param_a {
@@ -134,7 +127,6 @@ impl Chunk for ChunkReconfig {
         l
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn as_any(&self) -> &(dyn Any + Send + Sync) {
         self
     }

@@ -640,7 +640,6 @@ struct TestInterceptor(mpsc::UnboundedSender<TestInterceptorEvent>);
 
 #[async_trait]
 impl Interceptor for TestInterceptor {
-    #[tracing::instrument(level = "debug", skip(self, reader))]
     async fn bind_rtcp_reader(
         &self,
         reader: Arc<dyn RTCPReader + Send + Sync>,
@@ -648,7 +647,6 @@ impl Interceptor for TestInterceptor {
         reader
     }
 
-    #[tracing::instrument(level = "debug", skip(self, writer))]
     async fn bind_rtcp_writer(
         &self,
         writer: Arc<dyn interceptor::RTCPWriter + Send + Sync>,
@@ -656,7 +654,6 @@ impl Interceptor for TestInterceptor {
         writer
     }
 
-    #[tracing::instrument(level = "debug", skip(self, info, writer))]
     async fn bind_local_stream(
         &self,
         info: &StreamInfo,
@@ -666,12 +663,10 @@ impl Interceptor for TestInterceptor {
         writer
     }
 
-    #[tracing::instrument(level = "debug", skip(self, info))]
     async fn unbind_local_stream(&self, info: &StreamInfo) {
         let _ = self.0.send(TestInterceptorEvent::UnbindLocal(info.clone()));
     }
 
-    #[tracing::instrument(level = "debug", skip(self, info, reader))]
     async fn bind_remote_stream(
         &self,
         info: &StreamInfo,
@@ -681,21 +676,18 @@ impl Interceptor for TestInterceptor {
         reader
     }
 
-    #[tracing::instrument(level = "debug", skip(self, info))]
     async fn unbind_remote_stream(&self, info: &StreamInfo) {
         let _ = self
             .0
             .send(TestInterceptorEvent::UnbindRemote(info.clone()));
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     async fn close(&self) -> std::result::Result<(), interceptor::Error> {
         Ok(())
     }
 }
 
 impl InterceptorBuilder for TestInterceptor {
-    #[tracing::instrument(level = "debug", skip(self, _id))]
     fn build(
         &self,
         _id: &str,

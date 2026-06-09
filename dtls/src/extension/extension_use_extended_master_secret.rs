@@ -16,17 +16,14 @@ pub struct ExtensionUseExtendedMasterSecret {
 }
 
 impl ExtensionUseExtendedMasterSecret {
-    #[tracing::instrument(level = "debug", skip(self))]
     pub fn extension_value(&self) -> ExtensionValue {
         ExtensionValue::UseExtendedMasterSecret
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     pub fn size(&self) -> usize {
         2
     }
 
-    #[tracing::instrument(level = "debug", skip(self, writer))]
     pub fn marshal<W: Write>(&self, writer: &mut W) -> Result<()> {
         // length
         writer.write_u16::<BigEndian>(0)?;
@@ -34,7 +31,6 @@ impl ExtensionUseExtendedMasterSecret {
         Ok(writer.flush()?)
     }
 
-    #[tracing::instrument(level = "debug", skip(reader))]
     pub fn unmarshal<R: Read>(reader: &mut R) -> Result<Self> {
         let _ = reader.read_u16::<BigEndian>()?;
 

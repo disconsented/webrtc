@@ -73,7 +73,6 @@ pub struct RTCIceTransport {
 }
 
 impl RTCIceTransport {
-    #[tracing::instrument(level = "debug", skip(gatherer))]
     /// creates a new new_icetransport.
     pub(crate) fn new(gatherer: Arc<RTCIceGatherer>) -> Self {
         RTCIceTransport {
@@ -83,7 +82,6 @@ impl RTCIceTransport {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// get_selected_candidate_pair returns the selected candidate pair on which packets are sent
     /// if there is no selected pair nil is returned
     pub async fn get_selected_candidate_pair(&self) -> Option<RTCIceCandidatePair> {
@@ -97,7 +95,6 @@ impl RTCIceTransport {
         None
     }
 
-    #[tracing::instrument(level = "debug", skip(self, params, role))]
     /// Start incoming connectivity checks based on its configured role.
     pub async fn start(&self, params: &RTCIceParameters, role: Option<RTCIceRole>) -> Result<()> {
         if self.state() != RTCIceTransportState::New {
@@ -198,7 +195,6 @@ impl RTCIceTransport {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// restart is not exposed currently because ORTC has users create a whole new ICETransport
     /// so for now lets keep it private so we don't cause ORTC users to depend on non-standard APIs
     pub(crate) async fn restart(&self) -> Result<()> {
@@ -219,7 +215,6 @@ impl RTCIceTransport {
         self.gatherer.gather().await
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// Stop irreversibly stops the ICETransport.
     pub async fn stop(&self) -> Result<()> {
         self.set_state(RTCIceTransportState::Closed);
@@ -245,7 +240,6 @@ impl RTCIceTransport {
         flatten_errs(errs)
     }
 
-    #[tracing::instrument(level = "debug", skip(self, f))]
     /// on_selected_candidate_pair_change sets a handler that is invoked when a new
     /// ICE candidate pair is selected
     pub fn on_selected_candidate_pair_change(&self, f: OnSelectedCandidatePairChangeHdlrFn) {
@@ -253,7 +247,6 @@ impl RTCIceTransport {
             .store(Some(Arc::new(Mutex::new(f))));
     }
 
-    #[tracing::instrument(level = "debug", skip(self, f))]
     /// on_connection_state_change sets a handler that is fired when the ICE
     /// connection state changes.
     pub fn on_connection_state_change(&self, f: OnConnectionStateChangeHdlrFn) {
@@ -261,14 +254,12 @@ impl RTCIceTransport {
             .store(Some(Arc::new(Mutex::new(f))));
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// Role indicates the current role of the ICE transport.
     pub async fn role(&self) -> RTCIceRole {
         let internal = self.internal.lock().await;
         internal.role
     }
 
-    #[tracing::instrument(level = "debug", skip(self, remote_candidates))]
     /// set_remote_candidates sets the sequence of candidates associated with the remote ICETransport.
     pub async fn set_remote_candidates(&self, remote_candidates: &[RTCIceCandidate]) -> Result<()> {
         self.ensure_gatherer().await?;
@@ -284,7 +275,6 @@ impl RTCIceTransport {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, remote_candidate))]
     /// adds a candidate associated with the remote ICETransport.
     pub async fn add_remote_candidate(
         &self,
@@ -304,18 +294,15 @@ impl RTCIceTransport {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// State returns the current ice transport state.
     pub fn state(&self) -> RTCIceTransportState {
         RTCIceTransportState::from(self.state.load(Ordering::SeqCst))
     }
 
-    #[tracing::instrument(level = "debug", skip(self, s))]
     pub(crate) fn set_state(&self, s: RTCIceTransportState) {
         self.state.store(s as u8, Ordering::SeqCst)
     }
 
-    #[tracing::instrument(level = "debug", skip(self, f))]
     pub(crate) async fn new_endpoint(&self, f: MatchFunc) -> Option<Arc<Endpoint>> {
         let internal = self.internal.lock().await;
         if let Some(mux) = &internal.mux {
@@ -325,7 +312,6 @@ impl RTCIceTransport {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     pub(crate) async fn ensure_gatherer(&self) -> Result<()> {
         if self.gatherer.get_agent().await.is_none() {
             self.gatherer.create_agent().await
@@ -334,7 +320,6 @@ impl RTCIceTransport {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, collector))]
     pub(crate) async fn collect_stats(&self, collector: &StatsCollector) {
         if let Some(agent) = self.gatherer.get_agent().await {
             let stats = ICETransportStats::new("ice_transport".to_string(), agent);
@@ -343,7 +328,6 @@ impl RTCIceTransport {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, new_ufrag, new_pwd))]
     pub(crate) async fn have_remote_credentials_change(
         &self,
         new_ufrag: &str,
@@ -357,7 +341,6 @@ impl RTCIceTransport {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, new_ufrag, new_pwd))]
     pub(crate) async fn set_remote_credentials(
         &self,
         new_ufrag: String,

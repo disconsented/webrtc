@@ -7,7 +7,6 @@ pub(super) struct SenderStream {
 }
 
 impl SenderStream {
-    #[tracing::instrument(level = "debug", skip(next_rtp_writer, next_sequence_nr, hdr_ext_id))]
     pub(super) fn new(
         next_rtp_writer: Arc<dyn RTPWriter + Send + Sync>,
         next_sequence_nr: Arc<AtomicU32>,
@@ -24,7 +23,6 @@ impl SenderStream {
 /// RTPWriter is used by Interceptor.bind_local_stream.
 #[async_trait]
 impl RTPWriter for SenderStream {
-    #[tracing::instrument(level = "debug", skip(self, pkt, a))]
     /// write a rtp packet
     async fn write(&self, pkt: &rtp::packet::Packet, a: &Attributes) -> Result<usize> {
         let sequence_number = self.next_sequence_nr.fetch_add(1, Ordering::SeqCst);

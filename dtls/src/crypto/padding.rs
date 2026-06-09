@@ -6,7 +6,6 @@ pub enum DtlsPadding {}
 impl RawPadding for DtlsPadding {
     const TYPE: PadType = PadType::Reversible;
 
-    #[tracing::instrument(level = "debug", skip(block, pos))]
     fn raw_pad(block: &mut [u8], pos: usize) {
         if pos >= block.len() {
             panic!("`pos` is bigger or equal to block size");
@@ -20,7 +19,6 @@ impl RawPadding for DtlsPadding {
         set(&mut block[pos..], padding_length as u8);
     }
 
-    #[tracing::instrument(level = "debug", skip(data))]
     fn raw_unpad(data: &[u8]) -> Result<&[u8], UnpadError> {
         let padding_length = data.last().copied().unwrap_or(1) as usize;
         if padding_length + 1 > data.len() {
@@ -40,7 +38,6 @@ impl RawPadding for DtlsPadding {
     }
 }
 
-#[tracing::instrument(level = "debug", skip(dst, value))]
 /// Sets all bytes in `dst` equal to `value`
 #[inline(always)]
 fn set(dst: &mut [u8], value: u8) {

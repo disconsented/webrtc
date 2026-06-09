@@ -19,14 +19,12 @@ struct MyAuthHandler {
 }
 
 impl MyAuthHandler {
-    #[tracing::instrument(level = "debug", skip(cred_map))]
     fn new(cred_map: HashMap<String, Vec<u8>>) -> Self {
         MyAuthHandler { cred_map }
     }
 }
 
 impl AuthHandler for MyAuthHandler {
-    #[tracing::instrument(level = "debug", skip(self, username, _realm, _src_addr))]
     fn auth_handle(
         &self,
         username: &str,
@@ -44,7 +42,6 @@ impl AuthHandler for MyAuthHandler {
 
 // RUST_LOG=trace cargo run --color=always --package turn --example turn_server_udp -- --public-ip 127.0.0.1 --users user=pass
 
-#[tracing::instrument(level = "debug", skip())]
 #[tokio::main]
 async fn main() -> Result<(), Error> {
     env_logger::init();

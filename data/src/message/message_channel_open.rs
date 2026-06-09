@@ -48,14 +48,12 @@ pub enum ChannelType {
 }
 
 impl MarshalSize for ChannelType {
-    #[tracing::instrument(level = "debug", skip(self))]
     fn marshal_size(&self) -> usize {
         CHANNEL_TYPE_LEN
     }
 }
 
 impl Marshal for ChannelType {
-    #[tracing::instrument(level = "debug", skip(self, buf))]
     fn marshal_to(&self, mut buf: &mut [u8]) -> Result<usize> {
         let required_len = self.marshal_size();
         if buf.remaining_mut() < required_len {
@@ -82,7 +80,6 @@ impl Marshal for ChannelType {
 }
 
 impl Unmarshal for ChannelType {
-    #[tracing::instrument(level = "debug", skip(buf))]
     fn unmarshal<B>(buf: &mut B) -> Result<Self>
     where
         Self: Sized,
@@ -150,7 +147,6 @@ pub struct DataChannelOpen {
 }
 
 impl MarshalSize for DataChannelOpen {
-    #[tracing::instrument(level = "debug", skip(self))]
     fn marshal_size(&self) -> usize {
         let label_len = self.label.len();
         let protocol_len = self.protocol.len();
@@ -160,7 +156,6 @@ impl MarshalSize for DataChannelOpen {
 }
 
 impl Marshal for DataChannelOpen {
-    #[tracing::instrument(level = "debug", skip(self, buf))]
     fn marshal_to(&self, mut buf: &mut [u8]) -> Result<usize> {
         let required_len = self.marshal_size();
         if buf.remaining_mut() < required_len {
@@ -184,7 +179,6 @@ impl Marshal for DataChannelOpen {
 }
 
 impl Unmarshal for DataChannelOpen {
-    #[tracing::instrument(level = "debug", skip(buf))]
     fn unmarshal<B>(buf: &mut B) -> Result<Self>
     where
         B: Buf,

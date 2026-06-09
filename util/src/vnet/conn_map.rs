@@ -19,14 +19,12 @@ pub(crate) struct UdpConnMap {
 }
 
 impl UdpConnMap {
-    #[tracing::instrument(level = "debug", skip())]
     pub(crate) fn new() -> Self {
         UdpConnMap {
             port_map: Mutex::new(HashMap::new()),
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, conn))]
     pub(crate) async fn insert(&self, conn: Arc<UdpConn>) -> Result<()> {
         let addr = conn.local_addr()?;
 
@@ -52,7 +50,6 @@ impl UdpConnMap {
         Ok(())
     }
 
-    #[tracing::instrument(level = "debug", skip(self, addr))]
     pub(crate) async fn find(&self, addr: &SocketAddr) -> Option<Arc<UdpConn>> {
         let port_map = self.port_map.lock().await;
         if let Some(conns) = port_map.get(&addr.port()) {
@@ -81,7 +78,6 @@ impl UdpConnMap {
         None
     }
 
-    #[tracing::instrument(level = "debug", skip(self, addr))]
     pub(crate) async fn delete(&self, addr: &SocketAddr) -> Result<()> {
         let mut port_map = self.port_map.lock().await;
         let mut new_conns = vec![];
@@ -113,7 +109,6 @@ impl UdpConnMap {
         Ok(())
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     pub(crate) async fn len(&self) -> usize {
         let port_map = self.port_map.lock().await;
         let mut n = 0;

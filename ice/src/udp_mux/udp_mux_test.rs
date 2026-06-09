@@ -18,7 +18,6 @@ enum Network {
 }
 
 impl Network {
-    #[tracing::instrument(level = "debug", skip(self))]
     /// Bind the UDP socket for the "remote".
     async fn bind(self) -> io::Result<UdpSocket> {
         match self {
@@ -27,7 +26,6 @@ impl Network {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, port))]
     /// Connect ip from the "remote".
     fn connect_ip(self, port: u16) -> String {
         match self {
@@ -151,7 +149,6 @@ async fn test_udp_mux() -> Result<()> {
     Ok(())
 }
 
-#[tracing::instrument(level = "debug", skip(mux, ufrag, listener_addr, network))]
 async fn test_mux_connection(
     mux: Arc<dyn UDPMux + Send + Sync>,
     ufrag: &str,
@@ -279,7 +276,6 @@ async fn test_mux_connection(
     Ok(())
 }
 
-#[tracing::instrument(level = "debug", skip(buffer, next_sequence))]
 fn verify_packet(buffer: &[u8], next_sequence: u32) {
     let read_sequence = u32::from_le_bytes(buffer[0..4].try_into().unwrap());
     assert_eq!(read_sequence, next_sequence);
@@ -288,7 +284,6 @@ fn verify_packet(buffer: &[u8], next_sequence: u32) {
     assert_eq!(hash, buffer[4..24]);
 }
 
-#[tracing::instrument(level = "debug", skip(buffer))]
 fn sha1_hash(buffer: &[u8]) -> Vec<u8> {
     let mut hasher = Sha1::new();
     hasher.update(&buffer[24..]);

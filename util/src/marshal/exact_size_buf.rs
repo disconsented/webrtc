@@ -21,13 +21,11 @@ pub trait ExactSizeBuf {
 }
 
 impl ExactSizeBuf for Bytes {
-    #[tracing::instrument(level = "debug", skip(self))]
     #[inline]
     fn len(&self) -> usize {
         Bytes::len(self)
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     #[inline]
     fn is_empty(&self) -> bool {
         Bytes::is_empty(self)
@@ -35,13 +33,11 @@ impl ExactSizeBuf for Bytes {
 }
 
 impl ExactSizeBuf for BytesMut {
-    #[tracing::instrument(level = "debug", skip(self))]
     #[inline]
     fn len(&self) -> usize {
         BytesMut::len(self)
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     #[inline]
     fn is_empty(&self) -> bool {
         BytesMut::is_empty(self)
@@ -49,13 +45,11 @@ impl ExactSizeBuf for BytesMut {
 }
 
 impl ExactSizeBuf for [u8] {
-    #[tracing::instrument(level = "debug", skip(self))]
     #[inline]
     fn len(&self) -> usize {
         <[u8]>::len(self)
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     #[inline]
     fn is_empty(&self) -> bool {
         <[u8]>::is_empty(self)
@@ -67,7 +61,6 @@ where
     T: ExactSizeBuf,
     U: ExactSizeBuf,
 {
-    #[tracing::instrument(level = "debug", skip(self))]
     fn len(&self) -> usize {
         let first_ref = self.first_ref();
         let last_ref = self.last_ref();
@@ -75,7 +68,6 @@ where
         first_ref.len() + last_ref.len()
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn is_empty(&self) -> bool {
         let first_ref = self.first_ref();
         let last_ref = self.last_ref();
@@ -88,7 +80,6 @@ impl<T> ExactSizeBuf for Take<T>
 where
     T: ExactSizeBuf,
 {
-    #[tracing::instrument(level = "debug", skip(self))]
     fn len(&self) -> usize {
         let inner_ref = self.get_ref();
         let limit = self.limit();
@@ -96,7 +87,6 @@ where
         limit.min(inner_ref.len())
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn is_empty(&self) -> bool {
         let inner_ref = self.get_ref();
         let limit = self.limit();

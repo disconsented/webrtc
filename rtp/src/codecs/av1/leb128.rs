@@ -1,6 +1,5 @@
 use bytes::{BufMut, Bytes, BytesMut};
 
-#[tracing::instrument(level = "debug", skip(val))]
 pub fn encode_leb128(mut val: u32) -> u32 {
     let mut b = 0;
     loop {
@@ -15,7 +14,6 @@ pub fn encode_leb128(mut val: u32) -> u32 {
     }
 }
 
-#[tracing::instrument(level = "debug", skip(val))]
 pub fn decode_leb128(mut val: u64) -> u32 {
     let mut b = 0;
     loop {
@@ -28,7 +26,6 @@ pub fn decode_leb128(mut val: u64) -> u32 {
     }
 }
 
-#[tracing::instrument(level = "debug", skip(bytes))]
 pub fn read_leb128(bytes: &Bytes) -> (u32, usize) {
     let mut encoded = 0;
     for i in 0..bytes.len() {
@@ -41,7 +38,6 @@ pub fn read_leb128(bytes: &Bytes) -> (u32, usize) {
     (0, 0)
 }
 
-#[tracing::instrument(level = "debug", skip(value))]
 pub fn leb128_size(value: u32) -> usize {
     let mut size = 0;
     let mut value = value;
@@ -57,7 +53,6 @@ pub trait BytesMutExt {
 }
 
 impl BytesMutExt for BytesMut {
-    #[tracing::instrument(level = "debug", skip(self, n))]
     fn put_leb128(&mut self, n: u32) {
         let mut encoded = encode_leb128(n);
         while encoded >= 0b_1000_0000 {

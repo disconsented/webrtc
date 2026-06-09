@@ -59,7 +59,6 @@ const ICE_CONNECTION_STATE_CLOSED_STR: &str = "closed";
 
 /// takes a string and converts it to iceconnection_state
 impl From<&str> for RTCIceConnectionState {
-    #[tracing::instrument(level = "debug", skip(raw))]
     fn from(raw: &str) -> Self {
         match raw {
             ICE_CONNECTION_STATE_NEW_STR => RTCIceConnectionState::New,
@@ -75,7 +74,6 @@ impl From<&str> for RTCIceConnectionState {
 }
 
 impl From<u8> for RTCIceConnectionState {
-    #[tracing::instrument(level = "debug", skip(v))]
     fn from(v: u8) -> Self {
         match v {
             1 => RTCIceConnectionState::New,
@@ -91,7 +89,6 @@ impl From<u8> for RTCIceConnectionState {
 }
 
 impl fmt::Display for RTCIceConnectionState {
-    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let s = match *self {
             RTCIceConnectionState::New => ICE_CONNECTION_STATE_NEW_STR,

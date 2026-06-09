@@ -14,7 +14,6 @@ pub struct ConnectionInformation {
 }
 
 impl fmt::Display for ConnectionInformation {
-    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         if let Some(address) = &self.address {
             write!(f, "{} {} {}", self.network_type, self.address_type, address,)
@@ -33,7 +32,6 @@ pub struct Address {
 }
 
 impl fmt::Display for Address {
-    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.address)?;
         if let Some(t) = &self.ttl {
@@ -56,7 +54,6 @@ pub struct Bandwidth {
 }
 
 impl fmt::Display for Bandwidth {
-    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let output = if self.experimental { "X-" } else { "" };
         write!(f, "{}{}:{}", output, self.bandwidth_type, self.bandwidth)
@@ -75,7 +72,6 @@ pub struct Attribute {
 }
 
 impl fmt::Display for Attribute {
-    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         if let Some(value) = &self.value {
             write!(f, "{}:{}", self.key, value)
@@ -86,13 +82,11 @@ impl fmt::Display for Attribute {
 }
 
 impl Attribute {
-    #[tracing::instrument(level = "debug", skip(key, value))]
     /// new constructs a new attribute
     pub fn new(key: String, value: Option<String>) -> Self {
         Attribute { key, value }
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// is_ice_candidate returns true if the attribute key equals "candidate".
     pub fn is_ice_candidate(&self) -> bool {
         self.key.as_str() == "candidate"

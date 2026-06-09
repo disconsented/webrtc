@@ -31,7 +31,6 @@ pub struct RelayAddressGeneratorRanges {
 
 #[async_trait]
 impl RelayAddressGenerator for RelayAddressGeneratorRanges {
-    #[tracing::instrument(level = "debug", skip(self))]
     fn validate(&self) -> Result<()> {
         if self.min_port == 0 {
             Err(Error::ErrMinPortNotZero)
@@ -46,7 +45,6 @@ impl RelayAddressGenerator for RelayAddressGeneratorRanges {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, use_ipv4, requested_port))]
     async fn allocate_conn(
         &self,
         use_ipv4: bool,

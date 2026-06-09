@@ -32,7 +32,6 @@ struct SequenceTransformerInner {
 }
 
 impl SequenceTransformer {
-    #[tracing::instrument(level = "debug", skip())]
     /// Creates a new [`SequenceTransformer`].
     pub(crate) fn new() -> Self {
         Self(util::sync::Mutex::new(SequenceTransformerInner {
@@ -44,7 +43,6 @@ impl SequenceTransformer {
         }))
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// Enables this [`SequenceTransformer`].
     ///
     /// # Errors
@@ -68,14 +66,12 @@ impl SequenceTransformer {
             .ok_or(Error::ErrRTPSenderDataSent)
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// Indicates [`SequenceTransformer`] about necessity of recalculating
     /// `offset`.
     pub(crate) fn reset_offset(&self) {
         self.0.lock().reset_needed = true;
     }
 
-    #[tracing::instrument(level = "debug", skip(self, raw_sn))]
     /// Gets [`Some`] consistent `sequence number` if this [`SequenceTransformer`] is
     /// enabled or [`None`] if it is not.
     ///
@@ -116,7 +112,6 @@ pub(crate) struct SrtpWriterFuture {
 }
 
 impl SrtpWriterFuture {
-    #[tracing::instrument(level = "debug", skip(self, return_when_no_srtp))]
     async fn init(&self, return_when_no_srtp: bool) -> Result<()> {
         if return_when_no_srtp {
             {
@@ -165,7 +160,6 @@ impl SrtpWriterFuture {
         Ok(())
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     pub async fn close(&self) -> Result<()> {
         if self.closed.load(Ordering::SeqCst) {
             return Ok(());
@@ -183,7 +177,6 @@ impl SrtpWriterFuture {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, b))]
     pub async fn read(&self, b: &mut [u8]) -> Result<usize> {
         {
             let stream = {
@@ -210,7 +203,6 @@ impl SrtpWriterFuture {
         Ok(0)
     }
 
-    #[tracing::instrument(level = "debug", skip(self, pkt))]
     pub async fn write_rtp(&self, pkt: &rtp::packet::Packet) -> Result<usize> {
         {
             let session = {
@@ -237,7 +229,6 @@ impl SrtpWriterFuture {
         Ok(0)
     }
 
-    #[tracing::instrument(level = "debug", skip(self, b))]
     pub async fn write(&self, b: &Bytes) -> Result<usize> {
         {
             let session = {
@@ -269,7 +260,6 @@ type IResult<T> = std::result::Result<T, interceptor::Error>;
 
 #[async_trait]
 impl RTCPReader for SrtpWriterFuture {
-    #[tracing::instrument(level = "debug", skip(self, buf, a))]
     async fn read(
         &self,
         buf: &mut [u8],
@@ -284,7 +274,6 @@ impl RTCPReader for SrtpWriterFuture {
 
 #[async_trait]
 impl RTPWriter for SrtpWriterFuture {
-    #[tracing::instrument(level = "debug", skip(self, pkt, _a))]
     async fn write(&self, pkt: &rtp::packet::Packet, _a: &Attributes) -> IResult<usize> {
         Ok(
             match self.seq_trans.seq_number(pkt.header.sequence_number) {

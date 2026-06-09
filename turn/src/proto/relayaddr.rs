@@ -21,7 +21,6 @@ pub struct RelayedAddress {
 }
 
 impl Default for RelayedAddress {
-    #[tracing::instrument(level = "debug", skip())]
     fn default() -> Self {
         RelayedAddress {
             ip: IpAddr::V4(Ipv4Addr::from(0)),
@@ -31,7 +30,6 @@ impl Default for RelayedAddress {
 }
 
 impl fmt::Display for RelayedAddress {
-    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self.ip {
             IpAddr::V4(_) => write!(f, "{}:{}", self.ip, self.port),
@@ -41,7 +39,6 @@ impl fmt::Display for RelayedAddress {
 }
 
 impl Setter for RelayedAddress {
-    #[tracing::instrument(level = "debug", skip(self, m))]
     /// Adds `XOR-PEER-ADDRESS` to message.
     fn add_to(&self, m: &mut Message) -> Result<(), stun::Error> {
         let a = XorMappedAddress {
@@ -53,7 +50,6 @@ impl Setter for RelayedAddress {
 }
 
 impl Getter for RelayedAddress {
-    #[tracing::instrument(level = "debug", skip(self, m))]
     /// Decodes `XOR-PEER-ADDRESS` from message.
     fn get_from(&mut self, m: &Message) -> Result<(), stun::Error> {
         let mut a = XorMappedAddress::default();

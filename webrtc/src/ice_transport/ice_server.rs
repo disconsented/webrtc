@@ -18,18 +18,15 @@ pub struct RTCIceServer {
 }
 
 impl RTCIceServer {
-    #[tracing::instrument(level = "debug", skip(self, url_str))]
     pub(crate) fn parse_url(&self, url_str: &str) -> Result<ice::url::Url> {
         Ok(ice::url::Url::parse_url(url_str)?)
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     pub(crate) fn validate(&self) -> Result<()> {
         self.urls()?;
         Ok(())
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     pub(crate) fn urls(&self) -> Result<Vec<ice::url::Url>> {
         let mut urls = vec![];
 

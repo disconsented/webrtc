@@ -352,7 +352,6 @@ fn test_rfc_8285_one_byte_multiple_extensions_with_padding() -> Result<()> {
     Ok(())
 }
 
-#[tracing::instrument(level = "debug", skip())]
 fn test_rfc_8285_one_byte_multiple_extension() -> Result<()> {
     //  0                   1                   2                   3
     //  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
@@ -411,7 +410,6 @@ fn test_rfc_8285_one_byte_multiple_extension() -> Result<()> {
     Ok(())
 }
 
-#[tracing::instrument(level = "debug", skip())]
 fn test_rfc_8285_two_byte_extension() -> Result<()> {
     let raw_pkt = Bytes::from_static(&[
         0x90, 0xe0, 0x69, 0x8f, 0xd9, 0xc2, 0x93, 0xda, 0x1c, 0x64, 0x27, 0x82, 0x10, 0x00, 0x00,
@@ -452,7 +450,6 @@ fn test_rfc_8285_two_byte_extension() -> Result<()> {
     Ok(())
 }
 
-#[tracing::instrument(level = "debug", skip())]
 fn test_rfc8285_two_byte_multiple_extension_with_padding() -> Result<()> {
     // 0                   1                   2                   3
     // 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
@@ -498,7 +495,6 @@ fn test_rfc8285_two_byte_multiple_extension_with_padding() -> Result<()> {
     Ok(())
 }
 
-#[tracing::instrument(level = "debug", skip())]
 fn test_rfc8285_two_byte_multiple_extension_with_large_extension() -> Result<()> {
     // 0                   1                   2                   3
     // 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
@@ -567,7 +563,6 @@ fn test_rfc8285_two_byte_multiple_extension_with_large_extension() -> Result<()>
     Ok(())
 }
 
-#[tracing::instrument(level = "debug", skip())]
 fn test_rfc8285_get_extension_returns_nil_when_extension_disabled() -> Result<()> {
     let payload = Bytes::from_static(&[
         // Payload
@@ -597,7 +592,6 @@ fn test_rfc8285_get_extension_returns_nil_when_extension_disabled() -> Result<()
     Ok(())
 }
 
-#[tracing::instrument(level = "debug", skip())]
 fn test_rfc8285_del_extension() -> Result<()> {
     let payload = Bytes::from_static(&[
         // Payload
@@ -640,7 +634,6 @@ fn test_rfc8285_del_extension() -> Result<()> {
     Ok(())
 }
 
-#[tracing::instrument(level = "debug", skip())]
 fn test_rfc8285_get_extension_ids() {
     let payload = Bytes::from_static(&[0x98u8, 0x36, 0xbe, 0x88, 0x9e]);
 
@@ -687,7 +680,6 @@ fn test_rfc8285_get_extension_ids() {
     }
 }
 
-#[tracing::instrument(level = "debug", skip())]
 fn test_rfc8285_get_extension_ids_return_empty_when_extension_disabled() {
     let payload = Bytes::from_static(&[0x98u8, 0x36, 0xbe, 0x88, 0x9e]);
 
@@ -710,7 +702,6 @@ fn test_rfc8285_get_extension_ids_return_empty_when_extension_disabled() {
     assert!(ids.is_empty(), "Extensions should not exist");
 }
 
-#[tracing::instrument(level = "debug", skip())]
 fn test_rfc8285_del_extension_returns_error_when_extensions_disabled() {
     let payload = Bytes::from_static(&[0x98u8, 0x36, 0xbe, 0x88, 0x9e]);
 
@@ -736,7 +727,6 @@ fn test_rfc8285_del_extension_returns_error_when_extensions_disabled() {
     );
 }
 
-#[tracing::instrument(level = "debug", skip())]
 fn test_rfc8285_one_byte_set_extension_should_enable_extension_when_adding() {
     let payload = Bytes::from_static(&[0x98u8, 0x36, 0xbe, 0x88, 0x9e]);
 
@@ -776,7 +766,6 @@ fn test_rfc8285_one_byte_set_extension_should_enable_extension_when_adding() {
     )
 }
 
-#[tracing::instrument(level = "debug", skip())]
 fn test_rfc8285_set_extension_should_set_correct_extension_profile_for_16_byte_extension() {
     let payload = Bytes::from_static(&[0x98u8, 0x36, 0xbe, 0x88, 0x9e]);
 
@@ -809,7 +798,6 @@ fn test_rfc8285_set_extension_should_set_correct_extension_profile_for_16_byte_e
     );
 }
 
-#[tracing::instrument(level = "debug", skip())]
 fn test_rfc8285_set_extension_should_update_existing_extension() -> Result<()> {
     let payload = Bytes::from_static(&[0x98u8, 0x36, 0xbe, 0x88, 0x9e]);
 
@@ -851,7 +839,6 @@ fn test_rfc8285_set_extension_should_update_existing_extension() -> Result<()> {
     Ok(())
 }
 
-#[tracing::instrument(level = "debug", skip())]
 fn test_rfc8285_one_byte_set_extension_should_error_when_invalid_id_provided() {
     let payload = Bytes::from_static(&[0x98u8, 0x36, 0xbe, 0x88, 0x9e]);
 
@@ -889,7 +876,6 @@ fn test_rfc8285_one_byte_set_extension_should_error_when_invalid_id_provided() {
     );
 }
 
-#[tracing::instrument(level = "debug", skip())]
 fn test_rfc8285_one_byte_extension_terminate_processing_when_reserved_id_encountered() -> Result<()>
 {
     let reserved_id_pkt = Bytes::from_static(&[
@@ -911,7 +897,6 @@ fn test_rfc8285_one_byte_extension_terminate_processing_when_reserved_id_encount
     Ok(())
 }
 
-#[tracing::instrument(level = "debug", skip())]
 fn test_rfc8285_one_byte_set_extension_should_error_when_payload_too_large() {
     let payload = Bytes::from_static(&[0x98u8, 0x36, 0xbe, 0x88, 0x9e]);
 
@@ -949,7 +934,6 @@ fn test_rfc8285_one_byte_set_extension_should_error_when_payload_too_large() {
     );
 }
 
-#[tracing::instrument(level = "debug", skip())]
 fn test_rfc8285_two_bytes_set_extension_should_enable_extension_when_adding() -> Result<()> {
     let payload = Bytes::from_static(&[0x98u8, 0x36, 0xbe, 0x88, 0x9e]);
 
@@ -995,7 +979,6 @@ fn test_rfc8285_two_bytes_set_extension_should_enable_extension_when_adding() ->
     Ok(())
 }
 
-#[tracing::instrument(level = "debug", skip())]
 fn test_rfc8285_two_byte_set_extension_should_update_existing_extension() -> Result<()> {
     let payload = Bytes::from_static(&[0x98u8, 0x36, 0xbe, 0x88, 0x9e]);
 
@@ -1037,7 +1020,6 @@ fn test_rfc8285_two_byte_set_extension_should_update_existing_extension() -> Res
     Ok(())
 }
 
-#[tracing::instrument(level = "debug", skip())]
 fn test_rfc8285_two_byte_set_extension_should_error_when_payload_too_large() {
     let payload = Bytes::from_static(&[0x98u8, 0x36, 0xbe, 0x88, 0x9e]);
 
@@ -1092,7 +1074,6 @@ fn test_rfc8285_two_byte_set_extension_should_error_when_payload_too_large() {
     );
 }
 
-#[tracing::instrument(level = "debug", skip())]
 fn test_rfc3550_set_extension_should_error_when_non_zero() -> Result<()> {
     let payload = Bytes::from_static(&[0x98u8, 0x36, 0xbe, 0x88, 0x9e]);
 
@@ -1127,7 +1108,6 @@ fn test_rfc3550_set_extension_should_error_when_non_zero() -> Result<()> {
     Ok(())
 }
 
-#[tracing::instrument(level = "debug", skip())]
 fn test_rfc3550_set_extension_should_error_when_setting_non_zero_id() {
     let payload = Bytes::from_static(&[0x98u8, 0x36, 0xbe, 0x88, 0x9e]);
 
@@ -1158,7 +1138,6 @@ struct Cases {
     err: Error,
 }
 
-#[tracing::instrument(level = "debug", skip())]
 fn test_unmarshal_error_handling() {
     let mut cases = HashMap::new();
 
@@ -1232,7 +1211,6 @@ fn test_unmarshal_error_handling() {
     }
 }
 
-#[tracing::instrument(level = "debug", skip())]
 fn test_round_trip() -> Result<()> {
     let raw_pkt = Bytes::from_static(&[
         0x00u8, 0x10, 0x23, 0x45, 0x12, 0x34, 0x45, 0x67, 0xCC, 0xDD, 0xEE, 0xFF, 0x00, 0x11, 0x22,

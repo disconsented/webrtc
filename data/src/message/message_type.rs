@@ -16,14 +16,12 @@ pub enum MessageType {
 }
 
 impl MarshalSize for MessageType {
-    #[tracing::instrument(level = "debug", skip(self))]
     fn marshal_size(&self) -> usize {
         MESSAGE_TYPE_LEN
     }
 }
 
 impl Marshal for MessageType {
-    #[tracing::instrument(level = "debug", skip(self, buf))]
     fn marshal_to(&self, mut buf: &mut [u8]) -> Result<usize> {
         let b = match self {
             MessageType::DataChannelAck => MESSAGE_TYPE_ACK,
@@ -37,7 +35,6 @@ impl Marshal for MessageType {
 }
 
 impl Unmarshal for MessageType {
-    #[tracing::instrument(level = "debug", skip(buf))]
     fn unmarshal<B>(buf: &mut B) -> Result<Self>
     where
         B: Buf,

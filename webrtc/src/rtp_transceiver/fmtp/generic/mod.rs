@@ -5,7 +5,6 @@ use unicase::UniCase;
 
 use super::*;
 
-#[tracing::instrument(level = "debug", skip(a, b))]
 /// fmtp_consist checks that two FMTP parameters are not inconsistent.
 fn fmtp_consist(a: &HashMap<String, String>, b: &HashMap<String, String>) -> bool {
     for (k, v) in a {
@@ -32,12 +31,10 @@ pub(crate) struct GenericFmtp {
 }
 
 impl Fmtp for GenericFmtp {
-    #[tracing::instrument(level = "debug", skip(self))]
     fn mime_type(&self) -> &str {
         self.mime_type.as_str()
     }
 
-    #[tracing::instrument(level = "debug", skip(self, f))]
     /// Match returns true if g and b are compatible fmtp descriptions
     /// The generic implementation is used for MimeTypes that are not defined
     fn match_fmtp(&self, f: &dyn Fmtp) -> bool {
@@ -52,17 +49,14 @@ impl Fmtp for GenericFmtp {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, key))]
     fn parameter(&self, key: &str) -> Option<&String> {
         self.parameters.get(key)
     }
 
-    #[tracing::instrument(level = "debug", skip(self, other))]
     fn equal(&self, other: &dyn Fmtp) -> bool {
         other.as_any().downcast_ref::<GenericFmtp>() == Some(self)
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn as_any(&self) -> &dyn Any {
         self
     }

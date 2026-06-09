@@ -70,7 +70,6 @@ pub(crate) struct PeerConnectionInternal {
 }
 
 impl PeerConnectionInternal {
-    #[tracing::instrument(level = "debug", skip(api, interceptor, stats_interceptor, configuration))]
     pub(super) async fn new(
         api: &API,
         interceptor: Weak<dyn Interceptor + Send + Sync>,
@@ -211,7 +210,6 @@ impl PeerConnectionInternal {
         Ok((pc, configuration))
     }
 
-    #[tracing::instrument(level = "debug", skip(self, is_renegotiation, remote_desc))]
     pub(super) async fn start_rtp(
         self: &Arc<Self>,
         is_renegotiation: bool,
@@ -315,7 +313,6 @@ impl PeerConnectionInternal {
         Ok(())
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// undeclared_media_processor handles RTP/RTCP packets that don't match any a:ssrc lines
     fn undeclared_media_processor(self: &Arc<Self>) {
         let dtls_transport = Arc::clone(&self.dtls_transport);
@@ -416,7 +413,6 @@ impl PeerConnectionInternal {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, incoming_tracks, local_transceivers, is_renegotiation))]
     /// start_rtp_receivers opens knows inbound SRTP streams from the remote_description
     async fn start_rtp_receivers(
         self: &Arc<Self>,
@@ -504,7 +500,6 @@ impl PeerConnectionInternal {
         Ok(())
     }
 
-    #[tracing::instrument(level = "debug", skip(self, local_port, remote_port, sctp_transport_capabilities))]
     /// Start SCTP subsystem
     async fn start_sctp(
         &self,
@@ -549,7 +544,6 @@ impl PeerConnectionInternal {
             .fetch_add(opened_dc_count, Ordering::SeqCst);
     }
 
-    #[tracing::instrument(level = "debug", skip(self, kind, init))]
     pub(super) async fn add_transceiver_from_kind(
         &self,
         kind: RTPCodecType,
@@ -623,7 +617,6 @@ impl PeerConnectionInternal {
         Ok(t)
     }
 
-    #[tracing::instrument(level = "debug", skip(self, direction, track))]
     pub(super) async fn new_transceiver_from_track(
         &self,
         direction: RTCRtpTransceiverDirection,
@@ -671,7 +664,6 @@ impl PeerConnectionInternal {
         .await)
     }
 
-    #[tracing::instrument(level = "debug", skip(self, t))]
     /// add_rtp_transceiver appends t into rtp_transceivers
     /// and fires onNegotiationNeeded;
     /// caller of this method should hold `self.mu` lock
@@ -683,13 +675,11 @@ impl PeerConnectionInternal {
         self.trigger_negotiation_needed().await;
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// Helper to trigger a negotiation needed.
     pub(crate) async fn trigger_negotiation_needed(&self) {
         RTCPeerConnection::do_negotiation_needed(self.create_negotiation_needed_params()).await;
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// Creates the parameters needed to trigger a negotiation needed.
     fn create_negotiation_needed_params(&self) -> NegotiationNeededParams {
         NegotiationNeededParams {
@@ -708,7 +698,6 @@ impl PeerConnectionInternal {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     pub(crate) fn make_negotiation_needed_trigger(
         &self,
     ) -> impl Fn() -> Pin<Box<dyn Future<Output = ()> + Send + Sync>> + Send + Sync {
@@ -722,7 +711,6 @@ impl PeerConnectionInternal {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     pub(super) async fn remote_description(&self) -> Option<RTCSessionDescription> {
         let pending_remote_description = self.pending_remote_description.lock().await;
         if pending_remote_description.is_some() {
@@ -733,12 +721,10 @@ impl PeerConnectionInternal {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, f))]
     pub(super) fn set_gather_complete_handler(&self, f: OnGatheringCompleteHdlrFn) {
         self.ice_gatherer.on_gathering_complete(f);
     }
 
-    #[tracing::instrument(level = "debug", skip(self, ice_role, dtls_role, remote_ufrag, remote_pwd, fingerprint, fingerprint_hash))]
     /// Start all transports. PeerConnection now has enough state
     pub(super) async fn start_transports(
         self: &Arc<Self>,
@@ -790,7 +776,6 @@ impl PeerConnectionInternal {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, local_transceivers, use_identity))]
     /// generate_unmatched_sdp generates an SDP that doesn't take remote state into account
     /// This is used for the initial call for CreateOffer
     pub(super) async fn generate_unmatched_sdp(
@@ -862,7 +847,6 @@ impl PeerConnectionInternal {
         .await
     }
 
-    #[tracing::instrument(level = "debug", skip(self, local_transceivers, use_identity, include_unmatched, connection_role))]
     /// generate_matched_sdp generates a SDP and takes the remote state into account
     /// this is used everytime we have a remote_description
     pub(super) async fn generate_matched_sdp(
@@ -996,7 +980,6 @@ impl PeerConnectionInternal {
         .await
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     pub(super) fn ice_gathering_state(&self) -> RTCIceGatheringState {
         match self.ice_gatherer.state() {
             RTCIceGathererState::New => RTCIceGatheringState::New,
@@ -1005,7 +988,6 @@ impl PeerConnectionInternal {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, ssrc, remote_description))]
     async fn handle_undeclared_ssrc(
         self: &Arc<Self>,
         ssrc: SSRC,
@@ -1077,7 +1059,6 @@ impl PeerConnectionInternal {
         Ok(true)
     }
 
-    #[tracing::instrument(level = "debug", skip(self, rtp_stream, payload_type))]
     async fn handle_incoming_rtp_stream(
         self: &Arc<Self>,
         rtp_stream: Arc<Stream>,
@@ -1223,7 +1204,6 @@ impl PeerConnectionInternal {
         Err(Error::ErrPeerConnSimulcastIncomingSSRCFailed)
     }
 
-    #[tracing::instrument(level = "debug", skip(receive_mtu, incoming, receiver, transceiver, on_track_handler))]
     async fn start_receiver(
         receive_mtu: usize,
         incoming: &TrackDetails,
@@ -1268,7 +1248,6 @@ impl PeerConnectionInternal {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, desc))]
     /// has_local_description_changed returns whether local media (rtp_transceivers) has changed
     /// caller of this method should hold `pc.mu` lock
     pub(super) async fn has_local_description_changed(&self, desc: &RTCSessionDescription) -> bool {
@@ -1286,7 +1265,6 @@ impl PeerConnectionInternal {
         false
     }
 
-    #[tracing::instrument(level = "debug", skip(self, stats_id))]
     pub(super) async fn get_stats(&self, stats_id: String) -> StatsCollector {
         let collector = StatsCollector::new();
         let transceivers = { self.rtp_transceivers.lock().await.clone() };
@@ -1304,7 +1282,6 @@ impl PeerConnectionInternal {
         collector
     }
 
-    #[tracing::instrument(level = "debug", skip(self, collector, transceivers))]
     async fn collect_inbound_stats(
         &self,
         collector: &StatsCollector,
@@ -1430,7 +1407,6 @@ impl PeerConnectionInternal {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, collector, transceivers))]
     async fn collect_outbound_stats(
         &self,
         collector: &StatsCollector,
@@ -1586,7 +1562,6 @@ type IResult<T> = std::result::Result<T, interceptor::Error>;
 
 #[async_trait]
 impl RTCPWriter for PeerConnectionInternal {
-    #[tracing::instrument(level = "debug", skip(self, pkts, _a))]
     async fn write(
         &self,
         pkts: &[Box<dyn rtcp::packet::Packet + Send + Sync>],
@@ -1596,7 +1571,6 @@ impl RTCPWriter for PeerConnectionInternal {
     }
 }
 
-#[tracing::instrument(level = "debug", skip(s))]
 fn capitalize(s: &str) -> String {
     let first = s
         .chars()
@@ -1611,7 +1585,6 @@ fn capitalize(s: &str) -> String {
     result
 }
 
-#[tracing::instrument(level = "debug", skip(header, mid_extension_id, sid_extension_id, rsid_extension_id))]
 fn get_stream_mid_rid(
     header: &rtp::header::Header,
     mid_extension_id: u8,

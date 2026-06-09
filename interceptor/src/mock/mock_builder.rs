@@ -11,14 +11,12 @@ pub struct MockBuilder {
 }
 
 impl MockBuilder {
-    #[tracing::instrument(level = "debug", skip(f))]
     pub fn new<F: (Fn(&str) -> MockBuilderResult) + Send + Sync + 'static>(f: F) -> Self {
         MockBuilder { build: Box::new(f) }
     }
 }
 
 impl InterceptorBuilder for MockBuilder {
-    #[tracing::instrument(level = "debug", skip(self, id))]
     fn build(&self, id: &str) -> MockBuilderResult {
         (self.build)(id)
     }

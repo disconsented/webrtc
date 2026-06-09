@@ -17,17 +17,14 @@ pub struct HandshakeMessageCertificateVerify {
 const HANDSHAKE_MESSAGE_CERTIFICATE_VERIFY_MIN_LENGTH: usize = 4;
 
 impl HandshakeMessageCertificateVerify {
-    #[tracing::instrument(level = "debug", skip(self))]
     pub fn handshake_type(&self) -> HandshakeType {
         HandshakeType::CertificateVerify
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     pub fn size(&self) -> usize {
         1 + 1 + 2 + self.signature.len()
     }
 
-    #[tracing::instrument(level = "debug", skip(self, writer))]
     pub fn marshal<W: Write>(&self, writer: &mut W) -> Result<()> {
         writer.write_u8(self.algorithm.hash as u8)?;
         writer.write_u8(self.algorithm.signature as u8)?;
@@ -37,7 +34,6 @@ impl HandshakeMessageCertificateVerify {
         Ok(writer.flush()?)
     }
 
-    #[tracing::instrument(level = "debug", skip(reader))]
     pub fn unmarshal<R: Read>(reader: &mut R) -> Result<Self> {
         let hash_algorithm = reader.read_u8()?.into();
         let signature_algorithm = reader.read_u8()?.into();

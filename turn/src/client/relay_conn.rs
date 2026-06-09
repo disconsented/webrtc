@@ -77,7 +77,6 @@ pub struct RelayConn<T: 'static + RelayConnObserver + Send + Sync> {
 }
 
 impl<T: 'static + RelayConnObserver + Send + Sync> RelayConn<T> {
-    #[tracing::instrument(level = "debug", skip(obs, config))]
     /// Creates a new [`RelayConn`].
     pub(crate) async fn new(obs: Arc<Mutex<T>>, config: RelayConnConfig) -> Self {
         log::debug!("initial lifetime: {} seconds", config.lifetime.as_secs());
@@ -106,17 +105,14 @@ impl<T: 'static + RelayConnObserver + Send + Sync> RelayConn<T> {
 
 #[async_trait]
 impl<T: RelayConnObserver + Send + Sync> Conn for RelayConn<T> {
-    #[tracing::instrument(level = "debug", skip(self, _addr))]
     async fn connect(&self, _addr: SocketAddr) -> Result<(), util::Error> {
         Err(io::Error::other("Not applicable").into())
     }
 
-    #[tracing::instrument(level = "debug", skip(self, _buf))]
     async fn recv(&self, _buf: &mut [u8]) -> Result<usize, util::Error> {
         Err(io::Error::other("Not applicable").into())
     }
 
-    #[tracing::instrument(level = "debug", skip(self, p))]
     /// Reads a packet from the connection,
     /// copying the payload into `p`. It returns the number of
     /// bytes copied into `p` and the return address that
@@ -150,12 +146,10 @@ impl<T: RelayConnObserver + Send + Sync> Conn for RelayConn<T> {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, _buf))]
     async fn send(&self, _buf: &[u8]) -> Result<usize, util::Error> {
         Err(io::Error::other("Not applicable").into())
     }
 
-    #[tracing::instrument(level = "debug", skip(self, p, addr))]
     /// Writes a packet with payload `p` to `addr`.
     /// It can be made to time out and return
     /// an Error with Timeout() == true after a fixed time limit;
@@ -169,18 +163,15 @@ impl<T: RelayConnObserver + Send + Sync> Conn for RelayConn<T> {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// Returns the local network address.
     fn local_addr(&self) -> Result<SocketAddr, util::Error> {
         Ok(self.relayed_addr)
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn remote_addr(&self) -> Option<SocketAddr> {
         None
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// Closes the connection.
     /// Any blocked [`Self::recv_from()`] or [`Self::send_to()`] operations
     /// will be unblocked and return errors.
@@ -196,14 +187,12 @@ impl<T: RelayConnObserver + Send + Sync> Conn for RelayConn<T> {
         Ok(())
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn as_any(&self) -> &(dyn std::any::Any + Send + Sync) {
         self
     }
 }
 
 impl<T: RelayConnObserver + Send + Sync> RelayConnInternal<T> {
-    #[tracing::instrument(level = "debug", skip(obs, config))]
     /// Creates a new [`RelayConnInternal`].
     fn new(obs: Arc<Mutex<T>>, config: RelayConnConfig) -> Self {
         RelayConnInternal {
@@ -217,7 +206,6 @@ impl<T: RelayConnObserver + Send + Sync> RelayConnInternal<T> {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, p, addr))]
     /// Writes a packet with payload `p` to `addr`.
     /// It can be made to time out and return
     /// an Error with Timeout() == true after a fixed time limit;
@@ -370,7 +358,6 @@ impl<T: RelayConnObserver + Send + Sync> RelayConnInternal<T> {
         self.send_channel_data(p, number).await
     }
 
-    #[tracing::instrument(level = "debug", skip(self, perm, addr))]
     /// This func-block would block, per destination IP (, or perm), until
     /// the perm state becomes "requested". Purpose of this is to guarantee
     /// the order of packets (within the same perm).
@@ -390,7 +377,6 @@ impl<T: RelayConnObserver + Send + Sync> RelayConnInternal<T> {
         Ok(())
     }
 
-    #[tracing::instrument(level = "debug", skip(self, data, ch_num))]
     async fn send_channel_data(&self, data: &[u8], ch_num: u16) -> Result<usize, Error> {
         let mut ch_data = proto::chandata::ChannelData {
             data: data.to_vec(),
@@ -403,7 +389,6 @@ impl<T: RelayConnObserver + Send + Sync> RelayConnInternal<T> {
         Ok(obs.write_to(&ch_data.raw, &obs.turn_server_addr()).await?)
     }
 
-    #[tracing::instrument(level = "debug", skip(self, addrs))]
     async fn create_permissions(&mut self, addrs: &[SocketAddr]) -> Result<(), Error> {
         let res = {
             let msg = {
@@ -455,7 +440,6 @@ impl<T: RelayConnObserver + Send + Sync> RelayConnInternal<T> {
         Ok(())
     }
 
-    #[tracing::instrument(level = "debug", skip(self, msg))]
     pub fn set_nonce_from_msg(&mut self, msg: &Message) {
         // Update nonce
         match Nonce::get_from_as(msg, ATTR_NONCE) {
@@ -467,7 +451,6 @@ impl<T: RelayConnObserver + Send + Sync> RelayConnInternal<T> {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// Closes the connection.
     /// Any blocked `recv_from` or `send_to` operations will be unblocked and return errors.
     pub async fn close(&mut self) -> Result<(), Error> {
@@ -475,7 +458,6 @@ impl<T: RelayConnObserver + Send + Sync> RelayConnInternal<T> {
             .await
     }
 
-    #[tracing::instrument(level = "debug", skip(self, lifetime, dont_wait))]
     async fn refresh_allocation(
         &mut self,
         lifetime: Duration,
@@ -534,7 +516,6 @@ impl<T: RelayConnObserver + Send + Sync> RelayConnInternal<T> {
         Ok(())
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     async fn refresh_permissions(&mut self) -> Result<(), Error> {
         let addrs = self.perm_map.addrs();
         if addrs.is_empty() {
@@ -553,7 +534,6 @@ impl<T: RelayConnObserver + Send + Sync> RelayConnInternal<T> {
         Ok(())
     }
 
-    #[tracing::instrument(level = "debug", skip(rc_obs, bind_addr, bind_number, nonce, integrity))]
     async fn bind(
         rc_obs: Arc<Mutex<T>>,
         bind_addr: SocketAddr,
@@ -604,7 +584,6 @@ impl<T: RelayConnObserver + Send + Sync> RelayConnInternal<T> {
 
 #[async_trait]
 impl<T: RelayConnObserver + Send + Sync> PeriodicTimerTimeoutHandler for RelayConnInternal<T> {
-    #[tracing::instrument(level = "debug", skip(self, id))]
     async fn on_timeout(&mut self, id: TimerIdRefresh) {
         log::debug!("refresh timer {id:?} expired");
         match id {
@@ -643,7 +622,6 @@ impl<T: RelayConnObserver + Send + Sync> PeriodicTimerTimeoutHandler for RelayCo
     }
 }
 
-#[tracing::instrument(level = "debug", skip(addr))]
 fn socket_addr2peer_address(addr: &SocketAddr) -> proto::peeraddr::PeerAddress {
     proto::peeraddr::PeerAddress {
         ip: addr.ip(),

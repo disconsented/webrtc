@@ -40,19 +40,16 @@ struct FlamegraphProfiler<'a> {
 }
 
 impl<'a> FlamegraphProfiler<'a> {
-    #[tracing::instrument(level = "debug", skip(frequency))]
     fn new(frequency: c_int) -> Self {
         FlamegraphProfiler { frequency, active_profiler: None }
     }
 }
 
 impl<'a> Profiler for FlamegraphProfiler<'a> {
-    #[tracing::instrument(level = "debug", skip(self, _benchmark_id, _benchmark_dir))]
     fn start_profiling(&mut self, _benchmark_id: &str, _benchmark_dir: &Path) {
         self.active_profiler = Some(ProfilerGuard::new(self.frequency).unwrap());
     }
 
-    #[tracing::instrument(level = "debug", skip(self, _benchmark_id, benchmark_dir))]
     fn stop_profiling(&mut self, _benchmark_id: &str, benchmark_dir: &Path) {
         std::fs::create_dir_all(benchmark_dir).unwrap();
         let flamegraph_file = File::create(benchmark_dir.join("flamegraph.svg"))
@@ -72,13 +69,11 @@ impl<'a> Profiler for FlamegraphProfiler<'a> {
 // Strategies (mirror the implementations in data_channel/mod.rs)
 // ---------------------------------------------------------------------------
 
-#[tracing::instrument(level = "debug", skip(buffer, n))]
 /// Upstream default: alloc n bytes + memcpy n bytes.
 fn buf_copy(buffer: &mut Vec<u8>, n: usize) -> Bytes {
     Bytes::from(buffer[..n].to_vec())
 }
 
-#[tracing::instrument(level = "debug", skip(buffer, n))]
 /// Fixed handoff: alloc+zero 65535 bytes + swap.  Zero-fill (~450 ns) dominates for
 /// small messages; only competitive against buf_copy above ~65 KB.
 fn buf_handoff(buffer: &mut Vec<u8>, n: usize) -> Bytes {
@@ -88,7 +83,6 @@ fn buf_handoff(buffer: &mut Vec<u8>, n: usize) -> Bytes {
     Bytes::from(old)
 }
 
-#[tracing::instrument(level = "debug", skip(buffer, n))]
 /// Uninit handoff: alloc 65535 bytes (no zero-fill) + swap.
 ///
 /// # Safety
@@ -104,7 +98,6 @@ fn buf_handoff_uninit(buffer: &mut Vec<u8>, n: usize) -> Bytes {
     Bytes::from(old)
 }
 
-#[tracing::instrument(level = "debug", skip(buffer, n))]
 /// Adaptive: buf_copy below ADAPTIVE_THRESHOLD, buf_handoff_uninit above.
 fn buf_adaptive(buffer: &mut Vec<u8>, n: usize) -> Bytes {
     if n < ADAPTIVE_THRESHOLD {
@@ -118,7 +111,6 @@ fn buf_adaptive(buffer: &mut Vec<u8>, n: usize) -> Bytes {
 // Benchmark
 // ---------------------------------------------------------------------------
 
-#[tracing::instrument(level = "debug", skip(c))]
 fn bench_strategies(c: &mut Criterion) {
     // 64 B   — typical signaling / control messages
     // 1400 B — near Ethernet MTU, straddles the adaptive threshold

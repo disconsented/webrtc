@@ -20,7 +20,6 @@ pub struct Operation(
 );
 
 impl Operation {
-    #[tracing::instrument(level = "debug", skip(op, description))]
     pub(crate) fn new(
         op: impl FnMut() -> Pin<Box<dyn Future<Output = bool> + Send + 'static>> + Send + Sync + 'static,
         description: &'static str,
@@ -30,7 +29,6 @@ impl Operation {
 }
 
 impl fmt::Debug for Operation {
-    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_tuple("Operation")
             .field(&"_")
@@ -48,7 +46,6 @@ pub(crate) struct Operations {
 }
 
 impl Operations {
-    #[tracing::instrument(level = "debug", skip())]
     pub(crate) fn new() -> Self {
         let length = Arc::new(AtomicUsize::new(0));
         let (ops_tx, ops_rx) = mpsc::unbounded_channel();
@@ -67,7 +64,6 @@ impl Operations {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, op))]
     /// enqueue adds a new action to be executed. If there are no actions scheduled,
     /// the execution will start immediately in a new goroutine.
     pub(crate) async fn enqueue(&self, op: Operation) -> Result<()> {
@@ -78,7 +74,6 @@ impl Operations {
         Ok(())
     }
 
-    #[tracing::instrument(level = "debug", skip(op, ops_tx, length))]
     fn enqueue_inner(
         op: Operation,
         ops_tx: &Arc<mpsc::UnboundedSender<Operation>>,
@@ -90,13 +85,11 @@ impl Operations {
         Ok(())
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// is_empty checks if there are tasks in the queue
     pub(crate) async fn is_empty(&self) -> bool {
         self.length.load(Ordering::SeqCst) == 0
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// Done blocks until all currently enqueued operations are finished executing.
     /// For more complex synchronization, use Enqueue directly.
     pub(crate) async fn done(&self) {
@@ -114,7 +107,6 @@ impl Operations {
         wg.wait().await;
     }
 
-    #[tracing::instrument(level = "debug", skip(length, ops_tx, ops_rx, close_rx))]
     pub(crate) async fn start(
         length: Arc<AtomicUsize>,
         ops_tx: Arc<mpsc::UnboundedSender<Operation>>,
@@ -139,7 +131,6 @@ impl Operations {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     pub(crate) async fn close(&self) -> Result<()> {
         if let Some(close_tx) = &self.close_tx {
             close_tx.send(()).await?;

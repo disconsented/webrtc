@@ -52,7 +52,6 @@ const PEER_CONNECTION_STATE_FAILED_STR: &str = "failed";
 const PEER_CONNECTION_STATE_CLOSED_STR: &str = "closed";
 
 impl From<&str> for RTCPeerConnectionState {
-    #[tracing::instrument(level = "debug", skip(raw))]
     fn from(raw: &str) -> Self {
         match raw {
             PEER_CONNECTION_STATE_NEW_STR => RTCPeerConnectionState::New,
@@ -67,7 +66,6 @@ impl From<&str> for RTCPeerConnectionState {
 }
 
 impl From<u8> for RTCPeerConnectionState {
-    #[tracing::instrument(level = "debug", skip(v))]
     fn from(v: u8) -> Self {
         match v {
             1 => RTCPeerConnectionState::New,
@@ -82,7 +80,6 @@ impl From<u8> for RTCPeerConnectionState {
 }
 
 impl fmt::Display for RTCPeerConnectionState {
-    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let s = match *self {
             RTCPeerConnectionState::New => PEER_CONNECTION_STATE_NEW_STR,
@@ -109,7 +106,6 @@ pub(crate) enum NegotiationNeededState {
 }
 
 impl From<u8> for NegotiationNeededState {
-    #[tracing::instrument(level = "debug", skip(v))]
     fn from(v: u8) -> Self {
         match v {
             1 => NegotiationNeededState::Run,

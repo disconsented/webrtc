@@ -84,7 +84,6 @@ pub struct AgentInternal {
 }
 
 impl AgentInternal {
-    #[tracing::instrument(level = "debug", skip(config))]
     pub(super) fn new(config: &AgentConfig) -> (Self, ChanReceivers) {
         let (chan_state_tx, chan_state_rx) = mpsc::channel(1);
         let (chan_candidate_tx, chan_candidate_rx) = mpsc::channel(1);
@@ -167,7 +166,6 @@ impl AgentInternal {
         };
         (ai, chan_receivers)
     }
-    #[tracing::instrument(level = "debug", skip(self, is_controlling, remote_ufrag, remote_pwd))]
     pub(crate) async fn start_connectivity_checks(
         self: &Arc<Self>,
         is_controlling: bool,
@@ -203,7 +201,6 @@ impl AgentInternal {
         Ok(())
     }
 
-    #[tracing::instrument(level = "debug", skip(self, last_connection_state, checking_duration))]
     async fn contact(
         &self,
         last_connection_state: &mut ConnectionState,
@@ -238,7 +235,6 @@ impl AgentInternal {
         *last_connection_state = self.connection_state.load(Ordering::SeqCst).into();
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     async fn connectivity_checks(self: &Arc<Self>) {
         const ZERO_DURATION: Duration = Duration::from_secs(0);
         let mut last_connection_state = ConnectionState::Unspecified;
@@ -303,7 +299,6 @@ impl AgentInternal {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, new_state))]
     pub(crate) async fn update_connection_state(&self, new_state: ConnectionState) {
         if self.connection_state.load(Ordering::SeqCst) != new_state as u8 {
             // Connection has gone to failed, release all gathered candidates
@@ -330,7 +325,6 @@ impl AgentInternal {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, p))]
     pub(crate) async fn set_selected_pair(&self, p: Option<Arc<CandidatePair>>) {
         log::trace!(
             "[{}]: Set selected candidate pair: {:?}",
@@ -363,7 +357,6 @@ impl AgentInternal {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     pub(crate) async fn ping_all_candidates(&self) {
         log::trace!("[{}]: pinging all candidates", self.get_name(),);
 
@@ -411,7 +404,6 @@ impl AgentInternal {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, local, remote))]
     pub(crate) async fn add_pair(
         &self,
         local: Arc<dyn Candidate + Send + Sync>,
@@ -426,7 +418,6 @@ impl AgentInternal {
         checklist.push(p);
     }
 
-    #[tracing::instrument(level = "debug", skip(self, local, remote))]
     pub(crate) async fn find_pair(
         &self,
         local: &Arc<dyn Candidate + Send + Sync>,
@@ -441,7 +432,6 @@ impl AgentInternal {
         None
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// Checks if the selected pair is (still) valid.
     /// Note: the caller should hold the agent lock.
     pub(crate) async fn validate_selected_pair(&self) -> bool {
@@ -483,7 +473,6 @@ impl AgentInternal {
         valid
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// Sends STUN Binding Indications to the selected pair.
     /// if no packet has been sent on that pair in the last keepaliveInterval.
     /// Note: the caller should hold the agent lock.
@@ -520,12 +509,10 @@ impl AgentInternal {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn request_connectivity_check(&self) {
         let _ = self.force_candidate_contact_tx.try_send(true);
     }
 
-    #[tracing::instrument(level = "debug", skip(self, c))]
     /// Assumes you are holding the lock (must be execute using a.run).
     pub(crate) async fn add_remote_candidate(&self, c: &Arc<dyn Candidate + Send + Sync>) {
         let network_type = c.network_type();
@@ -562,7 +549,6 @@ impl AgentInternal {
         self.request_connectivity_check();
     }
 
-    #[tracing::instrument(level = "debug", skip(self, c))]
     pub(crate) async fn add_candidate(
         self: &Arc<Self>,
         c: &Arc<dyn Candidate + Send + Sync>,
@@ -623,7 +609,6 @@ impl AgentInternal {
         Ok(())
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     pub(crate) async fn close(&self) -> Result<()> {
         {
             let mut done_tx = self.done_tx.lock().await;
@@ -660,7 +645,6 @@ impl AgentInternal {
         Ok(())
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// Remove all candidates.
     /// This closes any listening sockets and removes both the local and remote candidate lists.
     ///
@@ -701,7 +685,6 @@ impl AgentInternal {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, network_type, addr))]
     pub(crate) async fn find_remote_candidate(
         &self,
         network_type: NetworkType,
@@ -720,7 +703,6 @@ impl AgentInternal {
         None
     }
 
-    #[tracing::instrument(level = "debug", skip(self, m, local, remote))]
     pub(crate) async fn send_binding_request(
         &self,
         m: &Message,
@@ -749,7 +731,6 @@ impl AgentInternal {
         self.send_stun(m, local, remote).await;
     }
 
-    #[tracing::instrument(level = "debug", skip(self, m, local, remote))]
     pub(crate) async fn send_binding_success(
         &self,
         m: &Message,
@@ -788,7 +769,6 @@ impl AgentInternal {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, filter_time))]
     /// Removes pending binding requests that are over `maxBindingRequestTimeout` old Let HTO be the
     /// transaction timeout, which SHOULD be 2*RTT if RTT is known or 500 ms otherwise.
     ///
@@ -819,7 +799,6 @@ impl AgentInternal {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, id))]
     /// Assert that the passed `TransactionID` is in our `pendingBindingRequests` and returns the
     /// destination, If the bindingRequest was valid remove it from our pending cache.
     pub(crate) async fn handle_inbound_binding_success(
@@ -839,7 +818,6 @@ impl AgentInternal {
         None
     }
 
-    #[tracing::instrument(level = "debug", skip(self, m, local, remote))]
     /// Processes STUN traffic from a remote candidate.
     pub(crate) async fn handle_inbound(
         &self,
@@ -994,7 +972,6 @@ impl AgentInternal {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, local, remote))]
     /// Processes non STUN traffic from a remote candidate, and returns true if it is an actual
     /// remote candidate.
     pub(crate) async fn validate_non_stun_traffic(
@@ -1010,7 +987,6 @@ impl AgentInternal {
             })
     }
 
-    #[tracing::instrument(level = "debug", skip(self, remote_ufrag, remote_pwd))]
     /// Sets the credentials of the remote agent.
     pub(crate) async fn set_remote_credentials(
         &self,
@@ -1029,7 +1005,6 @@ impl AgentInternal {
         Ok(())
     }
 
-    #[tracing::instrument(level = "debug", skip(self, msg, local, remote))]
     pub(crate) async fn send_stun(
         &self,
         msg: &Message,
@@ -1045,7 +1020,6 @@ impl AgentInternal {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, candidate, initialized_ch))]
     /// Runs the candidate using the provided connection.
     async fn start_candidate(
         self: &Arc<Self>,
@@ -1074,7 +1048,6 @@ impl AgentInternal {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, chan_state_rx, chan_candidate_rx, chan_candidate_pair_rx))]
     pub(super) fn start_on_connection_state_change_routine(
         self: &Arc<Self>,
         mut chan_state_rx: mpsc::Receiver<ConnectionState>,
@@ -1137,7 +1110,6 @@ impl AgentInternal {
         });
     }
 
-    #[tracing::instrument(level = "debug", skip(self, candidate, closed_ch_rx, initialized_ch, conn, addr))]
     async fn recv_loop(
         self: &Arc<Self>,
         candidate: Arc<dyn Candidate + Send + Sync>,
@@ -1175,7 +1147,6 @@ impl AgentInternal {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, c, buf, src_addr, addr))]
     async fn handle_inbound_candidate_msg(
         self: &Arc<Self>,
         c: &Arc<dyn Candidate + Send + Sync>,
@@ -1214,7 +1185,6 @@ impl AgentInternal {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     pub(crate) fn get_name(&self) -> &str {
         if self.is_controlling.load(Ordering::SeqCst) {
             "controlling"

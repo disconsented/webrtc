@@ -4,7 +4,6 @@ use crate::attributes::*;
 use crate::error::*;
 
 // check_size returns ErrAttrSizeInvalid if got is not equal to expected.
-#[tracing::instrument(level = "debug", skip(_at, got, expected))]
 pub fn check_size(_at: AttrType, got: usize, expected: usize) -> Result<()> {
     if got == expected {
         Ok(())
@@ -14,12 +13,10 @@ pub fn check_size(_at: AttrType, got: usize, expected: usize) -> Result<()> {
 }
 
 // is_attr_size_invalid returns true if error means that attribute size is invalid.
-#[tracing::instrument(level = "debug", skip(err))]
 pub fn is_attr_size_invalid(err: &Error) -> bool {
     Error::ErrAttributeSizeInvalid == *err
 }
 
-#[tracing::instrument(level = "debug", skip(got, expected))]
 pub(crate) fn check_hmac(got: &[u8], expected: &[u8]) -> Result<()> {
     if got.ct_eq(expected).unwrap_u8() != 1 {
         Err(Error::ErrIntegrityMismatch)
@@ -28,7 +25,6 @@ pub(crate) fn check_hmac(got: &[u8], expected: &[u8]) -> Result<()> {
     }
 }
 
-#[tracing::instrument(level = "debug", skip(got, expected))]
 pub(crate) fn check_fingerprint(got: u32, expected: u32) -> Result<()> {
     if got == expected {
         Ok(())
@@ -38,7 +34,6 @@ pub(crate) fn check_fingerprint(got: u32, expected: u32) -> Result<()> {
 }
 
 // check_overflow returns ErrAttributeSizeOverflow if got is bigger that max.
-#[tracing::instrument(level = "debug", skip(_at, got, max))]
 pub fn check_overflow(_at: AttrType, got: usize, max: usize) -> Result<()> {
     if got <= max {
         Ok(())
@@ -48,7 +43,6 @@ pub fn check_overflow(_at: AttrType, got: usize, max: usize) -> Result<()> {
 }
 
 // is_attr_size_overflow returns true if error means that attribute size is too big.
-#[tracing::instrument(level = "debug", skip(err))]
 pub fn is_attr_size_overflow(err: &Error) -> bool {
     Error::ErrAttributeSizeOverflow == *err
 }

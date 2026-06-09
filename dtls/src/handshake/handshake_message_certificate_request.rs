@@ -25,17 +25,14 @@ pub struct HandshakeMessageCertificateRequest {
 const HANDSHAKE_MESSAGE_CERTIFICATE_REQUEST_MIN_LENGTH: usize = 5;
 
 impl HandshakeMessageCertificateRequest {
-    #[tracing::instrument(level = "debug", skip(self))]
     pub fn handshake_type(&self) -> HandshakeType {
         HandshakeType::CertificateRequest
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     pub fn size(&self) -> usize {
         1 + self.certificate_types.len() + 2 + self.signature_hash_algorithms.len() * 2 + 2
     }
 
-    #[tracing::instrument(level = "debug", skip(self, writer))]
     pub fn marshal<W: Write>(&self, writer: &mut W) -> Result<()> {
         writer.write_u8(self.certificate_types.len() as u8)?;
         for v in &self.certificate_types {
@@ -53,7 +50,6 @@ impl HandshakeMessageCertificateRequest {
         Ok(writer.flush()?)
     }
 
-    #[tracing::instrument(level = "debug", skip(reader))]
     pub fn unmarshal<R: Read>(reader: &mut R) -> Result<Self> {
         let certificate_types_length = reader.read_u8()?;
 

@@ -17,7 +17,6 @@ struct Av1Obu {
 }
 
 impl Av1Obu {
-    #[tracing::instrument(level = "debug", skip(obu_type))]
     pub fn new(obu_type: u8) -> Self {
         Self {
             header: obu_type << 3 | OBU_HAS_SIZE_BIT,
@@ -26,27 +25,23 @@ impl Av1Obu {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, extension))]
     pub fn with_extension(mut self, extension: u8) -> Self {
         self.extension = extension;
         self.header |= OBU_HAS_EXTENSION_BIT;
         self
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     pub fn without_size(mut self) -> Self {
         self.header &= !OBU_HAS_SIZE_BIT;
         self
     }
 
-    #[tracing::instrument(level = "debug", skip(self, payload))]
     pub fn with_payload(mut self, payload: Vec<u8>) -> Self {
         self.payload = payload;
         self
     }
 }
 
-#[tracing::instrument(level = "debug", skip(obus))]
 fn build_av1_frame(obus: &Vec<Av1Obu>) -> Bytes {
     let mut raw = vec![];
     for obu in obus {

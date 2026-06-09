@@ -43,7 +43,6 @@ pub(crate) struct SrtcpSsrcState {
 }
 
 impl SrtpSsrcState {
-    #[tracing::instrument(level = "debug", skip(self, sequence_number))]
     pub fn next_rollover_count(&self, sequence_number: u16) -> (u32, i32, bool) {
         let local_roc = (self.index >> 16) as u32;
         let local_seq = self.index as u16;
@@ -79,7 +78,6 @@ impl SrtpSsrcState {
         (guess_roc, diff, (guess_roc == 0 && local_roc == MAX_ROC))
     }
 
-    #[tracing::instrument(level = "debug", skip(self, sequence_number, diff))]
     /// https://tools.ietf.org/html/rfc3550#appendix-A.1
     pub fn update_rollover_count(&mut self, sequence_number: u16, diff: i32) {
         if !self.rollover_has_processed {
@@ -105,7 +103,6 @@ pub struct Context {
 }
 
 impl Context {
-    #[tracing::instrument(level = "debug", skip(master_key, master_salt, profile, srtp_ctx_opt, srtcp_ctx_opt))]
     /// CreateContext creates a new SRTP Context
     pub fn new(
         master_key: &[u8],
@@ -165,7 +162,6 @@ impl Context {
         })
     }
 
-    #[tracing::instrument(level = "debug", skip(self, ssrc))]
     fn get_srtp_ssrc_state(&mut self, ssrc: u32) -> &mut SrtpSsrcState {
         let s = SrtpSsrcState {
             ssrc,
@@ -176,7 +172,6 @@ impl Context {
         self.srtp_ssrc_states.entry(ssrc).or_insert(s)
     }
 
-    #[tracing::instrument(level = "debug", skip(self, ssrc))]
     fn get_srtcp_ssrc_state(&mut self, ssrc: u32) -> &mut SrtcpSsrcState {
         let s = SrtcpSsrcState {
             ssrc,
@@ -186,7 +181,6 @@ impl Context {
         self.srtcp_ssrc_states.entry(ssrc).or_insert(s)
     }
 
-    #[tracing::instrument(level = "debug", skip(self, ssrc))]
     /// roc returns SRTP rollover counter value of specified SSRC.
     fn get_roc(&self, ssrc: u32) -> Option<u32> {
         self.srtp_ssrc_states
@@ -194,7 +188,6 @@ impl Context {
             .map(|s| (s.index >> 16) as _)
     }
 
-    #[tracing::instrument(level = "debug", skip(self, ssrc, roc))]
     /// set_roc sets SRTP rollover counter value of specified SSRC.
     fn set_roc(&mut self, ssrc: u32, roc: u32) {
         let state = self.get_srtp_ssrc_state(ssrc);
@@ -202,13 +195,11 @@ impl Context {
         state.rollover_has_processed = false;
     }
 
-    #[tracing::instrument(level = "debug", skip(self, ssrc))]
     /// index returns SRTCP index value of specified SSRC.
     fn get_index(&self, ssrc: u32) -> Option<usize> {
         self.srtcp_ssrc_states.get(&ssrc).map(|s| s.srtcp_index)
     }
 
-    #[tracing::instrument(level = "debug", skip(self, ssrc, index))]
     /// set_index sets SRTCP index value of specified SSRC.
     fn set_index(&mut self, ssrc: u32, index: usize) {
         self.get_srtcp_ssrc_state(ssrc).srtcp_index = index % (MAX_SRTCP_INDEX + 1);

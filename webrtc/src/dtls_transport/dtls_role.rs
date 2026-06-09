@@ -40,7 +40,6 @@ pub(crate) const DEFAULT_DTLS_ROLE_ANSWER: DTLSRole = DTLSRole::Client;
 pub(crate) const DEFAULT_DTLS_ROLE_OFFER: DTLSRole = DTLSRole::Auto;
 
 impl fmt::Display for DTLSRole {
-    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match *self {
             DTLSRole::Auto => write!(f, "auto"),
@@ -55,7 +54,6 @@ impl fmt::Display for DTLSRole {
 /// role can been determined from it. The decision is made from the first role we we parse.
 /// If no role can be found we return DTLSRoleAuto
 impl From<&SessionDescription> for DTLSRole {
-    #[tracing::instrument(level = "debug", skip(session_description))]
     fn from(session_description: &SessionDescription) -> Self {
         for media_section in &session_description.media_descriptions {
             for attribute in &media_section.attributes {
@@ -78,7 +76,6 @@ impl From<&SessionDescription> for DTLSRole {
 }
 
 impl DTLSRole {
-    #[tracing::instrument(level = "debug", skip(self))]
     pub(crate) fn to_connection_role(self) -> ConnectionRole {
         match self {
             DTLSRole::Client => ConnectionRole::Active,

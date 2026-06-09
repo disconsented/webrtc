@@ -31,7 +31,6 @@ const ICE_PROTOCOL_TCP_STR: &str = "tcp";
 
 /// takes a string and converts it to ICEProtocol
 impl From<&str> for RTCIceProtocol {
-    #[tracing::instrument(level = "debug", skip(raw))]
     fn from(raw: &str) -> Self {
         if raw.to_uppercase() == ICE_PROTOCOL_UDP_STR.to_uppercase() {
             RTCIceProtocol::Udp
@@ -44,7 +43,6 @@ impl From<&str> for RTCIceProtocol {
 }
 
 impl fmt::Display for RTCIceProtocol {
-    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match *self {
             RTCIceProtocol::Udp => write!(f, "{ICE_PROTOCOL_UDP_STR}"),

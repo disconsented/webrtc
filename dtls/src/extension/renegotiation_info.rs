@@ -21,17 +21,14 @@ pub struct ExtensionRenegotiationInfo {
 
 impl ExtensionRenegotiationInfo {
     // TypeValue returns the extension TypeValue
-    #[tracing::instrument(level = "debug", skip(self))]
     pub fn extension_value(&self) -> ExtensionValue {
         ExtensionValue::RenegotiationInfo
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     pub fn size(&self) -> usize {
         3
     }
 
-    #[tracing::instrument(level = "debug", skip(self, writer))]
     /// marshal encodes the extension
     pub fn marshal<W: Write>(&self, writer: &mut W) -> Result<()> {
         writer.write_u16::<BigEndian>(1)?; //length
@@ -40,7 +37,6 @@ impl ExtensionRenegotiationInfo {
         Ok(writer.flush()?)
     }
 
-    #[tracing::instrument(level = "debug", skip(reader))]
     /// Unmarshal populates the extension from encoded data
     pub fn unmarshal<R: Read>(reader: &mut R) -> Result<Self> {
         let l = reader.read_u16::<BigEndian>()?; //length

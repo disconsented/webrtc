@@ -19,7 +19,6 @@ pub struct ConnConfig {
 }
 
 impl ConnConfig {
-    #[tracing::instrument(level = "debug", skip(self))]
     pub fn validate(&self) -> Result<()> {
         self.relay_addr_generator.validate()
     }
@@ -46,7 +45,6 @@ pub struct ServerConfig {
 }
 
 impl ServerConfig {
-    #[tracing::instrument(level = "debug", skip(self))]
     pub fn validate(&self) -> Result<()> {
         if self.conn_configs.is_empty() {
             return Err(Error::ErrNoAvailableConns);

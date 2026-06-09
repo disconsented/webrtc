@@ -29,7 +29,6 @@ pub enum SchemeType {
 }
 
 impl From<&str> for SchemeType {
-    #[tracing::instrument(level = "debug", skip(raw))]
     /// Defines a procedure for creating a new `SchemeType` from a raw
     /// string naming the scheme type.
     fn from(raw: &str) -> Self {
@@ -44,7 +43,6 @@ impl From<&str> for SchemeType {
 }
 
 impl fmt::Display for SchemeType {
-    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let s = match *self {
             SchemeType::Stun => "stun",
@@ -75,7 +73,6 @@ pub enum ProtoType {
 impl From<&str> for ProtoType {
     // NewSchemeType defines a procedure for creating a new SchemeType from a raw
     // string naming the scheme type.
-    #[tracing::instrument(level = "debug", skip(raw))]
     fn from(raw: &str) -> Self {
         match raw {
             "udp" => Self::Udp,
@@ -86,7 +83,6 @@ impl From<&str> for ProtoType {
 }
 
 impl fmt::Display for ProtoType {
-    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let s = match *self {
             Self::Udp => "udp",
@@ -109,7 +105,6 @@ pub struct Url {
 }
 
 impl fmt::Display for Url {
-    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let host = if self.host.contains("::") {
             "[".to_owned() + self.host.as_str() + "]"
@@ -129,7 +124,6 @@ impl fmt::Display for Url {
 }
 
 impl Url {
-    #[tracing::instrument(level = "debug", skip(raw))]
     /// Parses a STUN or TURN urls following the ABNF syntax described in
     /// [IETF rfc-7064](https://tools.ietf.org/html/rfc7064) and
     /// [IETF rfc-7065](https://tools.ietf.org/html/rfc7065) respectively.
@@ -255,7 +249,6 @@ impl Url {
         return proto, nil
     }*/
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// Returns whether the this URL's scheme describes secure scheme or not.
     #[must_use]
     pub fn is_secure(&self) -> bool {

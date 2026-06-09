@@ -21,7 +21,6 @@ pub struct PacketMetadata {
 }
 
 impl PacketMetadata {
-    #[tracing::instrument(level = "debug", skip(first_obu_index))]
     fn new(first_obu_index: usize) -> Self {
         Self {
             first_obu_index,
@@ -33,7 +32,6 @@ impl PacketMetadata {
     }
 }
 
-#[tracing::instrument(level = "debug", skip(obus, mtu))]
 /// Returns the scheme for how to aggregate or split the OBUs across RTP packets.
 /// Reference: https://aomediacodec.github.io/av1-rtp-spec/#45-payload-structure
 ///            https://aomediacodec.github.io/av1-rtp-spec/#5-packetization-rules
@@ -176,7 +174,6 @@ pub fn packetize(obus: &[Obu], mtu: usize) -> Vec<PacketMetadata> {
     packets
 }
 
-#[tracing::instrument(level = "debug", skip(obus, packets, packet_index))]
 /// Returns the aggregation header for the packet.
 /// Reference: https://aomediacodec.github.io/av1-rtp-spec/#44-av1-aggregation-header
 pub fn get_aggregation_header(obus: &[Obu], packets: &[PacketMetadata], packet_index: usize) -> u8 {
@@ -229,7 +226,6 @@ pub fn get_aggregation_header(obus: &[Obu], packets: &[PacketMetadata], packet_i
     header
 }
 
-#[tracing::instrument(level = "debug", skip(packet))]
 /// Returns the number of additional bytes needed to store the previous OBU
 /// element if an additional OBU element is added to the packet.
 fn additional_bytes_for_previous_obu_element(packet: &PacketMetadata) -> usize {
@@ -245,7 +241,6 @@ fn additional_bytes_for_previous_obu_element(packet: &PacketMetadata) -> usize {
     }
 }
 
-#[tracing::instrument(level = "debug", skip(remaining_bytes))]
 /// Given |remaining_bytes| free bytes left in a packet, returns max size of an
 /// OBU fragment that can fit into the packet.
 /// i.e. MaxFragmentSize + Leb128Size(MaxFragmentSize) <= remaining_bytes.

@@ -16,7 +16,6 @@ use crate::error::Result;
 use crate::record_layer::record_layer_header::RecordLayerHeader;
 use crate::record_layer::unpack_datagram;
 
-#[tracing::instrument(level = "debug", skip(laddr, config))]
 /// Listen creates a DTLS listener
 pub async fn listen<A: 'static + ToSocketAddrs>(laddr: A, config: Config) -> Result<impl Listener> {
     validate_config(false, &config)?;
@@ -58,7 +57,6 @@ pub struct DTLSListener {
 }
 
 impl DTLSListener {
-    #[tracing::instrument(level = "debug", skip(parent, config))]
     ///  creates a DTLS listener which accepts connections from an inner Listener.
     pub fn new(parent: Arc<dyn Listener + Send + Sync>, config: Config) -> Result<Self> {
         validate_config(false, &config)?;
@@ -71,7 +69,6 @@ type UtilResult<T> = std::result::Result<T, util::Error>;
 
 #[async_trait]
 impl Listener for DTLSListener {
-    #[tracing::instrument(level = "debug", skip(self))]
     /// Accept waits for and returns the next connection to the listener.
     /// You have to either close or read on all connection that are created.
     /// Connection handshake will timeout using ConnectContextMaker in the Config.
@@ -84,7 +81,6 @@ impl Listener for DTLSListener {
         Ok((Arc::new(dtls_conn), raddr))
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// Close closes the listener.
     /// Any blocked Accept operations will be unblocked and return errors.
     /// Already Accepted connections are not closed.
@@ -92,7 +88,6 @@ impl Listener for DTLSListener {
         self.parent.close().await
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// Addr returns the listener's network address.
     async fn addr(&self) -> UtilResult<SocketAddr> {
         self.parent.addr().await

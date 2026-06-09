@@ -17,7 +17,6 @@ lazy_static! {
     static ref TAG_CTR: AtomicU64 = AtomicU64::new(0);
 }
 
-#[tracing::instrument(level = "debug", skip(value))]
 /// Encodes a u64 value to a lowercase base 36 string.
 pub fn base36(value: impl Into<u64>) -> String {
     let mut digits: Vec<u8> = vec![];
@@ -36,7 +35,6 @@ pub fn base36(value: impl Into<u64>) -> String {
 
 // Generate a base36-encoded unique tag
 // See: https://play.golang.org/p/0ZaAID1q-HN
-#[tracing::instrument(level = "debug", skip())]
 fn assign_chunk_tag() -> String {
     let n = TAG_CTR.fetch_add(1, Ordering::SeqCst);
     base36(n)
@@ -56,7 +54,6 @@ impl BitOr for TcpFlag {
     type Output = Self;
 
     // rhs is the "right-hand side" of the expression `a | b`
-    #[tracing::instrument(level = "debug", skip(self, rhs))]
     fn bitor(self, rhs: Self) -> Self::Output {
         Self(self.0 | rhs.0)
     }
@@ -66,14 +63,12 @@ impl BitAnd for TcpFlag {
     type Output = Self;
 
     // rhs is the "right-hand side" of the expression `a & b`
-    #[tracing::instrument(level = "debug", skip(self, rhs))]
     fn bitand(self, rhs: Self) -> Self::Output {
         Self(self.0 & rhs.0)
     }
 }
 
 impl fmt::Display for TcpFlag {
-    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut sa = vec![];
         if *self & TCP_FLAG_FIN != TCP_FLAG_ZERO {
@@ -122,28 +117,23 @@ pub(crate) struct ChunkIp {
 }
 
 impl ChunkIp {
-    #[tracing::instrument(level = "debug", skip(self))]
     fn set_timestamp(&mut self) -> SystemTime {
         self.timestamp = SystemTime::now();
         self.timestamp
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn get_timestamp(&self) -> SystemTime {
         self.timestamp
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn get_destination_ip(&self) -> IpAddr {
         self.destination_ip
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn get_source_ip(&self) -> IpAddr {
         self.source_ip
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn tag(&self) -> String {
         self.tag.clone()
     }
@@ -158,7 +148,6 @@ pub(crate) struct ChunkUdp {
 }
 
 impl fmt::Display for ChunkUdp {
-    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
@@ -172,47 +161,38 @@ impl fmt::Display for ChunkUdp {
 }
 
 impl Chunk for ChunkUdp {
-    #[tracing::instrument(level = "debug", skip(self))]
     fn set_timestamp(&mut self) -> SystemTime {
         self.chunk_ip.set_timestamp()
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn get_timestamp(&self) -> SystemTime {
         self.chunk_ip.get_timestamp()
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn get_destination_ip(&self) -> IpAddr {
         self.chunk_ip.get_destination_ip()
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn get_source_ip(&self) -> IpAddr {
         self.chunk_ip.get_source_ip()
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn tag(&self) -> String {
         self.chunk_ip.tag()
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn source_addr(&self) -> SocketAddr {
         SocketAddr::new(self.chunk_ip.source_ip, self.source_port)
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn destination_addr(&self) -> SocketAddr {
         SocketAddr::new(self.chunk_ip.destination_ip, self.destination_port)
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn user_data(&self) -> Vec<u8> {
         self.user_data.clone()
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn clone_to(&self) -> Box<dyn Chunk + Send + Sync> {
         Box::new(ChunkUdp {
             chunk_ip: ChunkIp {
@@ -227,12 +207,10 @@ impl Chunk for ChunkUdp {
         })
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn network(&self) -> String {
         UDP_STR.to_owned()
     }
 
-    #[tracing::instrument(level = "debug", skip(self, address))]
     fn set_source_addr(&mut self, address: &str) -> Result<()> {
         let addr = SocketAddr::from_str(address)?;
         self.chunk_ip.source_ip = addr.ip();
@@ -240,7 +218,6 @@ impl Chunk for ChunkUdp {
         Ok(())
     }
 
-    #[tracing::instrument(level = "debug", skip(self, address))]
     fn set_destination_addr(&mut self, address: &str) -> Result<()> {
         let addr = SocketAddr::from_str(address)?;
         self.chunk_ip.destination_ip = addr.ip();
@@ -250,7 +227,6 @@ impl Chunk for ChunkUdp {
 }
 
 impl ChunkUdp {
-    #[tracing::instrument(level = "debug", skip(src_addr, dst_addr))]
     pub(crate) fn new(src_addr: SocketAddr, dst_addr: SocketAddr) -> Self {
         ChunkUdp {
             chunk_ip: ChunkIp {
@@ -278,7 +254,6 @@ pub(crate) struct ChunkTcp {
 }
 
 impl fmt::Display for ChunkTcp {
-    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
@@ -293,47 +268,38 @@ impl fmt::Display for ChunkTcp {
 }
 
 impl Chunk for ChunkTcp {
-    #[tracing::instrument(level = "debug", skip(self))]
     fn set_timestamp(&mut self) -> SystemTime {
         self.chunk_ip.set_timestamp()
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn get_timestamp(&self) -> SystemTime {
         self.chunk_ip.get_timestamp()
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn get_destination_ip(&self) -> IpAddr {
         self.chunk_ip.get_destination_ip()
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn get_source_ip(&self) -> IpAddr {
         self.chunk_ip.get_source_ip()
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn tag(&self) -> String {
         self.chunk_ip.tag()
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn source_addr(&self) -> SocketAddr {
         SocketAddr::new(self.chunk_ip.source_ip, self.source_port)
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn destination_addr(&self) -> SocketAddr {
         SocketAddr::new(self.chunk_ip.destination_ip, self.destination_port)
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn user_data(&self) -> Vec<u8> {
         self.user_data.clone()
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn clone_to(&self) -> Box<dyn Chunk + Send + Sync> {
         Box::new(ChunkTcp {
             chunk_ip: ChunkIp {
@@ -349,12 +315,10 @@ impl Chunk for ChunkTcp {
         })
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn network(&self) -> String {
         "tcp".to_owned()
     }
 
-    #[tracing::instrument(level = "debug", skip(self, address))]
     fn set_source_addr(&mut self, address: &str) -> Result<()> {
         let addr = SocketAddr::from_str(address)?;
         self.chunk_ip.source_ip = addr.ip();
@@ -362,7 +326,6 @@ impl Chunk for ChunkTcp {
         Ok(())
     }
 
-    #[tracing::instrument(level = "debug", skip(self, address))]
     fn set_destination_addr(&mut self, address: &str) -> Result<()> {
         let addr = SocketAddr::from_str(address)?;
         self.chunk_ip.destination_ip = addr.ip();
@@ -372,7 +335,6 @@ impl Chunk for ChunkTcp {
 }
 
 impl ChunkTcp {
-    #[tracing::instrument(level = "debug", skip(src_addr, dst_addr, flags))]
     pub(crate) fn new(src_addr: SocketAddr, dst_addr: SocketAddr, flags: TcpFlag) -> Self {
         ChunkTcp {
             chunk_ip: ChunkIp {

@@ -60,7 +60,6 @@ pub struct CandidateBase {
 }
 
 impl Default for CandidateBase {
-    #[tracing::instrument(level = "debug", skip())]
     fn default() -> Self {
         Self {
             id: String::new(),
@@ -91,7 +90,6 @@ impl Default for CandidateBase {
 
 // String makes the candidateBase printable
 impl fmt::Display for CandidateBase {
-    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         if let Some(related_address) = self.related_address() {
             write!(
@@ -118,7 +116,6 @@ impl fmt::Display for CandidateBase {
 
 #[async_trait]
 impl Candidate for CandidateBase {
-    #[tracing::instrument(level = "debug", skip(self))]
     fn foundation(&self) -> String {
         if !self.foundation_override.is_empty() {
             return self.foundation_override.clone();
@@ -134,24 +131,20 @@ impl Candidate for CandidateBase {
         format!("{checksum}")
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// Returns Candidate ID.
     fn id(&self) -> String {
         self.id.clone()
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// Returns candidate component.
     fn component(&self) -> u16 {
         self.component.load(Ordering::SeqCst)
     }
 
-    #[tracing::instrument(level = "debug", skip(self, component))]
     fn set_component(&self, component: u16) {
         self.component.store(component, Ordering::SeqCst);
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// Returns a time indicating the last time this candidate was received.
     fn last_received(&self) -> SystemTime {
         UNIX_EPOCH.add(Duration::from_nanos(
@@ -159,31 +152,26 @@ impl Candidate for CandidateBase {
         ))
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// Returns a time indicating the last time this candidate was sent.
     fn last_sent(&self) -> SystemTime {
         UNIX_EPOCH.add(Duration::from_nanos(self.last_sent.load(Ordering::SeqCst)))
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// Returns candidate NetworkType.
     fn network_type(&self) -> NetworkType {
         NetworkType::from(self.network_type.load(Ordering::SeqCst))
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// Returns Candidate Address.
     fn address(&self) -> String {
         self.address.clone()
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// Returns Candidate Port.
     fn port(&self) -> u16 {
         self.port
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// Computes the priority for this ICE Candidate.
     fn priority(&self) -> u32 {
         if self.priority_override != 0 {
@@ -201,24 +189,20 @@ impl Candidate for CandidateBase {
             + (256 - u32::from(self.component()))
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// Returns `Option<CandidateRelatedAddress>`.
     fn related_address(&self) -> Option<CandidateRelatedAddress> {
         self.related_address.as_ref().cloned()
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// Returns candidate type.
     fn candidate_type(&self) -> CandidateType {
         self.candidate_type
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn tcp_type(&self) -> TcpType {
         self.tcp_type
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// Returns the string representation of the ICECandidate.
     fn marshal(&self) -> String {
         let mut val = format!(
@@ -247,12 +231,10 @@ impl Candidate for CandidateBase {
         val
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn addr(&self) -> SocketAddr {
         *self.resolved_addr.lock()
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// Stops the recvLoop.
     async fn close(&self) -> Result<()> {
         {
@@ -274,7 +256,6 @@ impl Candidate for CandidateBase {
         Ok(())
     }
 
-    #[tracing::instrument(level = "debug", skip(self, outbound))]
     fn seen(&self, outbound: bool) {
         let d = SystemTime::now()
             .duration_since(UNIX_EPOCH)
@@ -287,7 +268,6 @@ impl Candidate for CandidateBase {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, raw, dst))]
     async fn write_to(&self, raw: &[u8], dst: &(dyn Candidate + Send + Sync)) -> Result<usize> {
         let n = if let Some(conn) = &self.conn {
             let addr = dst.addr();
@@ -299,7 +279,6 @@ impl Candidate for CandidateBase {
         Ok(n)
     }
 
-    #[tracing::instrument(level = "debug", skip(self, other))]
     /// Used to compare two candidateBases.
     fn equal(&self, other: &dyn Candidate) -> bool {
         self.network_type() == other.network_type()
@@ -310,7 +289,6 @@ impl Candidate for CandidateBase {
             && self.related_address() == other.related_address()
     }
 
-    #[tracing::instrument(level = "debug", skip(self, ip))]
     fn set_ip(&self, ip: &IpAddr) -> Result<()> {
         let network_type = determine_network_type(&self.network, ip)?;
 
@@ -323,32 +301,27 @@ impl Candidate for CandidateBase {
         Ok(())
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn get_conn(&self) -> Option<&Arc<dyn util::Conn + Send + Sync>> {
         self.conn.as_ref()
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn get_closed_ch(&self) -> Arc<Mutex<Option<broadcast::Sender<()>>>> {
         self.closed_ch.clone()
     }
 }
 
 impl CandidateBase {
-    #[tracing::instrument(level = "debug", skip(self, d))]
     pub fn set_last_received(&self, d: Duration) {
         #[allow(clippy::cast_possible_truncation)]
         self.last_received
             .store(d.as_nanos() as u64, Ordering::SeqCst);
     }
 
-    #[tracing::instrument(level = "debug", skip(self, d))]
     pub fn set_last_sent(&self, d: Duration) {
         #[allow(clippy::cast_possible_truncation)]
         self.last_sent.store(d.as_nanos() as u64, Ordering::SeqCst);
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// Returns the local preference for this candidate.
     pub fn local_preference(&self) -> u16 {
         if self.network_type().is_tcp() {
@@ -414,7 +387,6 @@ impl CandidateBase {
     }
 }
 
-#[tracing::instrument(level = "debug", skip(raw))]
 /// Creates a Candidate from its string representation.
 pub fn unmarshal_candidate(raw: &str) -> Result<impl Candidate> {
     let split: Vec<&str> = raw.split_whitespace().collect();

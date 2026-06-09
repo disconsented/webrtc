@@ -64,7 +64,6 @@ pub(crate) enum HandshakeState {
 }
 
 impl fmt::Display for HandshakeState {
-    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match *self {
             HandshakeState::Errored => write!(f, "Errored"),
@@ -101,7 +100,6 @@ pub(crate) struct HandshakeConfig {
     //mu sync.Mutex
 }
 
-#[tracing::instrument(level = "debug", skip())]
 pub fn gen_self_signed_root_cert() -> rustls::RootCertStore {
     let mut certs = rustls::RootCertStore::empty();
     certs
@@ -117,7 +115,6 @@ pub fn gen_self_signed_root_cert() -> rustls::RootCertStore {
 }
 
 impl Default for HandshakeConfig {
-    #[tracing::instrument(level = "debug", skip())]
     fn default() -> Self {
         HandshakeConfig {
             local_psk_callback: None,
@@ -146,7 +143,6 @@ impl Default for HandshakeConfig {
 }
 
 impl HandshakeConfig {
-    #[tracing::instrument(level = "debug", skip(self, server_name))]
     pub(crate) fn get_certificate(&self, server_name: &str) -> Result<Certificate> {
         //TODO
         /*if self.name_to_certificate.is_empty() {
@@ -214,7 +210,6 @@ impl HandshakeConfig {
     }
 }
 
-#[tracing::instrument(level = "debug", skip(is_client))]
 pub(crate) fn srv_cli_str(is_client: bool) -> String {
     if is_client {
         return "client".to_owned();
@@ -223,7 +218,6 @@ pub(crate) fn srv_cli_str(is_client: bool) -> String {
 }
 
 impl DTLSConn {
-    #[tracing::instrument(level = "debug", skip(self, state))]
     pub(crate) async fn handshake(&mut self, mut state: HandshakeState) -> Result<()> {
         loop {
             trace!(
@@ -249,7 +243,6 @@ impl DTLSConn {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     async fn prepare(&mut self) -> Result<HandshakeState> {
         self.flights = None;
 
@@ -319,7 +312,6 @@ impl DTLSConn {
 
         Ok(HandshakeState::Sending)
     }
-    #[tracing::instrument(level = "debug", skip(self))]
     async fn send(&mut self) -> Result<HandshakeState> {
         // Send flights
         if let Some(pkts) = self.flights.clone() {
@@ -332,7 +324,6 @@ impl DTLSConn {
             Ok(HandshakeState::Waiting)
         }
     }
-    #[tracing::instrument(level = "debug", skip(self))]
     async fn wait(&mut self) -> Result<HandshakeState> {
         let retransmit_timer = tokio::time::sleep(self.cfg.retransmit_interval);
         tokio::pin!(retransmit_timer);
@@ -396,7 +387,6 @@ impl DTLSConn {
             }
         }
     }
-    #[tracing::instrument(level = "debug", skip(self))]
     async fn finish(&mut self) -> Result<HandshakeState> {
         let retransmit_timer = tokio::time::sleep(self.cfg.retransmit_interval);
 

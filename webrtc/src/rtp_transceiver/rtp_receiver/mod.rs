@@ -45,7 +45,6 @@ pub enum State {
 }
 
 impl From<u8> for State {
-    #[tracing::instrument(level = "debug", skip(value))]
     fn from(value: u8) -> Self {
         match value {
             v if v == State::Unstarted as u8 => State::Unstarted,
@@ -63,7 +62,6 @@ impl From<u8> for State {
 }
 
 impl fmt::Display for State {
-    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             State::Unstarted => write!(f, "Unstarted"),
@@ -76,7 +74,6 @@ impl fmt::Display for State {
 }
 
 impl State {
-    #[tracing::instrument(level = "debug", skip(to, tx))]
     fn transition(to: Self, tx: &watch::Sender<State>) -> Result<()> {
         let current = *tx.borrow();
         if current == to {
@@ -111,7 +108,6 @@ impl State {
         Err(Error::ErrRTPReceiverStateChangeInvalid { from: current, to })
     }
 
-    #[tracing::instrument(level = "debug", skip(rx, states))]
     async fn wait_for(rx: &mut watch::Receiver<State>, states: &[State]) -> Result<()> {
         loop {
             let state = *rx.borrow();
@@ -130,7 +126,6 @@ impl State {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(rx))]
     async fn error_on_close(rx: &mut watch::Receiver<State>) -> Result<()> {
         if rx.changed().await.is_err() {
             return Err(Error::ErrClosedPipe);
@@ -144,7 +139,6 @@ impl State {
         Ok(())
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn is_started(&self) -> bool {
         matches!(self, Self::Started | Self::Paused)
     }
@@ -167,7 +161,6 @@ pub struct RTPReceiverInternal {
 }
 
 impl RTPReceiverInternal {
-    #[tracing::instrument(level = "debug", skip(self, b))]
     /// read reads incoming RTCP for this RTPReceiver
     async fn read(
         &self,
@@ -200,7 +193,6 @@ impl RTPReceiverInternal {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, b, rid))]
     /// read_simulcast reads incoming RTCP for this RTPReceiver for given rid
     async fn read_simulcast(
         &self,
@@ -237,7 +229,6 @@ impl RTPReceiverInternal {
         Err(Error::ErrRTPReceiverForRIDTrackStreamNotFound)
     }
 
-    #[tracing::instrument(level = "debug", skip(self, receive_mtu))]
     /// read_rtcp is a convenience method that wraps Read and unmarshal for you.
     /// It also runs any configured interceptors.
     async fn read_rtcp(
@@ -250,7 +241,6 @@ impl RTPReceiverInternal {
         Ok((pkts, attributes))
     }
 
-    #[tracing::instrument(level = "debug", skip(self, rid, receive_mtu))]
     /// read_simulcast_rtcp is a convenience method that wraps ReadSimulcast and unmarshal for you
     async fn read_simulcast_rtcp(
         &self,
@@ -263,7 +253,6 @@ impl RTPReceiverInternal {
         Ok((pkts, attributes))
     }
 
-    #[tracing::instrument(level = "debug", skip(self, b, tid))]
     pub(crate) async fn read_rtp(
         &self,
         b: &mut [u8],
@@ -327,7 +316,6 @@ impl RTPReceiverInternal {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     async fn get_parameters(&self) -> RTCRtpParameters {
         let mut parameters = self
             .media_engine
@@ -343,7 +331,6 @@ impl RTPReceiverInternal {
         parameters
     }
 
-    #[tracing::instrument(level = "debug", skip(codecs, kind, media_engine))]
     pub(crate) fn get_codecs(
         codecs: &mut [RTCRtpCodecParameters],
         kind: RTPCodecType,
@@ -369,18 +356,15 @@ impl RTPReceiverInternal {
 
     // State
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// Get the current state and a receiver for the next state change.
     pub(crate) fn current_state(&self) -> State {
         *self.state_rx.borrow()
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     pub(crate) fn start(&self) -> Result<()> {
         State::transition(State::Started, &self.state_tx)
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     pub(crate) fn pause(&self) -> Result<()> {
         let current = self.current_state();
 
@@ -391,7 +375,6 @@ impl RTPReceiverInternal {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     pub(crate) fn resume(&self) -> Result<()> {
         let current = self.current_state();
 
@@ -402,7 +385,6 @@ impl RTPReceiverInternal {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     pub(crate) fn close(&self) -> Result<()> {
         State::transition(State::Stopped, &self.state_tx)
     }
@@ -424,7 +406,6 @@ pub struct RTCRtpReceiver {
 }
 
 impl std::fmt::Debug for RTCRtpReceiver {
-    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("RTCRtpReceiver")
             .field("kind", &self.internal.kind)
@@ -433,7 +414,6 @@ impl std::fmt::Debug for RTCRtpReceiver {
 }
 
 impl RTCRtpReceiver {
-    #[tracing::instrument(level = "debug", skip(receive_mtu, kind, transport, media_engine, interceptor))]
     pub fn new(
         receive_mtu: usize,
         kind: RTPCodecType,
@@ -462,12 +442,10 @@ impl RTCRtpReceiver {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     pub fn kind(&self) -> RTPCodecType {
         self.internal.kind
     }
 
-    #[tracing::instrument(level = "debug", skip(self, codecs))]
     pub(crate) fn set_transceiver_codecs(
         &self,
         codecs: Option<Arc<Mutex<Vec<RTCRtpCodecParameters>>>>,
@@ -475,21 +453,18 @@ impl RTCRtpReceiver {
         self.internal.transceiver_codecs.store(codecs);
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// transport returns the currently-configured *DTLSTransport or nil
     /// if one has not yet been configured
     pub fn transport(&self) -> Arc<RTCDtlsTransport> {
         Arc::clone(&self.internal.transport)
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// get_parameters describes the current configuration for the encoding and
     /// transmission of media on the receiver's track.
     pub async fn get_parameters(&self) -> RTCRtpParameters {
         self.internal.get_parameters().await
     }
 
-    #[tracing::instrument(level = "debug", skip(self, params))]
     /// SetRTPParameters applies provided RTPParameters the RTPReceiver's tracks.
     /// This method is part of the ORTC API. It is not
     /// meant to be used together with the basic WebRTC API.
@@ -518,7 +493,6 @@ impl RTCRtpReceiver {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// tracks returns the RtpTransceiver traclockks
     /// A RTPReceiver to support Simulcast may now have multiple tracks
     pub async fn tracks(&self) -> Vec<Arc<TrackRemote>> {
@@ -526,7 +500,6 @@ impl RTCRtpReceiver {
         tracks.iter().map(|t| Arc::clone(&t.track)).collect()
     }
 
-    #[tracing::instrument(level = "debug", skip(self, parameters))]
     /// receive initialize the track and starts all the transports
     pub async fn receive(&self, parameters: &RTCRtpReceiveParameters) -> Result<()> {
         let receiver = Arc::downgrade(&self.internal);
@@ -653,7 +626,6 @@ impl RTCRtpReceiver {
         Ok(())
     }
 
-    #[tracing::instrument(level = "debug", skip(self, b))]
     /// read reads incoming RTCP for this RTPReceiver
     pub async fn read(
         &self,
@@ -662,7 +634,6 @@ impl RTCRtpReceiver {
         self.internal.read(b).await
     }
 
-    #[tracing::instrument(level = "debug", skip(self, b, rid))]
     /// read_simulcast reads incoming RTCP for this RTPReceiver for given rid
     pub async fn read_simulcast(
         &self,
@@ -672,7 +643,6 @@ impl RTCRtpReceiver {
         self.internal.read_simulcast(b, rid).await
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// read_rtcp is a convenience method that wraps Read and unmarshal for you.
     /// It also runs any configured interceptors.
     pub async fn read_rtcp(
@@ -681,7 +651,6 @@ impl RTCRtpReceiver {
         self.internal.read_rtcp(self.receive_mtu).await
     }
 
-    #[tracing::instrument(level = "debug", skip(self, rid))]
     /// read_simulcast_rtcp is a convenience method that wraps ReadSimulcast and unmarshal for you
     pub async fn read_simulcast_rtcp(
         &self,
@@ -692,12 +661,10 @@ impl RTCRtpReceiver {
             .await
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     pub(crate) async fn have_received(&self) -> bool {
         self.internal.current_state().is_started()
     }
 
-    #[tracing::instrument(level = "debug", skip(self, incoming))]
     pub(crate) async fn start(&self, incoming: &TrackDetails) {
         let mut encoding_size = incoming.ssrcs.len();
         if incoming.rids.len() >= encoding_size {
@@ -734,7 +701,6 @@ impl RTCRtpReceiver {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// Stop irreversibly stops the RTPReceiver
     pub async fn stop(&self) -> Result<()> {
         let previous_state = self.internal.current_state();
@@ -788,7 +754,6 @@ impl RTCRtpReceiver {
         flatten_errs(errs)
     }
 
-    #[tracing::instrument(level = "debug", skip(self, b, tid))]
     /// read_rtp should only be called by a track, this only exists so we can keep state in one place
     pub(crate) async fn read_rtp(
         &self,
@@ -798,7 +763,6 @@ impl RTCRtpReceiver {
         self.internal.read_rtp(b, tid).await
     }
 
-    #[tracing::instrument(level = "debug", skip(self, rid, params, stream))]
     /// receive_for_rid is the sibling of Receive expect for RIDs instead of SSRCs
     /// It populates all the internal state for the given RID
     pub(crate) async fn receive_for_rid(
@@ -825,7 +789,6 @@ impl RTCRtpReceiver {
         Err(Error::ErrRTPReceiverForRIDTrackStreamNotFound)
     }
 
-    #[tracing::instrument(level = "debug", skip(self, ssrc, rsid, repair_stream))]
     /// receiveForRtx starts a routine that processes the repair stream
     /// These packets aren't exposed to the user yet, but we need to process them for
     /// TWCC
@@ -864,12 +827,10 @@ impl RTCRtpReceiver {
 
     // State
 
-    #[tracing::instrument(level = "debug", skip(self))]
     pub(crate) fn current_state(&self) -> State {
         self.internal.current_state()
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     pub(crate) async fn pause(&self) -> Result<()> {
         self.internal.pause()?;
 
@@ -888,7 +849,6 @@ impl RTCRtpReceiver {
         Ok(())
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     pub(crate) async fn resume(&self) -> Result<()> {
         self.internal.resume()?;
 

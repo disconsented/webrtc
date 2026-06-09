@@ -29,7 +29,6 @@ pub struct PeriodicTimer {
 }
 
 impl PeriodicTimer {
-    #[tracing::instrument(level = "debug", skip(id, interval))]
     /// create a new [`PeriodicTimer`].
     pub fn new(id: TimerIdRefresh, interval: Duration) -> Self {
         PeriodicTimer {
@@ -39,7 +38,6 @@ impl PeriodicTimer {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, timeout_handler))]
     /// Starts the timer.
     pub async fn start<T: 'static + PeriodicTimerTimeoutHandler + std::marker::Send>(
         &self,
@@ -80,14 +78,12 @@ impl PeriodicTimer {
         true
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// Stops the timer.
     pub async fn stop(&self) {
         let mut close_tx = self.close_tx.lock().await;
         close_tx.take();
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// Tests if the timer is running.
     /// Debug purpose only.
     pub async fn is_running(&self) -> bool {

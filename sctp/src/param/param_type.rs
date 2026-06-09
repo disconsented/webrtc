@@ -62,7 +62,6 @@ pub(crate) enum ParamType {
 }
 
 impl fmt::Display for ParamType {
-    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let s = match *self {
             ParamType::HeartbeatInfo => "Heartbeat Info",
@@ -98,7 +97,6 @@ impl fmt::Display for ParamType {
 }
 
 impl From<u16> for ParamType {
-    #[tracing::instrument(level = "debug", skip(v))]
     fn from(v: u16) -> ParamType {
         match v {
             1 => ParamType::HeartbeatInfo,
@@ -135,7 +133,6 @@ impl From<u16> for ParamType {
 }
 
 impl From<ParamType> for u16 {
-    #[tracing::instrument(level = "debug", skip(v))]
     fn from(v: ParamType) -> u16 {
         match v {
             ParamType::HeartbeatInfo => 1,

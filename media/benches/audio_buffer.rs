@@ -3,7 +3,6 @@ use criterion::{black_box, criterion_main, BenchmarkGroup, Criterion};
 use webrtc_media::audio::buffer::layout::{Deinterleaved, Interleaved};
 use webrtc_media::audio::buffer::Buffer;
 
-#[tracing::instrument(level = "debug", skip(g))]
 fn benchmark_from(g: &mut BenchmarkGroup<WallTime>) {
     type Sample = i32;
     let channels = 4;
@@ -34,7 +33,6 @@ fn benchmark_from(g: &mut BenchmarkGroup<WallTime>) {
     });
 }
 
-#[tracing::instrument(level = "debug", skip())]
 fn benches() {
     let mut c = Criterion::default().configure_from_args();
     let mut g = c.benchmark_group("Media");

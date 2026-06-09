@@ -14,7 +14,6 @@ use crate::url::{ProtoType, SchemeType, Url};
 pub(crate) struct OptimisticAuthHandler;
 
 impl AuthHandler for OptimisticAuthHandler {
-    #[tracing::instrument(level = "debug", skip(self, _username, _realm, _src_addr))]
     fn auth_handle(
         &self,
         _username: &str,

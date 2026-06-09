@@ -40,7 +40,6 @@ pub enum SdesType {
 }
 
 impl fmt::Display for SdesType {
-    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let s = match self {
             SdesType::SdesEnd => "END",
@@ -58,7 +57,6 @@ impl fmt::Display for SdesType {
 }
 
 impl From<u8> for SdesType {
-    #[tracing::instrument(level = "debug", skip(b))]
     fn from(b: u8) -> Self {
         match b {
             1 => SdesType::SdesCname,
@@ -83,7 +81,6 @@ pub struct SourceDescriptionChunk {
 }
 
 impl SourceDescriptionChunk {
-    #[tracing::instrument(level = "debug", skip(self))]
     fn raw_size(&self) -> usize {
         let mut len = SDES_SOURCE_LEN;
         for it in &self.items {
@@ -95,7 +92,6 @@ impl SourceDescriptionChunk {
 }
 
 impl MarshalSize for SourceDescriptionChunk {
-    #[tracing::instrument(level = "debug", skip(self))]
     fn marshal_size(&self) -> usize {
         let l = self.raw_size();
         // align to 32-bit boundary
@@ -104,7 +100,6 @@ impl MarshalSize for SourceDescriptionChunk {
 }
 
 impl Marshal for SourceDescriptionChunk {
-    #[tracing::instrument(level = "debug", skip(self, buf))]
     /// Marshal encodes the SourceDescriptionChunk in binary
     fn marshal_to(&self, mut buf: &mut [u8]) -> Result<usize> {
         if buf.remaining_mut() < self.marshal_size() {
@@ -136,7 +131,6 @@ impl Marshal for SourceDescriptionChunk {
 }
 
 impl Unmarshal for SourceDescriptionChunk {
-    #[tracing::instrument(level = "debug", skip(raw_packet))]
     /// Unmarshal decodes the SourceDescriptionChunk from binary
     fn unmarshal<B>(raw_packet: &mut B) -> Result<Self>
     where
@@ -192,7 +186,6 @@ pub struct SourceDescriptionItem {
 }
 
 impl MarshalSize for SourceDescriptionItem {
-    #[tracing::instrument(level = "debug", skip(self))]
     fn marshal_size(&self) -> usize {
         /*
          *   0                   1                   2                   3
@@ -206,7 +199,6 @@ impl MarshalSize for SourceDescriptionItem {
 }
 
 impl Marshal for SourceDescriptionItem {
-    #[tracing::instrument(level = "debug", skip(self, buf))]
     /// Marshal encodes the SourceDescriptionItem in binary
     fn marshal_to(&self, mut buf: &mut [u8]) -> Result<usize> {
         /*
@@ -239,7 +231,6 @@ impl Marshal for SourceDescriptionItem {
 }
 
 impl Unmarshal for SourceDescriptionItem {
-    #[tracing::instrument(level = "debug", skip(raw_packet))]
     /// Unmarshal decodes the SourceDescriptionItem from binary
     fn unmarshal<B>(raw_packet: &mut B) -> Result<Self>
     where
@@ -288,7 +279,6 @@ pub struct SourceDescription {
 }
 
 impl fmt::Display for SourceDescription {
-    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut out = "Source Description:\n".to_string();
         for c in &self.chunks {
@@ -302,7 +292,6 @@ impl fmt::Display for SourceDescription {
 }
 
 impl Packet for SourceDescription {
-    #[tracing::instrument(level = "debug", skip(self))]
     /// Header returns the Header associated with this packet.
     fn header(&self) -> Header {
         Header {
@@ -313,13 +302,11 @@ impl Packet for SourceDescription {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// destination_ssrc returns an array of SSRC values that this packet refers to.
     fn destination_ssrc(&self) -> Vec<u32> {
         self.chunks.iter().map(|x| x.source).collect()
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn raw_size(&self) -> usize {
         let mut chunks_length = 0;
         for c in &self.chunks {
@@ -329,24 +316,20 @@ impl Packet for SourceDescription {
         HEADER_LENGTH + chunks_length
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn as_any(&self) -> &(dyn Any + Send + Sync) {
         self
     }
 
-    #[tracing::instrument(level = "debug", skip(self, other))]
     fn equal(&self, other: &(dyn Packet + Send + Sync)) -> bool {
         other.as_any().downcast_ref::<SourceDescription>() == Some(self)
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn cloned(&self) -> Box<dyn Packet + Send + Sync> {
         Box::new(self.clone())
     }
 }
 
 impl MarshalSize for SourceDescription {
-    #[tracing::instrument(level = "debug", skip(self))]
     fn marshal_size(&self) -> usize {
         let l = self.raw_size();
         // align to 32-bit boundary
@@ -355,7 +338,6 @@ impl MarshalSize for SourceDescription {
 }
 
 impl Marshal for SourceDescription {
-    #[tracing::instrument(level = "debug", skip(self, buf))]
     /// Marshal encodes the SourceDescription in binary
     fn marshal_to(&self, mut buf: &mut [u8]) -> Result<usize> {
         if self.chunks.len() > COUNT_MAX {
@@ -402,7 +384,6 @@ impl Marshal for SourceDescription {
 }
 
 impl Unmarshal for SourceDescription {
-    #[tracing::instrument(level = "debug", skip(raw_packet))]
     /// Unmarshal decodes the SourceDescription from binary
     fn unmarshal<B>(raw_packet: &mut B) -> Result<Self>
     where

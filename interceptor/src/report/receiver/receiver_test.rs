@@ -626,7 +626,6 @@ async fn test_receiver_interceptor_reordered_packets() -> Result<()> {
     Ok(())
 }
 
-#[tracing::instrument(level = "debug", skip())]
 #[tokio::test(start_paused = true)]
 async fn test_receiver_interceptor_jitter() -> Result<()> {
     let mt = Arc::new(MockTime::default());

@@ -20,7 +20,6 @@ struct SenderStreamInternal {
 }
 
 impl SenderStreamInternal {
-    #[tracing::instrument(level = "debug", skip(self, now, pkt))]
     fn process_rtp(&mut self, now: SystemTime, pkt: &rtp::packet::Packet) {
         // always update time to minimize errors
         self.last_rtp_time_rtp = pkt.header.timestamp;
@@ -30,7 +29,6 @@ impl SenderStreamInternal {
         self.counters.count_octets(pkt.payload.len());
     }
 
-    #[tracing::instrument(level = "debug", skip(self, now))]
     fn generate_report(&mut self, now: SystemTime) -> rtcp::sender_report::SenderReport {
         rtcp::sender_report::SenderReport {
             ssrc: self.ssrc,
@@ -56,7 +54,6 @@ pub(crate) struct SenderStream {
 }
 
 impl SenderStream {
-    #[tracing::instrument(level = "debug", skip(ssrc, clock_rate, writer, now))]
     pub(crate) fn new(
         ssrc: u32,
         clock_rate: u32,
@@ -77,13 +74,11 @@ impl SenderStream {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, now, pkt))]
     async fn process_rtp(&self, now: SystemTime, pkt: &rtp::packet::Packet) {
         let mut internal = self.internal.lock().await;
         internal.process_rtp(now, pkt);
     }
 
-    #[tracing::instrument(level = "debug", skip(self, now))]
     pub(crate) async fn generate_report(
         &self,
         now: SystemTime,
@@ -96,7 +91,6 @@ impl SenderStream {
 /// RTPWriter is used by Interceptor.bind_local_stream.
 #[async_trait]
 impl RTPWriter for SenderStream {
-    #[tracing::instrument(level = "debug", skip(self, pkt, a))]
     /// write a rtp packet
     async fn write(&self, pkt: &rtp::packet::Packet, a: &Attributes) -> Result<usize> {
         let now = if let Some(f) = &self.now {
@@ -118,12 +112,10 @@ pub(crate) struct Counters {
 
 /// Wrapping counters used for generating [`rtcp::sender_report::SenderReport`]
 impl Counters {
-    #[tracing::instrument(level = "debug", skip(self))]
     pub fn increment_packets(&mut self) {
         self.packets = self.packets.wrapping_add(1);
     }
 
-    #[tracing::instrument(level = "debug", skip(self, octets))]
     pub fn count_octets(&mut self, octets: usize) {
         // account for a payload size of at most `u32::MAX`
         // and log a message if larger
@@ -135,17 +127,14 @@ impl Counters {
             }));
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     pub fn packet_count(&self) -> u32 {
         self.packets
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     pub fn octet_count(&self) -> u32 {
         self.octets
     }
 
-    #[tracing::instrument(level = "debug", skip(packets, octets))]
     #[cfg(test)]
     pub fn mock(packets: u32, octets: u32) -> Self {
         Self { packets, octets }

@@ -30,7 +30,6 @@ const ICE_ROLE_CONTROLLING_STR: &str = "controlling";
 const ICE_ROLE_CONTROLLED_STR: &str = "controlled";
 
 impl From<&str> for RTCIceRole {
-    #[tracing::instrument(level = "debug", skip(raw))]
     fn from(raw: &str) -> Self {
         match raw {
             ICE_ROLE_CONTROLLING_STR => RTCIceRole::Controlling,
@@ -41,7 +40,6 @@ impl From<&str> for RTCIceRole {
 }
 
 impl fmt::Display for RTCIceRole {
-    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match *self {
             RTCIceRole::Controlling => write!(f, "{ICE_ROLE_CONTROLLING_STR}"),

@@ -112,14 +112,12 @@ pub struct IoError(#[from] pub io::Error);
 
 // Workaround for wanting PartialEq for io::Error.
 impl PartialEq for IoError {
-    #[tracing::instrument(level = "debug", skip(self, other))]
     fn eq(&self, other: &Self) -> bool {
         self.0.kind() == other.0.kind()
     }
 }
 
 impl From<io::Error> for Error {
-    #[tracing::instrument(level = "debug", skip(e))]
     fn from(e: io::Error) -> Self {
         Error::Io(IoError(e))
     }
@@ -127,7 +125,6 @@ impl From<io::Error> for Error {
 
 // Because Tokio SendError is parameterized, we sadly lose the backtrace.
 impl<T> From<MpscSendError<T>> for Error {
-    #[tracing::instrument(level = "debug", skip(e))]
     fn from(e: MpscSendError<T>) -> Self {
         Error::MpscSend(e.to_string())
     }

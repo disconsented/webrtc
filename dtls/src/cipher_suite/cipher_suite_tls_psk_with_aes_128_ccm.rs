@@ -2,7 +2,6 @@ use super::*;
 use crate::cipher_suite::cipher_suite_aes_128_ccm::CipherSuiteAes128Ccm;
 use crate::crypto::crypto_ccm::CryptoCcmTagLen;
 
-#[tracing::instrument(level = "debug", skip())]
 pub fn new_cipher_suite_tls_psk_with_aes_128_ccm() -> CipherSuiteAes128Ccm {
     CipherSuiteAes128Ccm::new(
         ClientCertificateType::Unsupported,

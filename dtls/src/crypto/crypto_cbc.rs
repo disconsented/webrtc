@@ -35,7 +35,6 @@ impl CryptoCbc {
     const BLOCK_SIZE: usize = 16;
     const MAC_SIZE: usize = 20;
 
-    #[tracing::instrument(level = "debug", skip(local_key, local_mac, remote_key, remote_mac))]
     pub fn new(
         local_key: &[u8],
         local_mac: &[u8],
@@ -51,7 +50,6 @@ impl CryptoCbc {
         })
     }
 
-    #[tracing::instrument(level = "debug", skip(self, pkt_rlh, raw))]
     pub fn encrypt(&self, pkt_rlh: &RecordLayerHeader, raw: &[u8]) -> Result<Vec<u8>> {
         let mut payload = raw[RECORD_LAYER_HEADER_SIZE..].to_vec();
         let raw = &raw[..RECORD_LAYER_HEADER_SIZE];
@@ -88,7 +86,6 @@ impl CryptoCbc {
         Ok(r)
     }
 
-    #[tracing::instrument(level = "debug", skip(self, r))]
     pub fn decrypt(&self, r: &[u8]) -> Result<Vec<u8>> {
         let mut reader = Cursor::new(r);
         let h = RecordLayerHeader::unmarshal(&mut reader)?;

@@ -40,7 +40,6 @@ pub enum ChunkType {
 pub struct Chunk(pub u16);
 
 impl fmt::Display for Chunk {
-    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self.chunk_type() {
             ChunkType::RunLength => {
@@ -53,7 +52,6 @@ impl fmt::Display for Chunk {
     }
 }
 impl Chunk {
-    #[tracing::instrument(level = "debug", skip(self))]
     /// chunk_type returns the ChunkType that this Chunk represents
     pub fn chunk_type(&self) -> ChunkType {
         if self.0 == 0 {
@@ -65,7 +63,6 @@ impl Chunk {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// run_type returns the run_type that this Chunk represents. It is
     /// only valid if ChunkType is RunLengthChunkType.
     pub fn run_type(&self) -> error::Result<u8> {
@@ -76,7 +73,6 @@ impl Chunk {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// value returns the value represented in this Chunk
     pub fn value(&self) -> u16 {
         match self.chunk_type() {
@@ -130,7 +126,6 @@ pub type LossRLEReportBlock = RLEReportBlock;
 pub type DuplicateRLEReportBlock = RLEReportBlock;
 
 impl RLEReportBlock {
-    #[tracing::instrument(level = "debug", skip(self))]
     pub fn xr_header(&self) -> XRHeader {
         XRHeader {
             block_type: if self.is_loss_rle {
@@ -145,52 +140,43 @@ impl RLEReportBlock {
 }
 
 impl fmt::Display for RLEReportBlock {
-    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{self:?}")
     }
 }
 
 impl Packet for RLEReportBlock {
-    #[tracing::instrument(level = "debug", skip(self))]
     fn header(&self) -> Header {
         Header::default()
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// destination_ssrc returns an array of ssrc values that this report block refers to.
     fn destination_ssrc(&self) -> Vec<u32> {
         vec![self.ssrc]
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn raw_size(&self) -> usize {
         XR_HEADER_LENGTH + RLE_REPORT_BLOCK_MIN_LENGTH as usize + self.chunks.len() * 2
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn as_any(&self) -> &(dyn Any + Send + Sync) {
         self
     }
-    #[tracing::instrument(level = "debug", skip(self, other))]
     fn equal(&self, other: &(dyn Packet + Send + Sync)) -> bool {
         other.as_any().downcast_ref::<RLEReportBlock>() == Some(self)
     }
-    #[tracing::instrument(level = "debug", skip(self))]
     fn cloned(&self) -> Box<dyn Packet + Send + Sync> {
         Box::new(self.clone())
     }
 }
 
 impl MarshalSize for RLEReportBlock {
-    #[tracing::instrument(level = "debug", skip(self))]
     fn marshal_size(&self) -> usize {
         self.raw_size()
     }
 }
 
 impl Marshal for RLEReportBlock {
-    #[tracing::instrument(level = "debug", skip(self, buf))]
     /// marshal_to encodes the RLEReportBlock in binary
     fn marshal_to(&self, mut buf: &mut [u8]) -> Result<usize> {
         if buf.remaining_mut() < self.marshal_size() {
@@ -213,7 +199,6 @@ impl Marshal for RLEReportBlock {
 }
 
 impl Unmarshal for RLEReportBlock {
-    #[tracing::instrument(level = "debug", skip(raw_packet))]
     /// Unmarshal decodes the RLEReportBlock from binary
     fn unmarshal<B>(raw_packet: &mut B) -> Result<Self>
     where

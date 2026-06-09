@@ -17,7 +17,6 @@ mod packetizer;
 pub struct Av1Payloader {}
 
 impl Payloader for Av1Payloader {
-    #[tracing::instrument(level = "debug", skip(self, mtu, payload))]
     /// Based on <https://chromium.googlesource.com/external/webrtc/+/4e513346ec56c829b3a6010664998469fc237b35/modules/rtp_rtcp/source/rtp_packetizer_av1.cc>
     /// Reference: <https://aomediacodec.github.io/av1-rtp-spec/#45-payload-structure>
     fn payload(&mut self, mtu: usize, payload: &Bytes) -> crate::error::Result<Vec<Bytes>> {
@@ -117,7 +116,6 @@ impl Payloader for Av1Payloader {
         Ok(payloads)
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn clone_to(&self) -> Box<dyn Payloader + Send + Sync> {
         Box::new(self.clone())
     }

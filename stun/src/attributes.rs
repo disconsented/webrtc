@@ -11,7 +11,6 @@ use crate::message::*;
 pub struct Attributes(pub Vec<RawAttribute>);
 
 impl Attributes {
-    #[tracing::instrument(level = "debug", skip(self, t))]
     /// get returns first attribute from list by the type.
     /// If attribute is present the RawAttribute is returned and the
     /// boolean is true. Otherwise the returned RawAttribute will be
@@ -32,7 +31,6 @@ impl Attributes {
 pub struct AttrType(pub u16);
 
 impl fmt::Display for AttrType {
-    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let other = format!("0x{:x}", self.0);
 
@@ -76,19 +74,16 @@ impl fmt::Display for AttrType {
 }
 
 impl AttrType {
-    #[tracing::instrument(level = "debug", skip(self))]
     /// required returns true if type is from comprehension-required range (0x0000-0x7FFF).
     pub fn required(&self) -> bool {
         self.0 <= 0x7FFF
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// optional returns true if type is from comprehension-optional range (0x8000-0xFFFF).
     pub fn optional(&self) -> bool {
         self.0 >= 0x8000
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// value returns uint16 representation of attribute type.
     pub fn value(&self) -> u16 {
         self.0
@@ -171,14 +166,12 @@ pub struct RawAttribute {
 }
 
 impl fmt::Display for RawAttribute {
-    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}: {:?}", self.typ, self.value)
     }
 }
 
 impl Setter for RawAttribute {
-    #[tracing::instrument(level = "debug", skip(self, m))]
     /// add_to implements Setter, adding attribute as a.Type with a.Value and ignoring
     /// the Length field.
     fn add_to(&self, m: &mut Message) -> Result<()> {
@@ -189,7 +182,6 @@ impl Setter for RawAttribute {
 
 pub(crate) const PADDING: usize = 4;
 
-#[tracing::instrument(level = "debug", skip(l))]
 /// STUN aligns attributes on 32-bit boundaries, attributes whose content
 /// is not a multiple of 4 bytes are padded with 1, 2, or 3 bytes of
 /// padding so that its value contains a multiple of 4 bytes.  The
@@ -204,7 +196,6 @@ pub(crate) fn nearest_padded_value_length(l: usize) -> usize {
     n
 }
 
-#[tracing::instrument(level = "debug", skip(val))]
 /// This method converts uint16 vlue to AttrType. If it finds an old attribute
 /// type value, it also translates it to the new value to enable backward
 /// compatibility. (See: https://github.com/pion/stun/issues/21)

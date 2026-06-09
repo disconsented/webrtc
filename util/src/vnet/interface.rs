@@ -11,26 +11,21 @@ pub struct Interface {
 }
 
 impl Interface {
-    #[tracing::instrument(level = "debug", skip(name, addrs))]
     pub fn new(name: String, addrs: Vec<IpNet>) -> Self {
         Interface { name, addrs }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, addr))]
     pub fn add_addr(&mut self, addr: IpNet) {
         self.addrs.push(addr);
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     pub fn name(&self) -> &str {
         &self.name
     }
-    #[tracing::instrument(level = "debug", skip(self))]
     pub fn addrs(&self) -> &[IpNet] {
         &self.addrs
     }
 
-    #[tracing::instrument(level = "debug", skip(addr, mask))]
     pub fn convert(addr: SocketAddr, mask: Option<SocketAddr>) -> Result<IpNet> {
         if let Some(mask) = mask {
             Ok(IpNet::with_netmask(addr.ip(), mask.ip()).map_err(|_| Error::ErrInvalidMask)?)

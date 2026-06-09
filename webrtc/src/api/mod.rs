@@ -40,7 +40,6 @@ pub struct API {
 }
 
 impl API {
-    #[tracing::instrument(level = "debug", skip(self, configuration))]
     /// new_peer_connection creates a new PeerConnection with the provided configuration against the received API object
     pub async fn new_peer_connection(
         &self,
@@ -49,7 +48,6 @@ impl API {
         RTCPeerConnection::new(self, configuration).await
     }
 
-    #[tracing::instrument(level = "debug", skip(self, opts))]
     /// new_ice_gatherer creates a new ice gatherer.
     /// This constructor is part of the ORTC API. It is not
     /// meant to be used together with the basic WebRTC API.
@@ -69,7 +67,6 @@ impl API {
         ))
     }
 
-    #[tracing::instrument(level = "debug", skip(self, gatherer))]
     /// new_ice_transport creates a new ice transport.
     /// This constructor is part of the ORTC API. It is not
     /// meant to be used together with the basic WebRTC API.
@@ -77,7 +74,6 @@ impl API {
         RTCIceTransport::new(gatherer)
     }
 
-    #[tracing::instrument(level = "debug", skip(self, ice_transport, certificates))]
     /// new_dtls_transport creates a new dtls_transport transport.
     /// This constructor is part of the ORTC API. It is not
     /// meant to be used together with the basic WebRTC API.
@@ -106,7 +102,6 @@ impl API {
         ))
     }
 
-    #[tracing::instrument(level = "debug", skip(self, dtls_transport))]
     /// new_sctp_transport creates a new SCTPTransport.
     /// This constructor is part of the ORTC API. It is not
     /// meant to be used together with the basic WebRTC API.
@@ -120,7 +115,6 @@ impl API {
         ))
     }
 
-    #[tracing::instrument(level = "debug", skip(self, sctp_transport, params))]
     /// new_data_channel creates a new DataChannel.
     /// This constructor is part of the ORTC API. It is not
     /// meant to be used together with the basic WebRTC API.
@@ -140,7 +134,6 @@ impl API {
         Ok(d)
     }
 
-    #[tracing::instrument(level = "debug", skip(self, kind, transport, interceptor))]
     /// new_rtp_receiver constructs a new RTPReceiver
     pub fn new_rtp_receiver(
         &self,
@@ -157,7 +150,6 @@ impl API {
         )
     }
 
-    #[tracing::instrument(level = "debug", skip(self, track, transport, interceptor))]
     /// new_rtp_sender constructs a new RTPSender
     pub async fn new_rtp_sender(
         &self,
@@ -178,13 +170,11 @@ impl API {
         .await
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// Returns the internal [`SettingEngine`].
     pub fn setting_engine(&self) -> Arc<SettingEngine> {
         Arc::clone(&self.setting_engine)
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// Returns the internal [`MediaEngine`].
     pub fn media_engine(&self) -> Arc<MediaEngine> {
         Arc::clone(&self.media_engine)
@@ -199,12 +189,10 @@ pub struct APIBuilder {
 }
 
 impl APIBuilder {
-    #[tracing::instrument(level = "debug", skip())]
     pub fn new() -> Self {
         APIBuilder::default()
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     pub fn build(mut self) -> API {
         API {
             setting_engine: if let Some(setting_engine) = self.setting_engine.take() {
@@ -227,7 +215,6 @@ impl APIBuilder {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, setting_engine))]
     /// WithSettingEngine allows providing a SettingEngine to the API.
     /// Settings should not be changed after passing the engine to an API.
     pub fn with_setting_engine(mut self, setting_engine: SettingEngine) -> Self {
@@ -235,7 +222,6 @@ impl APIBuilder {
         self
     }
 
-    #[tracing::instrument(level = "debug", skip(self, media_engine))]
     /// WithMediaEngine allows providing a MediaEngine to the API.
     /// Settings can be changed after passing the engine to an API.
     pub fn with_media_engine(mut self, media_engine: MediaEngine) -> Self {
@@ -243,7 +229,6 @@ impl APIBuilder {
         self
     }
 
-    #[tracing::instrument(level = "debug", skip(self, interceptor_registry))]
     /// with_interceptor_registry allows providing Interceptors to the API.
     /// Settings should not be changed after passing the registry to an API.
     pub fn with_interceptor_registry(mut self, interceptor_registry: Registry) -> Self {

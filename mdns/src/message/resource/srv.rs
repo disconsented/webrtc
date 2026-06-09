@@ -13,7 +13,6 @@ pub struct SrvResource {
 }
 
 impl fmt::Display for SrvResource {
-    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
@@ -24,13 +23,11 @@ impl fmt::Display for SrvResource {
 }
 
 impl ResourceBody for SrvResource {
-    #[tracing::instrument(level = "debug", skip(self))]
     fn real_type(&self) -> DnsType {
         DnsType::Srv
     }
 
     // pack appends the wire format of the SRVResource to msg.
-    #[tracing::instrument(level = "debug", skip(self, msg, _compression, compression_off))]
     fn pack(
         &self,
         mut msg: Vec<u8>,
@@ -44,7 +41,6 @@ impl ResourceBody for SrvResource {
         Ok(msg)
     }
 
-    #[tracing::instrument(level = "debug", skip(self, msg, off, _length))]
     fn unpack(&mut self, msg: &[u8], off: usize, _length: usize) -> Result<usize> {
         let (priority, off) = unpack_uint16(msg, off)?;
         self.priority = priority;

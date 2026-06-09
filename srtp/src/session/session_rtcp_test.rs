@@ -9,7 +9,6 @@ use super::*;
 use crate::error::Result;
 use crate::protection_profile::*;
 
-#[tracing::instrument(level = "debug", skip())]
 async fn build_session_srtcp_pair() -> Result<(Session, Session)> {
     let (ua, ub) = pipe();
 
@@ -142,7 +141,6 @@ async fn test_session_srtcp_listen() -> Result<()> {
     Ok(())
 }
 
-#[tracing::instrument(level = "debug", skip(context, pkt))]
 fn encrypt_srtcp(
     context: &mut Context,
     pkt: &(dyn rtcp::packet::Packet + Send + Sync),
@@ -154,7 +152,6 @@ fn encrypt_srtcp(
 
 const PLI_PACKET_SIZE: usize = 8;
 
-#[tracing::instrument(level = "debug", skip(read_stream))]
 async fn get_sender_ssrc(read_stream: &Arc<Stream>) -> Result<u32> {
     let auth_tag_size = ProtectionProfile::Aes128CmHmacSha1_80.rtcp_auth_tag_len();
 

@@ -46,7 +46,6 @@ pub(crate) struct GapAckBlock {
 
 /// makes gapAckBlock printable
 impl fmt::Display for GapAckBlock {
-    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{} - {}", self.start, self.end)
     }
@@ -62,7 +61,6 @@ pub(crate) struct ChunkSelectiveAck {
 
 /// makes chunkSelectiveAck printable
 impl fmt::Display for ChunkSelectiveAck {
-    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut res = format!(
             "SACK cumTsnAck={} arwnd={} dupTsn={:?}",
@@ -80,7 +78,6 @@ impl fmt::Display for ChunkSelectiveAck {
 pub(crate) const SELECTIVE_ACK_HEADER_SIZE: usize = 12;
 
 impl Chunk for ChunkSelectiveAck {
-    #[tracing::instrument(level = "debug", skip(self))]
     fn header(&self) -> ChunkHeader {
         ChunkHeader {
             typ: CT_SACK,
@@ -89,7 +86,6 @@ impl Chunk for ChunkSelectiveAck {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(raw))]
     fn unmarshal(raw: &Bytes) -> Result<Self> {
         let header = ChunkHeader::unmarshal(raw)?;
 
@@ -139,7 +135,6 @@ impl Chunk for ChunkSelectiveAck {
         })
     }
 
-    #[tracing::instrument(level = "debug", skip(self, writer))]
     fn marshal_to(&self, writer: &mut BytesMut) -> Result<usize> {
         self.header().marshal_to(writer)?;
 
@@ -158,17 +153,14 @@ impl Chunk for ChunkSelectiveAck {
         Ok(writer.len())
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn check(&self) -> Result<()> {
         Ok(())
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn value_length(&self) -> usize {
         SELECTIVE_ACK_HEADER_SIZE + self.gap_ack_blocks.len() * 4 + self.duplicate_tsn.len() * 4
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn as_any(&self) -> &(dyn Any + Send + Sync) {
         self
     }

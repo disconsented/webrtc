@@ -60,14 +60,12 @@ pub enum VideoRotation {
 }
 
 impl MarshalSize for VideoOrientationExtension {
-    #[tracing::instrument(level = "debug", skip(self))]
     fn marshal_size(&self) -> usize {
         VIDEO_ORIENTATION_EXTENSION_SIZE
     }
 }
 
 impl Unmarshal for VideoOrientationExtension {
-    #[tracing::instrument(level = "debug", skip(buf))]
     fn unmarshal<B>(buf: &mut B) -> util::Result<Self>
     where
         Self: Sized,
@@ -92,7 +90,6 @@ impl Unmarshal for VideoOrientationExtension {
 }
 
 impl Marshal for VideoOrientationExtension {
-    #[tracing::instrument(level = "debug", skip(self, buf))]
     fn marshal_to(&self, mut buf: &mut [u8]) -> util::Result<usize> {
         let c = (self.direction as u8) << 3;
         let f = if self.flip { 0b0100 } else { 0 };
@@ -107,7 +104,6 @@ impl Marshal for VideoOrientationExtension {
 impl TryFrom<u8> for CameraDirection {
     type Error = util::Error;
 
-    #[tracing::instrument(level = "debug", skip(value))]
     fn try_from(value: u8) -> Result<Self, Self::Error> {
         match value {
             0 => Ok(CameraDirection::Front),
@@ -122,7 +118,6 @@ impl TryFrom<u8> for CameraDirection {
 impl TryFrom<u8> for VideoRotation {
     type Error = util::Error;
 
-    #[tracing::instrument(level = "debug", skip(value))]
     fn try_from(value: u8) -> Result<Self, Self::Error> {
         match value {
             0 => Ok(VideoRotation::Degree0),

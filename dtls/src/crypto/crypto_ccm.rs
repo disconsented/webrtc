@@ -53,7 +53,6 @@ pub struct CryptoCcm {
 }
 
 impl Clone for CryptoCcm {
-    #[tracing::instrument(level = "debug", skip(self))]
     fn clone(&self) -> Self {
         match self.local_ccm {
             CryptoCcmType::CryptoCcm(_) => Self::new(
@@ -75,7 +74,6 @@ impl Clone for CryptoCcm {
 }
 
 impl CryptoCcm {
-    #[tracing::instrument(level = "debug", skip(tag_len, local_key, local_write_iv, remote_key, remote_write_iv))]
     pub fn new(
         tag_len: &CryptoCcmTagLen,
         local_key: &[u8],
@@ -105,7 +103,6 @@ impl CryptoCcm {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, pkt_rlh, raw))]
     pub fn encrypt(&self, pkt_rlh: &RecordLayerHeader, raw: &[u8]) -> Result<Vec<u8>> {
         let payload = &raw[RECORD_LAYER_HEADER_SIZE..];
         let raw = &raw[..RECORD_LAYER_HEADER_SIZE];
@@ -145,7 +142,6 @@ impl CryptoCcm {
         Ok(r)
     }
 
-    #[tracing::instrument(level = "debug", skip(self, r))]
     pub fn decrypt(&self, r: &[u8]) -> Result<Vec<u8>> {
         let mut reader = Cursor::new(r);
         let h = RecordLayerHeader::unmarshal(&mut reader)?;

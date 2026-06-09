@@ -103,7 +103,6 @@ pub(crate) const MEDIA_SECTION_APPLICATION: &str = "application";
 
 const RUNES_ALPHA: &[u8] = b"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
-#[tracing::instrument(level = "debug", skip(n))]
 /// math_rand_alpha generates a mathematical random alphabet sequence of the requested length.
 pub fn math_rand_alpha(n: usize) -> String {
     let mut rng = rng();
@@ -201,7 +200,6 @@ pub struct RTCPeerConnection {
 }
 
 impl std::fmt::Debug for RTCPeerConnection {
-    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("RTCPeerConnection")
             .field("stats_id", &self.stats_id)
@@ -213,14 +211,12 @@ impl std::fmt::Debug for RTCPeerConnection {
 }
 
 impl std::fmt::Display for RTCPeerConnection {
-    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "(RTCPeerConnection {})", self.stats_id)
     }
 }
 
 impl RTCPeerConnection {
-    #[tracing::instrument(level = "debug", skip(api, configuration))]
     /// creates a PeerConnection with the default codecs and
     /// interceptors.  See register_default_codecs and register_default_interceptors.
     ///
@@ -268,7 +264,6 @@ impl RTCPeerConnection {
         })
     }
 
-    #[tracing::instrument(level = "debug", skip(configuration))]
     /// init_configuration defines validation of the specified Configuration and
     /// its assignment to the internal configuration variable. This function differs
     /// from its set_configuration counterpart because most of the checks do not
@@ -299,7 +294,6 @@ impl RTCPeerConnection {
         Ok(())
     }
 
-    #[tracing::instrument(level = "debug", skip(self, f))]
     /// on_signaling_state_change sets an event handler which is invoked when the
     /// peer connection's signaling state changes
     pub fn on_signaling_state_change(&self, f: OnSignalingStateChangeHdlrFn) {
@@ -308,7 +302,6 @@ impl RTCPeerConnection {
             .store(Some(Arc::new(Mutex::new(f))))
     }
 
-    #[tracing::instrument(level = "debug", skip(self, new_state))]
     async fn do_signaling_state_change(&self, new_state: RTCSignalingState) {
         log::info!("signaling state changed to {new_state}");
         if let Some(handler) = &*self.internal.on_signaling_state_change_handler.load() {
@@ -317,7 +310,6 @@ impl RTCPeerConnection {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, f))]
     /// on_data_channel sets an event handler which is invoked when a data
     /// channel message arrives from a remote peer.
     pub fn on_data_channel(&self, f: OnDataChannelHdlrFn) {
@@ -326,7 +318,6 @@ impl RTCPeerConnection {
             .store(Some(Arc::new(Mutex::new(f))));
     }
 
-    #[tracing::instrument(level = "debug", skip(self, f))]
     /// on_negotiation_needed sets an event handler which is invoked when
     /// a change has occurred which requires session negotiation
     pub fn on_negotiation_needed(&self, f: OnNegotiationNeededHdlrFn) {
@@ -335,7 +326,6 @@ impl RTCPeerConnection {
             .store(Some(Arc::new(Mutex::new(f))));
     }
 
-    #[tracing::instrument(level = "debug", skip(params))]
     fn do_negotiation_needed_inner(params: &NegotiationNeededParams) -> bool {
         // https://w3c.github.io/webrtc-pc/#updating-the-negotiation-needed-flag
         // non-canon step 1
@@ -357,7 +347,6 @@ impl RTCPeerConnection {
             true
         }
     }
-    #[tracing::instrument(level = "debug", skip(params))]
     /// do_negotiation_needed enqueues negotiation_needed_op if necessary
     /// caller of this method should hold `pc.mu` lock
     async fn do_negotiation_needed(params: NegotiationNeededParams) {
@@ -378,7 +367,6 @@ impl RTCPeerConnection {
             .await;
     }
 
-    #[tracing::instrument(level = "debug", skip(params))]
     async fn after_negotiation_needed_op(params: NegotiationNeededParams) -> bool {
         let old_negotiation_needed_state = params.negotiation_needed_state.load(Ordering::SeqCst);
 
@@ -393,7 +381,6 @@ impl RTCPeerConnection {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(params))]
     async fn negotiation_needed_op(params: NegotiationNeededParams) -> bool {
         // Don't run NegotiatedNeeded checks if on_negotiation_needed is not set
         let handler = &*params.on_negotiation_needed_handler.load();
@@ -445,7 +432,6 @@ impl RTCPeerConnection {
         RTCPeerConnection::after_negotiation_needed_op(params).await
     }
 
-    #[tracing::instrument(level = "debug", skip(params))]
     async fn check_negotiation_needed(params: &CheckNegotiationNeededParams) -> bool {
         // To check if negotiation is needed for connection, perform the following checks:
         // Skip 1, 2 steps
@@ -584,7 +570,6 @@ impl RTCPeerConnection {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, f))]
     /// on_ice_candidate sets an event handler which is invoked when a new ICE
     /// candidate is found.
     /// Take note that the handler is gonna be called with a nil pointer when
@@ -593,14 +578,12 @@ impl RTCPeerConnection {
         self.internal.ice_gatherer.on_local_candidate(f)
     }
 
-    #[tracing::instrument(level = "debug", skip(self, f))]
     /// on_ice_gathering_state_change sets an event handler which is invoked when the
     /// ICE candidate gathering state has changed.
     pub fn on_ice_gathering_state_change(&self, f: OnICEGathererStateChangeHdlrFn) {
         self.internal.ice_gatherer.on_state_change(f)
     }
 
-    #[tracing::instrument(level = "debug", skip(self, f))]
     /// on_track sets an event handler which is called when remote track
     /// arrives from a remote peer.
     pub fn on_track(&self, f: OnTrackHdlrFn) {
@@ -609,7 +592,6 @@ impl RTCPeerConnection {
             .store(Some(Arc::new(Mutex::new(f))));
     }
 
-    #[tracing::instrument(level = "debug", skip(on_track_handler, track, receiver, transceiver))]
     fn do_track(
         on_track_handler: Arc<ArcSwapOption<Mutex<OnTrackHdlrFn>>>,
         track: Arc<TrackRemote>,
@@ -628,7 +610,6 @@ impl RTCPeerConnection {
         });
     }
 
-    #[tracing::instrument(level = "debug", skip(self, f))]
     /// on_ice_connection_state_change sets an event handler which is called
     /// when an ICE connection state is changed.
     pub fn on_ice_connection_state_change(&self, f: OnICEConnectionStateChangeHdlrFn) {
@@ -637,7 +618,6 @@ impl RTCPeerConnection {
             .store(Some(Arc::new(Mutex::new(f))));
     }
 
-    #[tracing::instrument(level = "debug", skip(handler, ice_connection_state, cs))]
     async fn do_ice_connection_state_change(
         handler: &Arc<ArcSwapOption<Mutex<OnICEConnectionStateChangeHdlrFn>>>,
         ice_connection_state: &Arc<AtomicU8>,
@@ -652,7 +632,6 @@ impl RTCPeerConnection {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, f))]
     /// on_peer_connection_state_change sets an event handler which is called
     /// when the PeerConnectionState has changed
     pub fn on_peer_connection_state_change(&self, f: OnPeerConnectionStateChangeHdlrFn) {
@@ -661,7 +640,6 @@ impl RTCPeerConnection {
             .store(Some(Arc::new(Mutex::new(f))));
     }
 
-    #[tracing::instrument(level = "debug", skip(handler, cs))]
     async fn do_peer_connection_state_change(
         handler: &Arc<ArcSwapOption<Mutex<OnPeerConnectionStateChangeHdlrFn>>>,
         cs: RTCPeerConnectionState,
@@ -672,7 +650,6 @@ impl RTCPeerConnection {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// restart_ice restart ICE and triggers negotiation needed
     /// <https://w3c.github.io/webrtc-pc/#dom-rtcpeerconnection-restartice>
     pub async fn restart_ice(&self) -> Result<()> {
@@ -682,7 +659,6 @@ impl RTCPeerConnection {
     }
 
     // set_configuration updates the configuration of this PeerConnection object.
-    #[tracing::instrument(level = "debug", skip(self, configuration))]
     pub async fn set_configuration(&self, configuration: RTCConfiguration) -> Result<()> {
         // https://www.w3.org/TR/webrtc/#dom-rtcpeerconnection-setconfiguration (step #2)
         let mut config_lock = self.configuration.lock().await;
@@ -746,7 +722,6 @@ impl RTCPeerConnection {
         Ok(())
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// get_configuration returns a Configuration object representing the current
     /// configuration of this PeerConnection object. The returned object is a
     /// copy and direct mutation on it will not take affect until set_configuration
@@ -757,12 +732,10 @@ impl RTCPeerConnection {
         configuration.clone()
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     pub fn get_stats_id(&self) -> &str {
         self.stats_id.as_str()
     }
 
-    #[tracing::instrument(level = "debug", skip(self, options))]
     /// create_offer starts the PeerConnection and generates the localDescription
     /// <https://w3c.github.io/webrtc-pc/#dom-rtcpeerconnection-createoffer>
     pub async fn create_offer(
@@ -900,7 +873,6 @@ impl RTCPeerConnection {
         Ok(offer)
     }
 
-    #[tracing::instrument(level = "debug", skip(on_peer_connection_state_change_handler, is_closed, peer_connection_state, ice_connection_state, dtls_transport_state))]
     /// Update the PeerConnectionState given the state of relevant transports
     /// <https://www.w3.org/TR/webrtc/#rtcpeerconnectionstate-enum>
     async fn update_connection_state(
@@ -956,7 +928,6 @@ impl RTCPeerConnection {
         .await;
     }
 
-    #[tracing::instrument(level = "debug", skip(self, _options))]
     /// create_answer starts the PeerConnection and generates the localDescription
     pub async fn create_answer(
         &self,
@@ -1025,7 +996,6 @@ impl RTCPeerConnection {
     }
 
     // 4.4.1.6 Set the SessionDescription
-    #[tracing::instrument(level = "debug", skip(self, sd, op))]
     pub(crate) async fn set_description(
         &self,
         sd: &RTCSessionDescription,
@@ -1255,7 +1225,6 @@ impl RTCPeerConnection {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, desc))]
     /// set_local_description sets the SessionDescription of the local peer
     pub async fn set_local_description(&self, mut desc: RTCSessionDescription) -> Result<()> {
         if self.internal.is_closed.load(Ordering::SeqCst) {
@@ -1353,7 +1322,6 @@ impl RTCPeerConnection {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// local_description returns PendingLocalDescription if it is not null and
     /// otherwise it returns CurrentLocalDescription. This property is used to
     /// determine if set_local_description has already been called.
@@ -1365,7 +1333,6 @@ impl RTCPeerConnection {
         self.current_local_description().await
     }
 
-    #[tracing::instrument(level = "debug", skip(desc))]
     pub fn is_lite_set(desc: &SessionDescription) -> bool {
         for a in &desc.attributes {
             if a.key.trim() == ATTR_KEY_ICELITE {
@@ -1375,7 +1342,6 @@ impl RTCPeerConnection {
         false
     }
 
-    #[tracing::instrument(level = "debug", skip(self, desc))]
     /// set_remote_description sets the SessionDescription of the remote peer
     pub async fn set_remote_description(&self, mut desc: RTCSessionDescription) -> Result<()> {
         if self.internal.is_closed.load(Ordering::SeqCst) {
@@ -1654,7 +1620,6 @@ impl RTCPeerConnection {
         Ok(())
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// start_rtp_senders starts all outbound RTP streams
     pub(crate) async fn start_rtp_senders(&self) -> Result<()> {
         let current_transceivers = self.internal.rtp_transceivers.lock().await;
@@ -1671,7 +1636,6 @@ impl RTCPeerConnection {
         Ok(())
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// remote_description returns pending_remote_description if it is not null and
     /// otherwise it returns current_remote_description. This property is used to
     /// determine if setRemoteDescription has already been called.
@@ -1680,7 +1644,6 @@ impl RTCPeerConnection {
         self.internal.remote_description().await
     }
 
-    #[tracing::instrument(level = "debug", skip(self, candidate))]
     /// add_ice_candidate accepts an ICE candidate string and adds it
     /// to the existing set of candidates.
     pub async fn add_ice_candidate(&self, candidate: RTCIceCandidateInit) -> Result<()> {
@@ -1708,7 +1671,6 @@ impl RTCPeerConnection {
             .await
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// ice_connection_state returns the ICE connection state of the
     /// PeerConnection instance.
     pub fn ice_connection_state(&self) -> RTCIceConnectionState {
@@ -1718,7 +1680,6 @@ impl RTCPeerConnection {
             .into()
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// get_senders returns the RTPSender that are currently attached to this PeerConnection
     pub async fn get_senders(&self) -> Vec<Arc<RTCRtpSender>> {
         let mut senders = vec![];
@@ -1730,7 +1691,6 @@ impl RTCPeerConnection {
         senders
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// get_receivers returns the RTPReceivers that are currently attached to this PeerConnection
     pub async fn get_receivers(&self) -> Vec<Arc<RTCRtpReceiver>> {
         let mut receivers = vec![];
@@ -1741,14 +1701,12 @@ impl RTCPeerConnection {
         receivers
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// get_transceivers returns the RtpTransceiver that are currently attached to this PeerConnection
     pub async fn get_transceivers(&self) -> Vec<Arc<RTCRtpTransceiver>> {
         let rtp_transceivers = self.internal.rtp_transceivers.lock().await;
         rtp_transceivers.clone()
     }
 
-    #[tracing::instrument(level = "debug", skip(self, track))]
     /// add_track adds a Track to the PeerConnection
     pub async fn add_track(
         &self,
@@ -1798,7 +1756,6 @@ impl RTCPeerConnection {
         Ok(transceiver.sender().await)
     }
 
-    #[tracing::instrument(level = "debug", skip(self, sender))]
     /// remove_track removes a Track from the PeerConnection
     pub async fn remove_track(&self, sender: &Arc<RTCRtpSender>) -> Result<()> {
         if self.internal.is_closed.load(Ordering::SeqCst) {
@@ -1839,7 +1796,6 @@ impl RTCPeerConnection {
         Ok(())
     }
 
-    #[tracing::instrument(level = "debug", skip(self, kind, init))]
     /// add_transceiver_from_kind Create a new RtpTransceiver and adds it to the set of transceivers.
     pub async fn add_transceiver_from_kind(
         &self,
@@ -1849,7 +1805,6 @@ impl RTCPeerConnection {
         self.internal.add_transceiver_from_kind(kind, init).await
     }
 
-    #[tracing::instrument(level = "debug", skip(self, track, init))]
     /// add_transceiver_from_track Create a new RtpTransceiver(SendRecv or SendOnly) and add it to the set of transceivers.
     pub async fn add_transceiver_from_track(
         &self,
@@ -1874,7 +1829,6 @@ impl RTCPeerConnection {
         Ok(t)
     }
 
-    #[tracing::instrument(level = "debug", skip(self, label, options))]
     /// create_data_channel creates a new DataChannel object with the given label
     /// and optional DataChannelInit used to configure properties of the
     /// underlying channel such as data reliability.
@@ -1952,13 +1906,11 @@ impl RTCPeerConnection {
         Ok(d)
     }
 
-    #[tracing::instrument(level = "debug", skip(self, _provider))]
     /// set_identity_provider is used to configure an identity provider to generate identity assertions
     pub fn set_identity_provider(&self, _provider: &str) -> Result<()> {
         Err(Error::ErrPeerConnSetIdentityProviderNotImplemented)
     }
 
-    #[tracing::instrument(level = "debug", skip(self, pkts))]
     /// write_rtcp sends a user provided RTCP packet to the connected peer. If no peer is connected the
     /// packet is discarded. It also runs any configured interceptors.
     pub async fn write_rtcp(
@@ -1969,7 +1921,6 @@ impl RTCPeerConnection {
         Ok(self.interceptor_rtcp_writer.write(pkts, &a).await?)
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// close ends the PeerConnection
     pub async fn close(&self) -> Result<()> {
         // https://www.w3.org/TR/webrtc/#dom-rtcpeerconnection-close (step #1)
@@ -2051,7 +2002,6 @@ impl RTCPeerConnection {
         flatten_errs(close_errs)
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// CurrentLocalDescription represents the local description that was
     /// successfully negotiated the last time the PeerConnection transitioned
     /// into the stable state plus any local candidates that have been generated
@@ -2067,7 +2017,6 @@ impl RTCPeerConnection {
         populate_local_candidates(local_description.as_ref(), ice_gather, ice_gathering_state).await
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// PendingLocalDescription represents a local description that is in the
     /// process of being negotiated plus any local candidates that have been
     /// generated by the ICEAgent since the offer or answer was created. If the
@@ -2083,7 +2032,6 @@ impl RTCPeerConnection {
         populate_local_candidates(local_description.as_ref(), ice_gather, ice_gathering_state).await
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// current_remote_description represents the last remote description that was
     /// successfully negotiated the last time the PeerConnection transitioned
     /// into the stable state plus any remote candidates that have been supplied
@@ -2093,7 +2041,6 @@ impl RTCPeerConnection {
         current_remote_description.clone()
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// pending_remote_description represents a remote description that is in the
     /// process of being negotiated, complete with any remote candidates that
     /// have been supplied via add_icecandidate() since the offer or answer was
@@ -2104,21 +2051,18 @@ impl RTCPeerConnection {
         pending_remote_description.clone()
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// signaling_state attribute returns the signaling state of the
     /// PeerConnection instance.
     pub fn signaling_state(&self) -> RTCSignalingState {
         self.internal.signaling_state.load(Ordering::SeqCst).into()
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// icegathering_state attribute returns the ICE gathering state of the
     /// PeerConnection instance.
     pub fn ice_gathering_state(&self) -> RTCIceGatheringState {
         self.internal.ice_gathering_state()
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// connection_state attribute returns the connection state of the
     /// PeerConnection instance.
     pub fn connection_state(&self) -> RTCPeerConnectionState {
@@ -2128,7 +2072,6 @@ impl RTCPeerConnection {
             .into()
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     pub async fn get_stats(&self) -> StatsReport {
         self.internal
             .get_stats(self.get_stats_id().to_owned())
@@ -2136,7 +2079,6 @@ impl RTCPeerConnection {
             .into()
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// sctp returns the SCTPTransport for this PeerConnection
     ///
     /// The SCTP transport over which SCTP data is sent and received. If SCTP has not been negotiated, the value is nil.
@@ -2145,7 +2087,6 @@ impl RTCPeerConnection {
         Arc::clone(&self.internal.sctp_transport)
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// gathering_complete_promise is a Pion specific helper function that returns a channel that is closed when gathering is complete.
     /// This function may be helpful in cases where you are unable to trickle your ICE Candidates.
     ///
@@ -2177,13 +2118,11 @@ impl RTCPeerConnection {
         gathering_complete_rx
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// Returns the internal [`RTCDtlsTransport`].
     pub fn dtls_transport(&self) -> Arc<RTCDtlsTransport> {
         Arc::clone(&self.internal.dtls_transport)
     }
 
-    #[tracing::instrument(level = "debug", skip(self, t))]
     /// Adds the specified [`RTCRtpTransceiver`] to this [`RTCPeerConnection`].
     pub async fn add_transceiver(&self, t: Arc<RTCRtpTransceiver>) {
         self.internal.add_rtp_transceiver(t).await

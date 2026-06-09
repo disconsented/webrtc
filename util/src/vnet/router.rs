@@ -32,7 +32,6 @@ lazy_static! {
 }
 
 // Generate a unique router name
-#[tracing::instrument(level = "debug", skip())]
 fn assign_router_name() -> String {
     let n = ROUTER_ID_CTR.fetch_add(1, Ordering::SeqCst);
     format!("router{n}")
@@ -107,7 +106,6 @@ pub struct Router {
 
 #[async_trait]
 impl Nic for Router {
-    #[tracing::instrument(level = "debug", skip(self, ifc_name))]
     async fn get_interface(&self, ifc_name: &str) -> Option<Interface> {
         for ifc in &self.interfaces {
             if ifc.name == ifc_name {
@@ -117,7 +115,6 @@ impl Nic for Router {
         None
     }
 
-    #[tracing::instrument(level = "debug", skip(self, ifc_name, addrs))]
     async fn add_addrs_to_interface(&mut self, ifc_name: &str, addrs: &[IpNet]) -> Result<()> {
         for ifc in &mut self.interfaces {
             if ifc.name == ifc_name {
@@ -131,7 +128,6 @@ impl Nic for Router {
         Err(Error::ErrNotFound)
     }
 
-    #[tracing::instrument(level = "debug", skip(self, c))]
     async fn on_inbound_chunk(&self, c: Box<dyn Chunk + Send + Sync>) {
         let from_parent: Box<dyn Chunk + Send + Sync> = {
             let router_internal = self.router_internal.lock().await;
@@ -153,13 +149,11 @@ impl Nic for Router {
         self.push(from_parent).await;
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     async fn get_static_ips(&self) -> Vec<IpAddr> {
         self.static_ips.clone()
     }
 
     // caller must hold the mutex
-    #[tracing::instrument(level = "debug", skip(self, parent))]
     async fn set_router(&self, parent: Arc<Mutex<Router>>) -> Result<()> {
         {
             let mut router_internal = self.router_internal.lock().await;
@@ -220,7 +214,6 @@ impl Nic for Router {
 }
 
 impl Router {
-    #[tracing::instrument(level = "debug", skip(config))]
     pub fn new(config: RouterConfig) -> Result<Self> {
         let ipv4net: IpNet = config.cidr.parse()?;
 
@@ -301,13 +294,11 @@ impl Router {
     }
 
     // caller must hold the mutex
-    #[tracing::instrument(level = "debug", skip(self))]
     pub(crate) fn get_interfaces(&self) -> &[Interface] {
         &self.interfaces
     }
 
     // Start ...
-    #[tracing::instrument(level = "debug", skip(self))]
     pub fn start(&mut self) -> Pin<Box<dyn Future<Output = Result<()>>>> {
         if self.done.is_some() {
             return Box::pin(async move { Err(Error::ErrRouterAlreadyStarted) });
@@ -358,7 +349,6 @@ impl Router {
     }
 
     // Stop ...
-    #[tracing::instrument(level = "debug", skip(self))]
     pub fn stop(&mut self) -> Pin<Box<dyn Future<Output = Result<()>>>> {
         if self.done.is_none() {
             return Box::pin(async move { Err(Error::ErrRouterAlreadyStopped) });
@@ -370,7 +360,6 @@ impl Router {
         Box::pin(async move { Router::stop_children(children).await })
     }
 
-    #[tracing::instrument(level = "debug", skip(children))]
     async fn start_children(children: Vec<Arc<Mutex<Router>>>) -> Result<()> {
         for child in children {
             let mut c = child.lock().await;
@@ -380,7 +369,6 @@ impl Router {
         Ok(())
     }
 
-    #[tracing::instrument(level = "debug", skip(children))]
     async fn stop_children(children: Vec<Arc<Mutex<Router>>>) -> Result<()> {
         for child in children {
             let mut c = child.lock().await;
@@ -392,7 +380,6 @@ impl Router {
 
     // AddRouter adds a chile Router.
     // after parent.add_router(child), also call child.set_router(parent) to set child's parent router
-    #[tracing::instrument(level = "debug", skip(self, child))]
     pub async fn add_router(&mut self, child: Arc<Mutex<Router>>) -> Result<()> {
         // Router is a NIC. Add it as a NIC so that packets are routed to this child
         // router.
@@ -403,14 +390,12 @@ impl Router {
 
     // AddNet ...
     // after router.add_net(nic), also call nic.set_router(router) to set nic's router
-    #[tracing::instrument(level = "debug", skip(self, nic))]
     pub async fn add_net(&mut self, nic: Arc<Mutex<dyn Nic + Send + Sync>>) -> Result<()> {
         let mut router_internal = self.router_internal.lock().await;
         router_internal.add_nic(nic).await
     }
 
     // AddHost adds a mapping of hostname and an IP address to the local resolver.
-    #[tracing::instrument(level = "debug", skip(self, host_name, ip_addr))]
     pub async fn add_host(&mut self, host_name: String, ip_addr: String) -> Result<()> {
         let mut resolver = self.resolver.lock().await;
         resolver.add_host(host_name, ip_addr)
@@ -419,13 +404,11 @@ impl Router {
     // AddChunkFilter adds a filter for chunks traversing this router.
     // You may add more than one filter. The filters are called in the order of this method call.
     // If a chunk is dropped by a filter, subsequent filter will not receive the chunk.
-    #[tracing::instrument(level = "debug", skip(self, filter))]
     pub async fn add_chunk_filter(&self, filter: ChunkFilterFn) {
         let mut router_internal = self.router_internal.lock().await;
         router_internal.chunk_filters.push(filter);
     }
 
-    #[tracing::instrument(level = "debug", skip(self, c))]
     pub(crate) async fn push(&self, mut c: Box<dyn Chunk + Send + Sync>) {
         log::debug!("[{}] route {}", self.name, c);
         if self.done.is_some() {
@@ -443,7 +426,6 @@ impl Router {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(name, ipv4net, max_jitter, min_delay, queue, router_internal))]
     async fn process_chunks(
         name: &str,
         ipv4net: IpNet,
@@ -545,7 +527,6 @@ impl Router {
 
 impl RouterInternal {
     // caller must hold the mutex
-    #[tracing::instrument(level = "debug", skip(self, nic))]
     pub(crate) async fn add_nic(&mut self, nic: Arc<Mutex<dyn Nic + Send + Sync>>) -> Result<()> {
         let mut ips = {
             let ni = nic.lock().await;
@@ -581,7 +562,6 @@ impl RouterInternal {
     }
 
     // caller should hold the mutex
-    #[tracing::instrument(level = "debug", skip(self))]
     fn assign_ip_address(&mut self) -> Result<IpAddr> {
         // See: https://stackoverflow.com/questions/14915188/ip-address-ending-with-zero
 

@@ -38,7 +38,6 @@ pub(crate) struct UdpConn {
 }
 
 impl UdpConn {
-    #[tracing::instrument(level = "debug", skip(loc_addr, rem_addr, obs))]
     pub(crate) fn new(
         loc_addr: SocketAddr,
         rem_addr: Option<SocketAddr>,
@@ -57,7 +56,6 @@ impl UdpConn {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     pub(crate) fn get_inbound_ch(&self) -> Arc<Mutex<Option<ChunkChTx>>> {
         Arc::clone(&self.read_ch_tx)
     }
@@ -65,19 +63,16 @@ impl UdpConn {
 
 #[async_trait]
 impl Conn for UdpConn {
-    #[tracing::instrument(level = "debug", skip(self, addr))]
     async fn connect(&self, addr: SocketAddr) -> Result<()> {
         self.rem_addr.write().replace(addr);
 
         Ok(())
     }
-    #[tracing::instrument(level = "debug", skip(self, buf))]
     async fn recv(&self, buf: &mut [u8]) -> Result<usize> {
         let (n, _) = self.recv_from(buf).await?;
         Ok(n)
     }
 
-    #[tracing::instrument(level = "debug", skip(self, buf))]
     /// recv_from reads a packet from the connection,
     /// copying the payload into p. It returns the number of
     /// bytes copied into p and the return address that
@@ -106,7 +101,6 @@ impl Conn for UdpConn {
         Err(std::io::Error::new(std::io::ErrorKind::ConnectionAborted, "Connection Aborted").into())
     }
 
-    #[tracing::instrument(level = "debug", skip(self, buf))]
     async fn send(&self, buf: &[u8]) -> Result<usize> {
         let rem_addr = *self.rem_addr.read();
         if let Some(rem_addr) = rem_addr {
@@ -116,7 +110,6 @@ impl Conn for UdpConn {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, buf, target))]
     /// send_to writes a packet with payload p to addr.
     /// send_to can be made to time out and return
     async fn send_to(&self, buf: &[u8], target: SocketAddr) -> Result<usize> {
@@ -143,17 +136,14 @@ impl Conn for UdpConn {
         Ok(buf.len())
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn local_addr(&self) -> Result<SocketAddr> {
         Ok(self.loc_addr)
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn remote_addr(&self) -> Option<SocketAddr> {
         *self.rem_addr.read()
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     async fn close(&self) -> Result<()> {
         let obs = self.obs.upgrade().ok_or_else(|| Error::ErrVnetDisabled)?;
 
@@ -173,7 +163,6 @@ impl Conn for UdpConn {
         Ok(())
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn as_any(&self) -> &(dyn std::any::Any + Send + Sync) {
         self
     }

@@ -26,7 +26,6 @@ mod test_ack_timer {
 
     #[async_trait]
     impl AckTimerObserver for TestAckTimerObserver {
-        #[tracing::instrument(level = "debug", skip(self))]
         async fn on_ack_timeout(&mut self) {
             log::trace!("ack timed out");
             self.ncbs.fetch_add(1, Ordering::SeqCst);
@@ -178,7 +177,6 @@ mod test_rtx_timer {
     }
 
     impl Default for TestTimerObserver {
-        #[tracing::instrument(level = "debug", skip())]
         fn default() -> Self {
             TestTimerObserver {
                 ncbs: Arc::new(AtomicU32::new(0)),
@@ -191,7 +189,6 @@ mod test_rtx_timer {
 
     #[async_trait]
     impl RtxTimerObserver for TestTimerObserver {
-        #[tracing::instrument(level = "debug", skip(self, timer_id, n_rtos))]
         async fn on_retransmission_timeout(&mut self, timer_id: RtxTimerId, n_rtos: usize) {
             self.ncbs.fetch_add(1, Ordering::SeqCst);
             // 30 : 1 (30)
@@ -207,7 +204,6 @@ mod test_rtx_timer {
             }
         }
 
-        #[tracing::instrument(level = "debug", skip(self, timer_id))]
         async fn on_retransmission_failure(&mut self, timer_id: RtxTimerId) {
             if self.max_rtos == 0 {
                 if let Some(done) = &self.done_tx {

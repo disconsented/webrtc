@@ -50,46 +50,38 @@ pub struct ReceptionReport {
 }
 
 impl fmt::Display for ReceptionReport {
-    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{self:?}")
     }
 }
 
 impl Packet for ReceptionReport {
-    #[tracing::instrument(level = "debug", skip(self))]
     fn header(&self) -> Header {
         Header::default()
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn destination_ssrc(&self) -> Vec<u32> {
         vec![]
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn raw_size(&self) -> usize {
         RECEPTION_REPORT_LENGTH
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn as_any(&self) -> &(dyn Any + Send + Sync) {
         self
     }
 
-    #[tracing::instrument(level = "debug", skip(self, other))]
     fn equal(&self, other: &(dyn Packet + Send + Sync)) -> bool {
         other.as_any().downcast_ref::<ReceptionReport>() == Some(self)
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn cloned(&self) -> Box<dyn Packet + Send + Sync> {
         Box::new(self.clone())
     }
 }
 
 impl MarshalSize for ReceptionReport {
-    #[tracing::instrument(level = "debug", skip(self))]
     fn marshal_size(&self) -> usize {
         let l = self.raw_size();
         // align to 32-bit boundary
@@ -98,7 +90,6 @@ impl MarshalSize for ReceptionReport {
 }
 
 impl Marshal for ReceptionReport {
-    #[tracing::instrument(level = "debug", skip(self, buf))]
     /// marshal_to encodes the ReceptionReport in binary
     fn marshal_to(&self, mut buf: &mut [u8]) -> Result<usize, util::Error> {
         /*
@@ -147,7 +138,6 @@ impl Marshal for ReceptionReport {
 }
 
 impl Unmarshal for ReceptionReport {
-    #[tracing::instrument(level = "debug", skip(raw_packet))]
     /// unmarshal decodes the ReceptionReport from binary
     fn unmarshal<B>(raw_packet: &mut B) -> Result<Self, util::Error>
     where

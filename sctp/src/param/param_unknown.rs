@@ -18,14 +18,12 @@ pub struct ParamUnknown {
 }
 
 impl Display for ParamUnknown {
-    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(f, "ParamUnknown( {} {:?} )", self.header(), self.value)
     }
 }
 
 impl Param for ParamUnknown {
-    #[tracing::instrument(level = "debug", skip(self))]
     fn header(&self) -> ParamHeader {
         ParamHeader {
             typ: ParamType::Unknown {
@@ -35,12 +33,10 @@ impl Param for ParamUnknown {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn as_any(&self) -> &(dyn Any + Send + Sync) {
         self
     }
 
-    #[tracing::instrument(level = "debug", skip(raw))]
     fn unmarshal(raw: &Bytes) -> crate::error::Result<Self>
     where
         Self: Sized,
@@ -53,19 +49,16 @@ impl Param for ParamUnknown {
         })
     }
 
-    #[tracing::instrument(level = "debug", skip(self, buf))]
     fn marshal_to(&self, buf: &mut BytesMut) -> crate::error::Result<usize> {
         self.header().marshal_to(buf)?;
         buf.extend(self.value.clone());
         Ok(buf.len())
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn value_length(&self) -> usize {
         self.value.len()
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn clone_to(&self) -> Box<dyn Param + Send + Sync> {
         Box::new(self.clone())
     }

@@ -39,7 +39,6 @@ pub(crate) const FORWARD_TSN_STREAM_LENGTH: usize = 4;
 
 /// makes ChunkForwardTsn printable
 impl fmt::Display for ChunkForwardTsn {
-    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut res = vec![self.header().to_string()];
         res.push(format!("New Cumulative TSN: {}", self.new_cumulative_tsn));
@@ -52,7 +51,6 @@ impl fmt::Display for ChunkForwardTsn {
 }
 
 impl Chunk for ChunkForwardTsn {
-    #[tracing::instrument(level = "debug", skip(self))]
     fn header(&self) -> ChunkHeader {
         ChunkHeader {
             typ: CT_FORWARD_TSN,
@@ -61,7 +59,6 @@ impl Chunk for ChunkForwardTsn {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(buf))]
     fn unmarshal(buf: &Bytes) -> Result<Self> {
         let header = ChunkHeader::unmarshal(buf)?;
 
@@ -94,7 +91,6 @@ impl Chunk for ChunkForwardTsn {
         })
     }
 
-    #[tracing::instrument(level = "debug", skip(self, writer))]
     fn marshal_to(&self, writer: &mut BytesMut) -> Result<usize> {
         self.header().marshal_to(writer)?;
 
@@ -107,17 +103,14 @@ impl Chunk for ChunkForwardTsn {
         Ok(writer.len())
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn check(&self) -> Result<()> {
         Ok(())
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn value_length(&self) -> usize {
         NEW_CUMULATIVE_TSN_LENGTH + FORWARD_TSN_STREAM_LENGTH * self.streams.len()
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn as_any(&self) -> &(dyn Any + Send + Sync) {
         self
     }
@@ -142,14 +135,12 @@ pub(crate) struct ChunkForwardTsnStream {
 
 /// makes ChunkForwardTsnStream printable
 impl fmt::Display for ChunkForwardTsnStream {
-    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}, {}", self.identifier, self.sequence)
     }
 }
 
 impl Chunk for ChunkForwardTsnStream {
-    #[tracing::instrument(level = "debug", skip(self))]
     fn header(&self) -> ChunkHeader {
         ChunkHeader {
             typ: ChunkType(0),
@@ -158,7 +149,6 @@ impl Chunk for ChunkForwardTsnStream {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(buf))]
     fn unmarshal(buf: &Bytes) -> Result<Self> {
         if buf.len() < FORWARD_TSN_STREAM_LENGTH {
             return Err(Error::ErrChunkTooShort);
@@ -174,24 +164,20 @@ impl Chunk for ChunkForwardTsnStream {
         })
     }
 
-    #[tracing::instrument(level = "debug", skip(self, writer))]
     fn marshal_to(&self, writer: &mut BytesMut) -> Result<usize> {
         writer.put_u16(self.identifier);
         writer.put_u16(self.sequence);
         Ok(writer.len())
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn check(&self) -> Result<()> {
         Ok(())
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn value_length(&self) -> usize {
         FORWARD_TSN_STREAM_LENGTH
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn as_any(&self) -> &(dyn Any + Send + Sync) {
         self
     }

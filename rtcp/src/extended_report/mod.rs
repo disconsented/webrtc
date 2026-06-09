@@ -47,7 +47,6 @@ pub enum BlockType {
 }
 
 impl From<u8> for BlockType {
-    #[tracing::instrument(level = "debug", skip(v))]
     fn from(v: u8) -> Self {
         match v {
             1 => BlockType::LossRLE,
@@ -64,7 +63,6 @@ impl From<u8> for BlockType {
 
 /// converts the Extended report block types into readable strings
 impl fmt::Display for BlockType {
-    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let s = match *self {
             BlockType::LossRLE => "LossRLEReportBlockType",
@@ -99,14 +97,12 @@ pub struct XRHeader {
 }
 
 impl MarshalSize for XRHeader {
-    #[tracing::instrument(level = "debug", skip(self))]
     fn marshal_size(&self) -> usize {
         XR_HEADER_LENGTH
     }
 }
 
 impl Marshal for XRHeader {
-    #[tracing::instrument(level = "debug", skip(self, buf))]
     /// marshal_to encodes the ExtendedReport in binary
     fn marshal_to(&self, mut buf: &mut [u8]) -> Result<usize> {
         if buf.remaining_mut() < XR_HEADER_LENGTH {
@@ -122,7 +118,6 @@ impl Marshal for XRHeader {
 }
 
 impl Unmarshal for XRHeader {
-    #[tracing::instrument(level = "debug", skip(raw_packet))]
     /// Unmarshal decodes the ExtendedReport from binary
     fn unmarshal<B>(raw_packet: &mut B) -> Result<Self>
     where
@@ -166,14 +161,12 @@ pub struct ExtendedReport {
 }
 
 impl fmt::Display for ExtendedReport {
-    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{self:?}")
     }
 }
 
 impl Packet for ExtendedReport {
-    #[tracing::instrument(level = "debug", skip(self))]
     /// Header returns the Header associated with this packet.
     fn header(&self) -> Header {
         Header {
@@ -184,7 +177,6 @@ impl Packet for ExtendedReport {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// destination_ssrc returns an array of ssrc values that this packet refers to.
     fn destination_ssrc(&self) -> Vec<u32> {
         let mut ssrc = vec![];
@@ -194,7 +186,6 @@ impl Packet for ExtendedReport {
         ssrc
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn raw_size(&self) -> usize {
         let mut reps_length = 0;
         for rep in &self.reports {
@@ -203,24 +194,20 @@ impl Packet for ExtendedReport {
         HEADER_LENGTH + SSRC_LENGTH + reps_length
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn as_any(&self) -> &(dyn Any + Send + Sync) {
         self
     }
 
-    #[tracing::instrument(level = "debug", skip(self, other))]
     fn equal(&self, other: &(dyn Packet + Send + Sync)) -> bool {
         other.as_any().downcast_ref::<ExtendedReport>() == Some(self)
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn cloned(&self) -> Box<dyn Packet + Send + Sync> {
         Box::new(self.clone())
     }
 }
 
 impl MarshalSize for ExtendedReport {
-    #[tracing::instrument(level = "debug", skip(self))]
     fn marshal_size(&self) -> usize {
         let l = self.raw_size();
         // align to 32-bit boundary
@@ -229,7 +216,6 @@ impl MarshalSize for ExtendedReport {
 }
 
 impl Marshal for ExtendedReport {
-    #[tracing::instrument(level = "debug", skip(self, buf))]
     /// marshal_to encodes the ExtendedReport in binary
     fn marshal_to(&self, mut buf: &mut [u8]) -> Result<usize> {
         if buf.remaining_mut() < self.marshal_size() {
@@ -256,7 +242,6 @@ impl Marshal for ExtendedReport {
 }
 
 impl Unmarshal for ExtendedReport {
-    #[tracing::instrument(level = "debug", skip(raw_packet))]
     /// Unmarshal decodes the ExtendedReport from binary
     fn unmarshal<B>(raw_packet: &mut B) -> Result<Self>
     where

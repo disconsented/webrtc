@@ -226,7 +226,6 @@ pub enum Error {
 }
 
 impl From<Error> for io::Error {
-    #[tracing::instrument(level = "debug", skip(error))]
     fn from(error: Error) -> Self {
         match error {
             e @ Error::ErrEof => io::Error::new(io::ErrorKind::UnexpectedEof, e.to_string()),

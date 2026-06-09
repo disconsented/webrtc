@@ -58,7 +58,6 @@ hex = "0.4"
 pem = { version = "3", optional = true }
 portable-atomic = "1.6"
 unicase = "2.8"
-tracing.workspace = true
 
 [dev-dependencies]
 env_logger = "0.11.3"

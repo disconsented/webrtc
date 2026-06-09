@@ -23,7 +23,6 @@ pub(crate) const USER_INITIATED_ABORT: ErrorCauseCode = ErrorCauseCode(12);
 pub(crate) const PROTOCOL_VIOLATION: ErrorCauseCode = ErrorCauseCode(13);
 
 impl fmt::Display for ErrorCauseCode {
-    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let others = format!("Unknown CauseCode: {}", self.0);
         let s = match *self {
@@ -83,14 +82,12 @@ pub(crate) const ERROR_CAUSE_HEADER_LENGTH: usize = 4;
 
 /// makes ErrorCauseHeader printable
 impl fmt::Display for ErrorCause {
-    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.code)
     }
 }
 
 impl ErrorCause {
-    #[tracing::instrument(level = "debug", skip(buf))]
     pub(crate) fn unmarshal(buf: &Bytes) -> Result<Self> {
         if buf.len() < ERROR_CAUSE_HEADER_LENGTH {
             return Err(Error::ErrErrorCauseTooSmall);
@@ -115,14 +112,12 @@ impl ErrorCause {
         Ok(ErrorCause { code, raw })
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     pub(crate) fn marshal(&self) -> Bytes {
         let mut buf = BytesMut::with_capacity(self.length());
         let _ = self.marshal_to(&mut buf);
         buf.freeze()
     }
 
-    #[tracing::instrument(level = "debug", skip(self, writer))]
     pub(crate) fn marshal_to(&self, writer: &mut BytesMut) -> usize {
         let len = self.raw.len() + ERROR_CAUSE_HEADER_LENGTH;
         writer.put_u16(self.code.0);
@@ -131,12 +126,10 @@ impl ErrorCause {
         writer.len()
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     pub(crate) fn length(&self) -> usize {
         self.raw.len() + ERROR_CAUSE_HEADER_LENGTH
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     pub(crate) fn error_cause_code(&self) -> ErrorCauseCode {
         self.code
     }

@@ -13,7 +13,6 @@ pub enum NamedCurve {
 }
 
 impl From<u16> for NamedCurve {
-    #[tracing::instrument(level = "debug", skip(val))]
     fn from(val: u16) -> Self {
         match val {
             0x0017 => NamedCurve::P256,
@@ -36,7 +35,6 @@ pub struct NamedCurveKeypair {
     pub(crate) private_key: NamedCurvePrivateKey,
 }
 
-#[tracing::instrument(level = "debug", skip(curve))]
 fn elliptic_curve_keypair(curve: NamedCurve) -> Result<NamedCurveKeypair> {
     let (public_key, private_key) = match curve {
         NamedCurve::P256 => {
@@ -74,7 +72,6 @@ fn elliptic_curve_keypair(curve: NamedCurve) -> Result<NamedCurveKeypair> {
 }
 
 impl NamedCurve {
-    #[tracing::instrument(level = "debug", skip(self))]
     pub fn generate_keypair(&self) -> Result<NamedCurveKeypair> {
         match *self {
             NamedCurve::X25519 => elliptic_curve_keypair(NamedCurve::X25519),

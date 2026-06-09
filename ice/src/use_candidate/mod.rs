@@ -9,7 +9,6 @@ use stun::message::*;
 pub struct UseCandidateAttr;
 
 impl Setter for UseCandidateAttr {
-    #[tracing::instrument(level = "debug", skip(self, m))]
     /// Adds USE-CANDIDATE attribute to message.
     fn add_to(&self, m: &mut Message) -> Result<(), stun::Error> {
         m.add(ATTR_USE_CANDIDATE, &[]);
@@ -23,7 +22,6 @@ impl UseCandidateAttr {
         Self
     }
 
-    #[tracing::instrument(level = "debug", skip(m))]
     /// Returns true if USE-CANDIDATE attribute is set.
     #[must_use]
     pub fn is_set(m: &Message) -> bool {

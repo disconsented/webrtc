@@ -9,7 +9,6 @@ use super::*;
 use crate::error::Result;
 use crate::protection_profile::*;
 
-#[tracing::instrument(level = "debug", skip())]
 async fn build_session_srtp_pair() -> Result<(Session, Session)> {
     let ua = UdpSocket::bind("127.0.0.1:0").await?;
     let ub = UdpSocket::bind("127.0.0.1:0").await?;
@@ -200,14 +199,12 @@ async fn test_session_srtp_multi_ssrc() -> Result<()> {
     Ok(())
 }
 
-#[tracing::instrument(level = "debug", skip(context, pkt))]
 fn encrypt_srtp(context: &mut Context, pkt: &rtp::packet::Packet) -> Result<Bytes> {
     let decrypted = pkt.marshal()?;
     let encrypted = context.encrypt_rtp(&decrypted)?;
     Ok(encrypted)
 }
 
-#[tracing::instrument(level = "debug", skip(read_stream, header_size, expected_payload))]
 async fn payload_srtp(
     read_stream: &Arc<Stream>,
     header_size: usize,

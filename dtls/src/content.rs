@@ -22,7 +22,6 @@ pub enum ContentType {
 }
 
 impl From<u8> for ContentType {
-    #[tracing::instrument(level = "debug", skip(val))]
     fn from(val: u8) -> Self {
         match val {
             20 => ContentType::ChangeCipherSpec,
@@ -43,7 +42,6 @@ pub enum Content {
 }
 
 impl Content {
-    #[tracing::instrument(level = "debug", skip(self))]
     pub fn content_type(&self) -> ContentType {
         match self {
             Content::ChangeCipherSpec(c) => c.content_type(),
@@ -53,7 +51,6 @@ impl Content {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     pub fn size(&self) -> usize {
         match self {
             Content::ChangeCipherSpec(c) => c.size(),
@@ -63,7 +60,6 @@ impl Content {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, writer))]
     pub fn marshal<W: Write>(&self, writer: &mut W) -> Result<()> {
         match self {
             Content::ChangeCipherSpec(c) => c.marshal(writer),
@@ -73,7 +69,6 @@ impl Content {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(content_type, reader))]
     pub fn unmarshal<R: Read>(content_type: ContentType, reader: &mut R) -> Result<Self> {
         match content_type {
             ContentType::ChangeCipherSpec => Ok(Content::ChangeCipherSpec(

@@ -92,7 +92,6 @@ pub struct RTCDataChannel {
     pub(crate) setting_engine: Arc<SettingEngine>,
 }
 
-#[tracing::instrument(level = "debug", skip(buffer, n))]
 /// Packages the received bytes from `buffer` into a `Bytes` value to hand to the message handler.
 ///
 /// Four implementations are available via feature flags (mutually exclusive).
@@ -116,7 +115,6 @@ fn package_message(buffer: &mut Vec<u8>, n: usize) -> Bytes {
     Bytes::from(buffer[..n].to_vec())
 }
 
-#[tracing::instrument(level = "debug", skip(buffer, n))]
 #[cfg(feature = "buf-handoff")]
 fn package_message(buffer: &mut Vec<u8>, n: usize) -> Bytes {
     let new_buf = vec![0u8; DATA_CHANNEL_BUFFER_SIZE as usize];
@@ -125,7 +123,6 @@ fn package_message(buffer: &mut Vec<u8>, n: usize) -> Bytes {
     Bytes::from(old)
 }
 
-#[tracing::instrument(level = "debug", skip(buffer, n))]
 #[cfg(feature = "buf-handoff-uninit")]
 fn package_message(buffer: &mut Vec<u8>, n: usize) -> Bytes {
     let mut new_buf = Vec::with_capacity(DATA_CHANNEL_BUFFER_SIZE as usize);
@@ -138,7 +135,6 @@ fn package_message(buffer: &mut Vec<u8>, n: usize) -> Bytes {
     Bytes::from(old)
 }
 
-#[tracing::instrument(level = "debug", skip(buffer, n))]
 #[cfg(feature = "buf-adaptive")]
 fn package_message(buffer: &mut Vec<u8>, n: usize) -> Bytes {
     if n < 1500 {
@@ -155,7 +151,6 @@ fn package_message(buffer: &mut Vec<u8>, n: usize) -> Bytes {
 
 impl RTCDataChannel {
     // create the DataChannel object before the networking is set up.
-    #[tracing::instrument(level = "debug", skip(params, setting_engine))]
     pub(crate) fn new(params: DataChannelParameters, setting_engine: Arc<SettingEngine>) -> Self {
         // the id value if non-negotiated doesn't matter, since it will be overwritten
         // on opening
@@ -184,7 +179,6 @@ impl RTCDataChannel {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, sctp_transport))]
     /// open opens the datachannel over the sctp transport
     pub(crate) async fn open(&self, sctp_transport: Arc<RTCSctpTransport>) -> Result<()> {
         if let Some(association) = sctp_transport.association().await {
@@ -271,14 +265,12 @@ impl RTCDataChannel {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// transport returns the SCTPTransport instance the DataChannel is sending over.
     pub async fn transport(&self) -> Option<Weak<RTCSctpTransport>> {
         let sctp_transport = self.sctp_transport.lock().await;
         sctp_transport.clone()
     }
 
-    #[tracing::instrument(level = "debug", skip(self, f))]
     /// on_open sets an event handler which is invoked when
     /// the underlying data transport has been established (or re-established).
     pub fn on_open(&self, f: OnOpenHdlrFn) {
@@ -289,7 +281,6 @@ impl RTCDataChannel {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn do_open(&self) {
         let on_open_handler = self.on_open_handler.lock().take();
         if on_open_handler.is_none() {
@@ -314,14 +305,12 @@ impl RTCDataChannel {
         });
     }
 
-    #[tracing::instrument(level = "debug", skip(self, f))]
     /// on_close sets an event handler which is invoked when
     /// the underlying data transport has been closed.
     pub fn on_close(&self, f: OnCloseHdlrFn) {
         self.on_close_handler.store(Some(Arc::new(Mutex::new(f))));
     }
 
-    #[tracing::instrument(level = "debug", skip(self, f))]
     /// on_message sets an event handler which is invoked on a binary
     /// message arrival over the sctp transport from a remote peer.
     /// OnMessage can currently receive messages up to 16384 bytes
@@ -332,7 +321,6 @@ impl RTCDataChannel {
         self.on_message_handler.store(Some(Arc::new(Mutex::new(f))));
     }
 
-    #[tracing::instrument(level = "debug", skip(self, msg))]
     async fn do_message(&self, msg: DataChannelMessage) {
         if let Some(handler) = &*self.on_message_handler.load() {
             let mut f = handler.lock().await;
@@ -340,7 +328,6 @@ impl RTCDataChannel {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, dc))]
     pub(crate) async fn handle_open(&self, dc: Arc<data::data_channel::DataChannel>) {
         {
             let mut data_channel = self.data_channel.lock().await;
@@ -370,14 +357,12 @@ impl RTCDataChannel {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, f))]
     /// on_error sets an event handler which is invoked when
     /// the underlying data transport cannot be read.
     pub fn on_error(&self, f: OnErrorHdlrFn) {
         self.on_error_handler.store(Some(Arc::new(Mutex::new(f))));
     }
 
-    #[tracing::instrument(level = "debug", skip(notify_rx, data_channel, ready_state, on_message_handler, on_close_handler, on_error_handler))]
     async fn read_loop(
         notify_rx: Arc<Notify>,
         data_channel: Arc<data::data_channel::DataChannel>,
@@ -453,7 +438,6 @@ impl RTCDataChannel {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, data))]
     /// send sends the binary message to the DataChannel peer
     pub async fn send(&self, data: &Bytes) -> Result<usize> {
         self.ensure_open()?;
@@ -466,7 +450,6 @@ impl RTCDataChannel {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, s))]
     /// send_text sends the text message to the DataChannel peer
     pub async fn send_text(&self, s: impl Into<String>) -> Result<usize> {
         self.ensure_open()?;
@@ -479,7 +462,6 @@ impl RTCDataChannel {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn ensure_open(&self) -> Result<()> {
         if self.ready_state() != RTCDataChannelState::Open {
             Err(Error::ErrClosedPipe)
@@ -488,7 +470,6 @@ impl RTCDataChannel {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// detach allows you to detach the underlying datachannel. This provides
     /// an idiomatic API to work with, however it disables the OnMessage callback.
     /// Before calling Detach you have to enable this behavior by calling
@@ -512,7 +493,6 @@ impl RTCDataChannel {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// Close Closes the DataChannel. It may be called regardless of whether
     /// the DataChannel object was created by this peer or the remote peer.
     pub async fn close(&self) -> Result<()> {
@@ -531,7 +511,6 @@ impl RTCDataChannel {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// label represents a label that can be used to distinguish this
     /// DataChannel object from other DataChannel objects. Scripts are
     /// allowed to create multiple DataChannel objects with the same label.
@@ -539,42 +518,36 @@ impl RTCDataChannel {
         self.label.as_str()
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// Ordered returns true if the DataChannel is ordered, and false if
     /// out-of-order delivery is allowed.
     pub fn ordered(&self) -> bool {
         self.ordered
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// max_packet_lifetime represents the length of the time window (msec) during
     /// which transmissions and retransmissions may occur in unreliable mode.
     pub fn max_packet_lifetime(&self) -> Option<u16> {
         self.max_packet_lifetime
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// max_retransmits represents the maximum number of retransmissions that are
     /// attempted in unreliable mode.
     pub fn max_retransmits(&self) -> Option<u16> {
         self.max_retransmits
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// protocol represents the name of the sub-protocol used with this
     /// DataChannel.
     pub fn protocol(&self) -> &str {
         self.protocol.as_str()
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// negotiated represents whether this DataChannel was negotiated by the
     /// application (true), or not (false).
     pub fn negotiated(&self) -> bool {
         self.negotiated
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// ID represents the ID for this DataChannel. The value is initially
     /// null, which is what will be returned if the ID was not provided at
     /// channel creation time, and the DTLS role of the SCTP transport has not
@@ -585,13 +558,11 @@ impl RTCDataChannel {
         self.id.load(Ordering::SeqCst)
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// ready_state represents the state of the DataChannel object.
     pub fn ready_state(&self) -> RTCDataChannelState {
         self.ready_state.load(Ordering::SeqCst).into()
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// buffered_amount represents the number of bytes of application data
     /// (UTF-8 text and binary data) that have been queued using send(). Even
     /// though the data transmission can occur in parallel, the returned value
@@ -611,7 +582,6 @@ impl RTCDataChannel {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// buffered_amount_low_threshold represents the threshold at which the
     /// bufferedAmount is considered to be low. When the bufferedAmount decreases
     /// from above this threshold to equal or below it, the bufferedamountlow
@@ -627,7 +597,6 @@ impl RTCDataChannel {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, th))]
     /// set_buffered_amount_low_threshold is used to update the threshold.
     /// See buffered_amount_low_threshold().
     pub async fn set_buffered_amount_low_threshold(&self, th: usize) {
@@ -639,7 +608,6 @@ impl RTCDataChannel {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, f))]
     /// on_buffered_amount_low sets an event handler which is invoked when
     /// the number of bytes of outgoing data becomes lower than the
     /// buffered_amount_low_threshold.
@@ -653,18 +621,15 @@ impl RTCDataChannel {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     pub(crate) fn get_stats_id(&self) -> &str {
         self.stats_id.as_str()
     }
 
-    #[tracing::instrument(level = "debug", skip(self, collector))]
     pub(crate) async fn collect_stats(&self, collector: &StatsCollector) {
         let stats = DataChannelStats::from(self).await;
         collector.insert(self.stats_id.clone(), StatsReportType::DataChannel(stats));
     }
 
-    #[tracing::instrument(level = "debug", skip(self, r))]
     pub(crate) fn set_ready_state(&self, r: RTCDataChannelState) {
         self.ready_state.store(r as u8, Ordering::SeqCst);
     }

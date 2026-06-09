@@ -6,7 +6,6 @@ use crate::{Attributes, RTCPReader, RTPReader};
 
 #[async_trait]
 impl RTPReader for Stream {
-    #[tracing::instrument(level = "debug", skip(self, buf, a))]
     async fn read(
         &self,
         buf: &mut [u8],
@@ -18,7 +17,6 @@ impl RTPReader for Stream {
 
 #[async_trait]
 impl RTCPReader for Stream {
-    #[tracing::instrument(level = "debug", skip(self, buf, a))]
     async fn read(
         &self,
         buf: &mut [u8],

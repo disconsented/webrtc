@@ -53,7 +53,6 @@ pub enum CipherSuiteId {
 }
 
 impl fmt::Display for CipherSuiteId {
-    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match *self {
             CipherSuiteId::Tls_Ecdhe_Ecdsa_With_Aes_128_Ccm => {
@@ -92,7 +91,6 @@ impl fmt::Display for CipherSuiteId {
 }
 
 impl From<u16> for CipherSuiteId {
-    #[tracing::instrument(level = "debug", skip(val))]
     fn from(val: u16) -> Self {
         match val {
             // AES-128-CCM
@@ -121,7 +119,6 @@ impl From<u16> for CipherSuiteId {
 }
 
 impl From<&str> for CipherSuiteId {
-    #[tracing::instrument(level = "debug", skip(val))]
     fn from(val: &str) -> Self {
         match val {
             "TLS_ECDHE_ECDSA_WITH_AES_128_CCM" => CipherSuiteId::Tls_Ecdhe_Ecdsa_With_Aes_128_Ccm,
@@ -160,7 +157,6 @@ pub enum CipherSuiteHash {
 }
 
 impl CipherSuiteHash {
-    #[tracing::instrument(level = "debug", skip(self))]
     pub(crate) fn size(&self) -> usize {
         match *self {
             CipherSuiteHash::Sha256 => 32,
@@ -192,7 +188,6 @@ pub trait CipherSuite {
 // Taken from https://www.iana.org/assignments/tls-parameters/tls-parameters.xml
 // A cipher_suite is a specific combination of key agreement, cipher and MAC
 // function.
-#[tracing::instrument(level = "debug", skip(id))]
 pub fn cipher_suite_for_id(id: CipherSuiteId) -> Result<Box<dyn CipherSuite + Send + Sync>> {
     match id {
         CipherSuiteId::Tls_Ecdhe_Ecdsa_With_Aes_128_Ccm => {
@@ -234,7 +229,6 @@ pub fn cipher_suite_for_id(id: CipherSuiteId) -> Result<Box<dyn CipherSuite + Se
 }
 
 // CipherSuites we support in order of preference
-#[tracing::instrument(level = "debug", skip())]
 pub(crate) fn default_cipher_suites() -> Vec<Box<dyn CipherSuite + Send + Sync>> {
     vec![
         Box::new(CipherSuiteAes128GcmSha256::new(false)),
@@ -245,7 +239,6 @@ pub(crate) fn default_cipher_suites() -> Vec<Box<dyn CipherSuite + Send + Sync>>
     ]
 }
 
-#[tracing::instrument(level = "debug", skip())]
 fn all_cipher_suites() -> Vec<Box<dyn CipherSuite + Send + Sync>> {
     vec![
         Box::new(new_cipher_suite_tls_ecdhe_ecdsa_with_aes_128_ccm()),
@@ -262,7 +255,6 @@ fn all_cipher_suites() -> Vec<Box<dyn CipherSuite + Send + Sync>> {
     ]
 }
 
-#[tracing::instrument(level = "debug", skip(ids))]
 fn cipher_suites_for_ids(ids: &[CipherSuiteId]) -> Result<Vec<Box<dyn CipherSuite + Send + Sync>>> {
     let mut cipher_suites = vec![];
     for id in ids {
@@ -271,7 +263,6 @@ fn cipher_suites_for_ids(ids: &[CipherSuiteId]) -> Result<Vec<Box<dyn CipherSuit
     Ok(cipher_suites)
 }
 
-#[tracing::instrument(level = "debug", skip(user_selected_suites, exclude_psk, exclude_non_psk))]
 pub(crate) fn parse_cipher_suites(
     user_selected_suites: &[CipherSuiteId],
     exclude_psk: bool,

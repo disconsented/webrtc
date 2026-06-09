@@ -66,7 +66,6 @@ trait ControlledSelector {
 }
 
 impl AgentInternal {
-    #[tracing::instrument(level = "debug", skip(self, c))]
     fn is_nominatable(&self, c: &Arc<dyn Candidate + Send + Sync>) -> bool {
         let start_time = *self.start_time.lock();
         match c.candidate_type() {
@@ -108,7 +107,6 @@ impl AgentInternal {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     async fn nominate_pair(&self) {
         let result = {
             let nominated_pair = self.nominated_pair.lock().await;
@@ -161,7 +159,6 @@ impl AgentInternal {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     pub(crate) async fn start(&self) {
         if self.is_controlling.load(Ordering::SeqCst) {
             ControllingSelector::start(self).await;
@@ -170,7 +167,6 @@ impl AgentInternal {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     pub(crate) async fn contact_candidates(&self) {
         if self.is_controlling.load(Ordering::SeqCst) {
             ControllingSelector::contact_candidates(self).await;
@@ -179,7 +175,6 @@ impl AgentInternal {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, local, remote))]
     pub(crate) async fn ping_candidate(
         &self,
         local: &Arc<dyn Candidate + Send + Sync>,
@@ -192,7 +187,6 @@ impl AgentInternal {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, m, local, remote, remote_addr))]
     pub(crate) async fn handle_success_response(
         &self,
         m: &Message,
@@ -207,7 +201,6 @@ impl AgentInternal {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, m, local, remote))]
     pub(crate) async fn handle_binding_request(
         &self,
         m: &Message,
@@ -224,7 +217,6 @@ impl AgentInternal {
 
 #[async_trait]
 impl ControllingSelector for AgentInternal {
-    #[tracing::instrument(level = "debug", skip(self))]
     async fn start(&self) {
         {
             let mut nominated_pair = self.nominated_pair.lock().await;
@@ -233,7 +225,6 @@ impl ControllingSelector for AgentInternal {
         *self.start_time.lock() = Instant::now();
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     async fn contact_candidates(&self) {
         // A lite selector should not contact candidates
         if self.lite.load(Ordering::SeqCst) {
@@ -282,7 +273,6 @@ impl ControllingSelector for AgentInternal {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, local, remote))]
     async fn ping_candidate(
         &self,
         local: &Arc<dyn Candidate + Send + Sync>,
@@ -313,7 +303,6 @@ impl ControllingSelector for AgentInternal {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, m, local, remote, remote_addr))]
     async fn handle_success_response(
         &self,
         m: &Message,
@@ -360,7 +349,6 @@ impl ControllingSelector for AgentInternal {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, m, local, remote))]
     async fn handle_binding_request(
         &self,
         m: &Message,
@@ -414,10 +402,8 @@ impl ControllingSelector for AgentInternal {
 
 #[async_trait]
 impl ControlledSelector for AgentInternal {
-    #[tracing::instrument(level = "debug", skip(self))]
     async fn start(&self) {}
 
-    #[tracing::instrument(level = "debug", skip(self))]
     async fn contact_candidates(&self) {
         // A lite selector should not contact candidates
         if self.lite.load(Ordering::SeqCst) {
@@ -432,7 +418,6 @@ impl ControlledSelector for AgentInternal {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, local, remote))]
     async fn ping_candidate(
         &self,
         local: &Arc<dyn Candidate + Send + Sync>,
@@ -463,7 +448,6 @@ impl ControlledSelector for AgentInternal {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, m, local, remote, remote_addr))]
     async fn handle_success_response(
         &self,
         m: &Message,
@@ -512,7 +496,6 @@ impl ControlledSelector for AgentInternal {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, m, local, remote))]
     async fn handle_binding_request(
         &self,
         m: &Message,

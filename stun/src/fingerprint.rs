@@ -30,7 +30,6 @@ pub const FINGERPRINT_SIZE: usize = 4; // 32 bit
 // up to (but excluding) the FINGERPRINT attribute itself, XOR'ed with
 // the 32-bit value 0x5354554e (the XOR helps in cases where an
 // application packet is also using CRC-32 in it).
-#[tracing::instrument(level = "debug", skip(b))]
 pub fn fingerprint_value(b: &[u8]) -> u32 {
     let checksum = Crc::<u32>::new(&CRC_32_ISO_HDLC).checksum(b);
     checksum ^ FINGERPRINT_XOR_VALUE // XOR
@@ -38,7 +37,6 @@ pub fn fingerprint_value(b: &[u8]) -> u32 {
 
 impl Setter for FingerprintAttr {
     // add_to adds fingerprint to message.
-    #[tracing::instrument(level = "debug", skip(self, m))]
     fn add_to(&self, m: &mut Message) -> Result<()> {
         let l = m.length;
         // length in header should include size of fingerprint attribute
@@ -55,7 +53,6 @@ impl Setter for FingerprintAttr {
 impl FingerprintAttr {
     // Check reads fingerprint value from m and checks it, returning error if any.
     // Can return *AttrLengthErr, ErrAttributeNotFound, and *CRCMismatch.
-    #[tracing::instrument(level = "debug", skip(self, m))]
     pub fn check(&self, m: &Message) -> Result<()> {
         let b = m.get(ATTR_FINGERPRINT)?;
         check_size(ATTR_FINGERPRINT, b.len(), FINGERPRINT_SIZE)?;

@@ -24,7 +24,6 @@ pub struct Goodbye {
 }
 
 impl fmt::Display for Goodbye {
-    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut out = "Goodbye:\n\tSources:\n".to_string();
         for s in &self.sources {
@@ -37,7 +36,6 @@ impl fmt::Display for Goodbye {
 }
 
 impl Packet for Goodbye {
-    #[tracing::instrument(level = "debug", skip(self))]
     /// Header returns the Header associated with this packet.
     fn header(&self) -> Header {
         Header {
@@ -48,13 +46,11 @@ impl Packet for Goodbye {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// destination_ssrc returns an array of SSRC values that this packet refers to.
     fn destination_ssrc(&self) -> Vec<u32> {
         self.sources.to_vec()
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn raw_size(&self) -> usize {
         let srcs_length = self.sources.len() * SSRC_LENGTH;
         let reason_length = self.reason.len() + 1;
@@ -62,24 +58,20 @@ impl Packet for Goodbye {
         HEADER_LENGTH + srcs_length + reason_length
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn as_any(&self) -> &(dyn Any + Send + Sync) {
         self
     }
 
-    #[tracing::instrument(level = "debug", skip(self, other))]
     fn equal(&self, other: &(dyn Packet + Send + Sync)) -> bool {
         other.as_any().downcast_ref::<Goodbye>() == Some(self)
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn cloned(&self) -> Box<dyn Packet + Send + Sync> {
         Box::new(self.clone())
     }
 }
 
 impl MarshalSize for Goodbye {
-    #[tracing::instrument(level = "debug", skip(self))]
     fn marshal_size(&self) -> usize {
         let l = self.raw_size();
         // align to 32-bit boundary
@@ -88,7 +80,6 @@ impl MarshalSize for Goodbye {
 }
 
 impl Marshal for Goodbye {
-    #[tracing::instrument(level = "debug", skip(self, buf))]
     /// marshal_to encodes the packet in binary.
     fn marshal_to(&self, mut buf: &mut [u8]) -> Result<usize> {
         if self.sources.len() > COUNT_MAX {
@@ -139,7 +130,6 @@ impl Marshal for Goodbye {
 }
 
 impl Unmarshal for Goodbye {
-    #[tracing::instrument(level = "debug", skip(raw_packet))]
     fn unmarshal<B>(raw_packet: &mut B) -> Result<Self>
     where
         Self: Sized,

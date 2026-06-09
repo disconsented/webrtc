@@ -4,7 +4,6 @@ use crate::chunk::chunk_payload_data::{ChunkPayloadData, PayloadProtocolIdentifi
 use crate::error::{Error, Result};
 use crate::util::*;
 
-#[tracing::instrument(level = "debug", skip(c))]
 fn sort_chunks_by_tsn(c: &mut [ChunkPayloadData]) {
     c.sort_by(|a, b| {
         if sna32lt(a.tsn, b.tsn) {
@@ -15,7 +14,6 @@ fn sort_chunks_by_tsn(c: &mut [ChunkPayloadData]) {
     });
 }
 
-#[tracing::instrument(level = "debug", skip(c))]
 fn sort_chunks_by_ssn(c: &mut [ChunkSet]) {
     c.sort_by(|a, b| {
         if sna16lt(a.ssn, b.ssn) {
@@ -36,7 +34,6 @@ pub(crate) struct ChunkSet {
 }
 
 impl ChunkSet {
-    #[tracing::instrument(level = "debug", skip(ssn, ppi))]
     pub(crate) fn new(ssn: u16, ppi: PayloadProtocolIdentifier) -> Self {
         ChunkSet {
             ssn,
@@ -45,7 +42,6 @@ impl ChunkSet {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, chunk))]
     pub(crate) fn push(&mut self, chunk: ChunkPayloadData) -> bool {
         // check if dup
         for c in &self.chunks {
@@ -62,7 +58,6 @@ impl ChunkSet {
         self.is_complete()
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     pub(crate) fn is_complete(&self) -> bool {
         // Condition for complete set
         //   0. Has at least one chunk.
@@ -121,7 +116,6 @@ pub(crate) struct ReassemblyQueue {
 }
 
 impl ReassemblyQueue {
-    #[tracing::instrument(level = "debug", skip(si))]
     /// From RFC 4960 Sec 6.5:
     ///   The Stream Sequence Number in all the streams MUST start from 0 when
     ///   the association is Established.  Also, when the Stream Sequence
@@ -138,7 +132,6 @@ impl ReassemblyQueue {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, chunk))]
     pub(crate) fn push(&mut self, chunk: ChunkPayloadData) -> bool {
         if chunk.stream_identifier != self.si {
             return false;
@@ -187,7 +180,6 @@ impl ReassemblyQueue {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     pub(crate) fn find_complete_unordered_chunk_set(&mut self) -> Option<ChunkSet> {
         let mut start_idx = -1isize;
         let mut n_chunks = 0usize;
@@ -243,7 +235,6 @@ impl ReassemblyQueue {
         Some(chunk_set)
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     pub(crate) fn is_readable(&self) -> bool {
         // Check unordered first
         if !self.unordered.is_empty() {
@@ -261,7 +252,6 @@ impl ReassemblyQueue {
         false
     }
 
-    #[tracing::instrument(level = "debug", skip(self, buf))]
     pub(crate) fn read(&mut self, buf: &mut [u8]) -> Result<(usize, PayloadProtocolIdentifier)> {
         // Check unordered first
         let cset = if !self.unordered.is_empty() {
@@ -307,7 +297,6 @@ impl ReassemblyQueue {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, last_ssn))]
     /// Use last_ssn to locate a chunkSet then remove it if the set has
     /// not been complete
     pub(crate) fn forward_tsn_for_ordered(&mut self, last_ssn: u16) {
@@ -329,7 +318,6 @@ impl ReassemblyQueue {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, new_cumulative_tsn))]
     /// Remove all fragments in the unordered sets that contains chunks
     /// equal to or older than `new_cumulative_tsn`.
     /// We know all sets in the r.unordered are complete ones.
@@ -351,7 +339,6 @@ impl ReassemblyQueue {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, n_bytes))]
     pub(crate) fn subtract_num_bytes(&mut self, n_bytes: usize) {
         if self.n_bytes >= n_bytes {
             self.n_bytes -= n_bytes;
@@ -360,7 +347,6 @@ impl ReassemblyQueue {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     pub(crate) fn get_num_bytes(&self) -> usize {
         self.n_bytes
     }

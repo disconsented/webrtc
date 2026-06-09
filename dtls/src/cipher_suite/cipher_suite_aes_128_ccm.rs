@@ -17,7 +17,6 @@ impl CipherSuiteAes128Ccm {
     const PRF_KEY_LEN: usize = 16;
     const PRF_IV_LEN: usize = 4;
 
-    #[tracing::instrument(level = "debug", skip(client_certificate_type, id, psk, crypto_ccm_tag_len))]
     pub fn new(
         client_certificate_type: ClientCertificateType,
         id: CipherSuiteId,
@@ -35,37 +34,30 @@ impl CipherSuiteAes128Ccm {
 }
 
 impl CipherSuite for CipherSuiteAes128Ccm {
-    #[tracing::instrument(level = "debug", skip(self))]
     fn to_string(&self) -> String {
         format!("{}", self.id)
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn id(&self) -> CipherSuiteId {
         self.id
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn certificate_type(&self) -> ClientCertificateType {
         self.client_certificate_type
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn hash_func(&self) -> CipherSuiteHash {
         CipherSuiteHash::Sha256
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn is_psk(&self) -> bool {
         self.psk
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn is_initialized(&self) -> bool {
         self.ccm.is_some()
     }
 
-    #[tracing::instrument(level = "debug", skip(self, master_secret, client_random, server_random, is_client))]
     fn init(
         &mut self,
         master_secret: &[u8],
@@ -104,7 +96,6 @@ impl CipherSuite for CipherSuiteAes128Ccm {
         Ok(())
     }
 
-    #[tracing::instrument(level = "debug", skip(self, pkt_rlh, raw))]
     fn encrypt(&self, pkt_rlh: &RecordLayerHeader, raw: &[u8]) -> Result<Vec<u8>> {
         let ccm = self.ccm.as_ref().ok_or(Error::Other(
             "CipherSuite has not been initialized, unable to encrypt".to_owned(),
@@ -112,7 +103,6 @@ impl CipherSuite for CipherSuiteAes128Ccm {
         ccm.encrypt(pkt_rlh, raw)
     }
 
-    #[tracing::instrument(level = "debug", skip(self, input))]
     fn decrypt(&self, input: &[u8]) -> Result<Vec<u8>> {
         let ccm = self.ccm.as_ref().ok_or(Error::Other(
             "CipherSuite has not been initialized, unable to decrypt".to_owned(),

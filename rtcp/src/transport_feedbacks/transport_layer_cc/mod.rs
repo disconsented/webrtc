@@ -82,7 +82,6 @@ pub enum SymbolSizeTypeTcc {
 }
 
 impl From<u16> for SymbolSizeTypeTcc {
-    #[tracing::instrument(level = "debug", skip(val))]
     fn from(val: u16) -> Self {
         match val {
             0 => SymbolSizeTypeTcc::OneBit,
@@ -92,7 +91,6 @@ impl From<u16> for SymbolSizeTypeTcc {
 }
 
 impl From<u16> for StatusChunkTypeTcc {
-    #[tracing::instrument(level = "debug", skip(val))]
     fn from(val: u16) -> Self {
         match val {
             0 => StatusChunkTypeTcc::RunLengthChunk,
@@ -102,7 +100,6 @@ impl From<u16> for StatusChunkTypeTcc {
 }
 
 impl From<u16> for SymbolTypeTcc {
-    #[tracing::instrument(level = "debug", skip(val))]
     fn from(val: u16) -> Self {
         match val {
             0 => SymbolTypeTcc::PacketNotReceived,
@@ -122,7 +119,6 @@ pub enum PacketStatusChunk {
 }
 
 impl MarshalSize for PacketStatusChunk {
-    #[tracing::instrument(level = "debug", skip(self))]
     fn marshal_size(&self) -> usize {
         match self {
             PacketStatusChunk::RunLengthChunk(c) => c.marshal_size(),
@@ -132,7 +128,6 @@ impl MarshalSize for PacketStatusChunk {
 }
 
 impl Marshal for PacketStatusChunk {
-    #[tracing::instrument(level = "debug", skip(self, buf))]
     /// Marshal ..
     fn marshal_to(&self, buf: &mut [u8]) -> Result<usize> {
         match self {
@@ -160,14 +155,12 @@ pub struct RunLengthChunk {
 }
 
 impl MarshalSize for RunLengthChunk {
-    #[tracing::instrument(level = "debug", skip(self))]
     fn marshal_size(&self) -> usize {
         PACKET_STATUS_CHUNK_LENGTH
     }
 }
 
 impl Marshal for RunLengthChunk {
-    #[tracing::instrument(level = "debug", skip(self, buf))]
     /// Marshal ..
     fn marshal_to(&self, mut buf: &mut [u8]) -> Result<usize> {
         // append 1 bit '0'
@@ -186,7 +179,6 @@ impl Marshal for RunLengthChunk {
 }
 
 impl Unmarshal for RunLengthChunk {
-    #[tracing::instrument(level = "debug", skip(raw_packet))]
     /// Unmarshal ..
     fn unmarshal<B>(raw_packet: &mut B) -> Result<Self>
     where
@@ -240,14 +232,12 @@ pub struct StatusVectorChunk {
 }
 
 impl MarshalSize for StatusVectorChunk {
-    #[tracing::instrument(level = "debug", skip(self))]
     fn marshal_size(&self) -> usize {
         PACKET_STATUS_CHUNK_LENGTH
     }
 }
 
 impl Marshal for StatusVectorChunk {
-    #[tracing::instrument(level = "debug", skip(self, buf))]
     /// Marshal ..
     fn marshal_to(&self, mut buf: &mut [u8]) -> Result<usize> {
         // set first bit '1'
@@ -270,7 +260,6 @@ impl Marshal for StatusVectorChunk {
 }
 
 impl Unmarshal for StatusVectorChunk {
-    #[tracing::instrument(level = "debug", skip(raw_packet))]
     /// Unmarshal ..
     fn unmarshal<B>(raw_packet: &mut B) -> Result<Self>
     where
@@ -332,7 +321,6 @@ pub struct RecvDelta {
 }
 
 impl MarshalSize for RecvDelta {
-    #[tracing::instrument(level = "debug", skip(self))]
     fn marshal_size(&self) -> usize {
         let delta = self.delta / TYPE_TCC_DELTA_SCALE_FACTOR;
 
@@ -357,7 +345,6 @@ impl MarshalSize for RecvDelta {
 }
 
 impl Marshal for RecvDelta {
-    #[tracing::instrument(level = "debug", skip(self, buf))]
     /// Marshal ..
     fn marshal_to(&self, mut buf: &mut [u8]) -> Result<usize> {
         let delta = self.delta / TYPE_TCC_DELTA_SCALE_FACTOR;
@@ -388,7 +375,6 @@ impl Marshal for RecvDelta {
 }
 
 impl Unmarshal for RecvDelta {
-    #[tracing::instrument(level = "debug", skip(raw_packet))]
     /// Unmarshal ..
     fn unmarshal<B>(raw_packet: &mut B) -> Result<Self>
     where
@@ -469,7 +455,6 @@ pub struct TransportLayerCc {
 }
 
 impl fmt::Display for TransportLayerCc {
-    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut out = String::new();
         out += format!("TransportLayerCC:\n\tSender Ssrc {}\n", self.sender_ssrc).as_str();
@@ -490,7 +475,6 @@ impl fmt::Display for TransportLayerCc {
 }
 
 impl Packet for TransportLayerCc {
-    #[tracing::instrument(level = "debug", skip(self))]
     fn header(&self) -> Header {
         Header {
             padding: get_padding_size(self.raw_size()) != 0,
@@ -500,13 +484,11 @@ impl Packet for TransportLayerCc {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// destination_ssrc returns an array of SSRC values that this packet refers to.
     fn destination_ssrc(&self) -> Vec<u32> {
         vec![self.media_ssrc]
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn raw_size(&self) -> usize {
         let mut n = HEADER_LENGTH + PACKET_CHUNK_OFFSET + self.packet_chunks.len() * 2;
         for d in &self.recv_deltas {
@@ -520,24 +502,20 @@ impl Packet for TransportLayerCc {
         n
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn as_any(&self) -> &(dyn Any + Send + Sync) {
         self
     }
 
-    #[tracing::instrument(level = "debug", skip(self, other))]
     fn equal(&self, other: &(dyn Packet + Send + Sync)) -> bool {
         other.as_any().downcast_ref::<TransportLayerCc>() == Some(self)
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn cloned(&self) -> Box<dyn Packet + Send + Sync> {
         Box::new(self.clone())
     }
 }
 
 impl MarshalSize for TransportLayerCc {
-    #[tracing::instrument(level = "debug", skip(self))]
     fn marshal_size(&self) -> usize {
         let l = self.raw_size();
         // align to 32-bit boundary
@@ -546,7 +524,6 @@ impl MarshalSize for TransportLayerCc {
 }
 
 impl Marshal for TransportLayerCc {
-    #[tracing::instrument(level = "debug", skip(self, buf))]
     fn marshal_to(&self, mut buf: &mut [u8]) -> Result<usize> {
         if buf.remaining_mut() < self.marshal_size() {
             return Err(Error::BufferTooShort.into());
@@ -586,7 +563,6 @@ impl Marshal for TransportLayerCc {
 }
 
 impl Unmarshal for TransportLayerCc {
-    #[tracing::instrument(level = "debug", skip(raw_packet))]
     /// Unmarshal ..
     fn unmarshal<B>(raw_packet: &mut B) -> Result<Self>
     where

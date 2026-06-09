@@ -17,7 +17,6 @@ pub(crate) enum AlertLevel {
 }
 
 impl fmt::Display for AlertLevel {
-    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match *self {
             AlertLevel::Warning => write!(f, "LevelWarning"),
@@ -28,7 +27,6 @@ impl fmt::Display for AlertLevel {
 }
 
 impl From<u8> for AlertLevel {
-    #[tracing::instrument(level = "debug", skip(val))]
     fn from(val: u8) -> Self {
         match val {
             1 => AlertLevel::Warning,
@@ -70,7 +68,6 @@ pub(crate) enum AlertDescription {
 }
 
 impl fmt::Display for AlertDescription {
-    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match *self {
             AlertDescription::CloseNotify => write!(f, "CloseNotify"),
@@ -105,7 +102,6 @@ impl fmt::Display for AlertDescription {
 }
 
 impl From<u8> for AlertDescription {
-    #[tracing::instrument(level = "debug", skip(val))]
     fn from(val: u8) -> Self {
         match val {
             0 => AlertDescription::CloseNotify,
@@ -160,24 +156,20 @@ pub struct Alert {
 }
 
 impl fmt::Display for Alert {
-    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "Alert {}: {}", self.alert_level, self.alert_description)
     }
 }
 
 impl Alert {
-    #[tracing::instrument(level = "debug", skip(self))]
     pub fn content_type(&self) -> ContentType {
         ContentType::Alert
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     pub fn size(&self) -> usize {
         2
     }
 
-    #[tracing::instrument(level = "debug", skip(self, writer))]
     pub fn marshal<W: Write>(&self, writer: &mut W) -> Result<()> {
         writer.write_u8(self.alert_level as u8)?;
         writer.write_u8(self.alert_description as u8)?;
@@ -185,7 +177,6 @@ impl Alert {
         Ok(writer.flush()?)
     }
 
-    #[tracing::instrument(level = "debug", skip(reader))]
     pub fn unmarshal<R: Read>(reader: &mut R) -> Result<Self> {
         let alert_level = reader.read_u8()?.into();
         let alert_description = reader.read_u8()?.into();

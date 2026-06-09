@@ -8,14 +8,12 @@ pub struct UnknownReportBlock {
 }
 
 impl fmt::Display for UnknownReportBlock {
-    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{self:?}")
     }
 }
 
 impl UnknownReportBlock {
-    #[tracing::instrument(level = "debug", skip(self))]
     pub fn xr_header(&self) -> XRHeader {
         XRHeader {
             block_type: BlockType::Unknown,
@@ -26,45 +24,37 @@ impl UnknownReportBlock {
 }
 
 impl Packet for UnknownReportBlock {
-    #[tracing::instrument(level = "debug", skip(self))]
     fn header(&self) -> Header {
         Header::default()
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// destination_ssrc returns an array of ssrc values that this report block refers to.
     fn destination_ssrc(&self) -> Vec<u32> {
         vec![]
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn raw_size(&self) -> usize {
         XR_HEADER_LENGTH + self.bytes.len()
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn as_any(&self) -> &(dyn Any + Send + Sync) {
         self
     }
-    #[tracing::instrument(level = "debug", skip(self, other))]
     fn equal(&self, other: &(dyn Packet + Send + Sync)) -> bool {
         other.as_any().downcast_ref::<UnknownReportBlock>() == Some(self)
     }
-    #[tracing::instrument(level = "debug", skip(self))]
     fn cloned(&self) -> Box<dyn Packet + Send + Sync> {
         Box::new(self.clone())
     }
 }
 
 impl MarshalSize for UnknownReportBlock {
-    #[tracing::instrument(level = "debug", skip(self))]
     fn marshal_size(&self) -> usize {
         self.raw_size()
     }
 }
 
 impl Marshal for UnknownReportBlock {
-    #[tracing::instrument(level = "debug", skip(self, buf))]
     /// marshal_to encodes the UnknownReportBlock in binary
     fn marshal_to(&self, mut buf: &mut [u8]) -> Result<usize> {
         if buf.remaining_mut() < self.marshal_size() {
@@ -82,7 +72,6 @@ impl Marshal for UnknownReportBlock {
 }
 
 impl Unmarshal for UnknownReportBlock {
-    #[tracing::instrument(level = "debug", skip(raw_packet))]
     /// Unmarshal decodes the UnknownReportBlock from binary
     fn unmarshal<B>(raw_packet: &mut B) -> Result<Self>
     where

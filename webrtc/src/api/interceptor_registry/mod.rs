@@ -14,7 +14,6 @@ use crate::error::Result;
 use crate::rtp_transceiver::rtp_codec::{RTCRtpHeaderExtensionCapability, RTPCodecType};
 use crate::rtp_transceiver::{RTCPFeedback, TYPE_RTCP_FB_TRANSPORT_CC};
 
-#[tracing::instrument(level = "debug", skip(registry, media_engine))]
 /// register_default_interceptors will register some useful interceptors.
 /// If you want to customize which interceptors are loaded, you should copy the
 /// code from this method and remove unwanted interceptors.
@@ -31,7 +30,6 @@ pub fn register_default_interceptors(
     Ok(registry)
 }
 
-#[tracing::instrument(level = "debug", skip(registry))]
 /// configure_rtcp_reports will setup everything necessary for generating Sender and Receiver Reports
 pub fn configure_rtcp_reports(mut registry: Registry) -> Registry {
     let receiver = Box::new(ReceiverReport::builder());
@@ -41,7 +39,6 @@ pub fn configure_rtcp_reports(mut registry: Registry) -> Registry {
     registry
 }
 
-#[tracing::instrument(level = "debug", skip(registry, media_engine))]
 /// configure_nack will setup everything necessary for handling generating/responding to nack messages.
 pub fn configure_nack(mut registry: Registry, media_engine: &mut MediaEngine) -> Registry {
     media_engine.register_feedback(
@@ -66,7 +63,6 @@ pub fn configure_nack(mut registry: Registry, media_engine: &mut MediaEngine) ->
     registry
 }
 
-#[tracing::instrument(level = "debug", skip(registry, media_engine))]
 /// configure_twcc will setup everything necessary for adding
 /// a TWCC header extension to outgoing RTP packets and generating TWCC reports.
 pub fn configure_twcc(mut registry: Registry, media_engine: &mut MediaEngine) -> Result<Registry> {
@@ -107,7 +103,6 @@ pub fn configure_twcc(mut registry: Registry, media_engine: &mut MediaEngine) ->
     Ok(registry)
 }
 
-#[tracing::instrument(level = "debug", skip(registry, media_engine))]
 /// configure_twcc_sender will setup everything necessary for adding
 /// a TWCC header extension to outgoing RTP packets. This will allow the remote peer to generate TWCC reports.
 pub fn configure_twcc_sender_only(
@@ -135,7 +130,6 @@ pub fn configure_twcc_sender_only(
     Ok(registry)
 }
 
-#[tracing::instrument(level = "debug", skip(registry, media_engine))]
 /// configure_twcc_receiver will setup everything necessary for generating TWCC reports.
 pub fn configure_twcc_receiver_only(
     mut registry: Registry,

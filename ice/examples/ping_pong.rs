@@ -39,7 +39,6 @@ lazy_static! {
 }
 
 // HTTP Listener to get ICE Credentials/Candidate from remote Peer
-#[tracing::instrument(level = "debug", skip(req))]
 async fn remote_handler(req: Request<Body>) -> Result<Response<Body>, hyper::Error> {
     //println!("received {:?}", req);
     match (req.method(), req.uri().path()) {
@@ -87,7 +86,6 @@ async fn remote_handler(req: Request<Body>) -> Result<Response<Body>, hyper::Err
 // Controlling Agent:
 //      cargo run --color=always --package webrtc-ice --example ping_pong -- --controlling
 
-#[tracing::instrument(level = "debug", skip())]
 #[tokio::main]
 async fn main() -> Result<(), Error> {
     env_logger::init();

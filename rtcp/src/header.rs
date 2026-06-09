@@ -37,7 +37,6 @@ pub const FORMAT_REMB: u8 = 15;
 pub const FORMAT_TCC: u8 = 15;
 
 impl std::fmt::Display for PacketType {
-    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let s = match self {
             PacketType::Unsupported => "Unsupported",
@@ -55,7 +54,6 @@ impl std::fmt::Display for PacketType {
 }
 
 impl From<u8> for PacketType {
-    #[tracing::instrument(level = "debug", skip(b))]
     fn from(b: u8) -> Self {
         match b {
             200 => PacketType::SenderReport,              // RFC 3550, 6.4.1
@@ -102,14 +100,12 @@ pub struct Header {
 
 /// Marshal encodes the Header in binary
 impl MarshalSize for Header {
-    #[tracing::instrument(level = "debug", skip(self))]
     fn marshal_size(&self) -> usize {
         HEADER_LENGTH
     }
 }
 
 impl Marshal for Header {
-    #[tracing::instrument(level = "debug", skip(self, buf))]
     fn marshal_to(&self, mut buf: &mut [u8]) -> Result<usize, util::Error> {
         if self.count > 31 {
             return Err(Error::InvalidHeader.into());
@@ -138,7 +134,6 @@ impl Marshal for Header {
 }
 
 impl Unmarshal for Header {
-    #[tracing::instrument(level = "debug", skip(raw_packet))]
     /// Unmarshal decodes the Header from binary
     fn unmarshal<B>(raw_packet: &mut B) -> Result<Self, util::Error>
     where

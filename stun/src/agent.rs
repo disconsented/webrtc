@@ -18,7 +18,6 @@ use crate::message::*;
 /// copy needed fields explicitly.
 pub type Handler = Option<Arc<mpsc::UnboundedSender<Event>>>;
 
-#[tracing::instrument(level = "debug", skip())]
 /// noop_handler just discards any event.
 pub fn noop_handler() -> Handler {
     None
@@ -49,7 +48,6 @@ pub enum EventType {
 }
 
 impl Default for EventType {
-    #[tracing::instrument(level = "debug", skip())]
     fn default() -> Self {
         EventType::Callback(TransactionId::default())
     }
@@ -64,7 +62,6 @@ pub struct Event {
 }
 
 impl Default for Event {
-    #[tracing::instrument(level = "debug", skip())]
     fn default() -> Self {
         Event {
             event_type: EventType::default(),
@@ -88,7 +85,6 @@ const AGENT_COLLECT_CAP: usize = 100;
 pub struct TransactionId(pub [u8; TRANSACTION_ID_SIZE]);
 
 impl TransactionId {
-    #[tracing::instrument(level = "debug", skip())]
     /// new returns new random transaction ID using crypto/rand
     /// as source.
     pub fn new() -> Self {
@@ -99,7 +95,6 @@ impl TransactionId {
 }
 
 impl Setter for TransactionId {
-    #[tracing::instrument(level = "debug", skip(self, m))]
     fn add_to(&self, m: &mut Message) -> Result<()> {
         m.transaction_id = *self;
         m.write_transaction_id();
@@ -119,7 +114,6 @@ pub enum ClientAgent {
 }
 
 impl Agent {
-    #[tracing::instrument(level = "debug", skip(handler))]
     /// new initializes and returns new Agent with provided handler.
     pub fn new(handler: Handler) -> Self {
         Agent {
@@ -129,7 +123,6 @@ impl Agent {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, id, error))]
     /// stop_with_error removes transaction from list and calls handler with
     /// provided error. Can return ErrTransactionNotExists and ErrAgentClosed.
     pub fn stop_with_error(&mut self, id: TransactionId, error: Error) -> Result<()> {
@@ -151,7 +144,6 @@ impl Agent {
         Ok(())
     }
 
-    #[tracing::instrument(level = "debug", skip(self, message))]
     /// process incoming message, synchronously passing it to handler.
     pub fn process(&mut self, message: Message) -> Result<()> {
         if self.closed {
@@ -172,7 +164,6 @@ impl Agent {
         Ok(())
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// close terminates all transactions with ErrAgentClosed and renders Agent to
     /// closed state.
     pub fn close(&mut self) -> Result<()> {
@@ -196,7 +187,6 @@ impl Agent {
         Ok(())
     }
 
-    #[tracing::instrument(level = "debug", skip(self, id, deadline))]
     /// start registers transaction with provided id and deadline.
     /// Could return ErrAgentClosed, ErrTransactionExists.
     ///
@@ -215,14 +205,12 @@ impl Agent {
         Ok(())
     }
 
-    #[tracing::instrument(level = "debug", skip(self, id))]
     /// stop stops transaction by id with ErrTransactionStopped, blocking
     /// until handler returns.
     pub fn stop(&mut self, id: TransactionId) -> Result<()> {
         self.stop_with_error(id, Error::ErrTransactionStopped)
     }
 
-    #[tracing::instrument(level = "debug", skip(self, deadline))]
     /// collect terminates all transactions that have deadline before provided
     /// time, blocking until all handlers will process ErrTransactionTimeOut.
     /// Will return ErrAgentClosed if agent is already closed.
@@ -265,7 +253,6 @@ impl Agent {
         Ok(())
     }
 
-    #[tracing::instrument(level = "debug", skip(self, h))]
     /// set_handler sets agent handler to h.
     pub fn set_handler(&mut self, h: Handler) -> Result<()> {
         if self.closed {
@@ -276,7 +263,6 @@ impl Agent {
         Ok(())
     }
 
-    #[tracing::instrument(level = "debug", skip(agent, rx))]
     pub(crate) async fn run(mut agent: Agent, mut rx: mpsc::Receiver<ClientAgent>) {
         while let Some(client_agent) = rx.recv().await {
             let result = match client_agent {

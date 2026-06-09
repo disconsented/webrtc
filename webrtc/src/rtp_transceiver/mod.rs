@@ -129,7 +129,6 @@ pub struct RTCRtpTransceiverInit {
     // Streams       []*Track
 }
 
-#[tracing::instrument(level = "debug", skip(id, ssrc, payload_type, codec, webrtc_header_extensions, associated_stream))]
 pub(crate) fn create_stream_info(
     id: String,
     ssrc: SSRC,
@@ -193,7 +192,6 @@ pub struct RTCRtpTransceiver {
 }
 
 impl RTCRtpTransceiver {
-    #[tracing::instrument(level = "debug", skip(receiver, sender, direction, kind, codecs, media_engine, trigger_negotiation_needed))]
     pub async fn new(
         receiver: Arc<RTCRtpReceiver>,
         sender: Arc<RTCRtpSender>,
@@ -227,7 +225,6 @@ impl RTCRtpTransceiver {
         t
     }
 
-    #[tracing::instrument(level = "debug", skip(self, codecs))]
     /// set_codec_preferences sets preferred list of supported codecs
     /// if codecs is empty or nil we reset to default from MediaEngine
     pub async fn set_codec_preferences(&self, codecs: Vec<RTCRtpCodecParameters>) -> Result<()> {
@@ -246,21 +243,18 @@ impl RTCRtpTransceiver {
         Ok(())
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// Codecs returns list of supported codecs
     pub(crate) async fn get_codecs(&self) -> Vec<RTCRtpCodecParameters> {
         let mut codecs = self.codecs.lock().await;
         RTPReceiverInternal::get_codecs(&mut codecs, self.kind, &self.media_engine)
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// sender returns the RTPTransceiver's RTPSender if it has one
     pub async fn sender(&self) -> Arc<RTCRtpSender> {
         let sender = self.sender.lock().await;
         sender.clone()
     }
 
-    #[tracing::instrument(level = "debug", skip(self, sender, track))]
     /// set_sender_track sets the RTPSender and Track to current transceiver
     pub async fn set_sender_track(
         self: &Arc<Self>,
@@ -271,7 +265,6 @@ impl RTCRtpTransceiver {
         self.set_sending_track(track).await
     }
 
-    #[tracing::instrument(level = "debug", skip(self, s))]
     pub async fn set_sender(self: &Arc<Self>, s: Arc<RTCRtpSender>) {
         s.set_rtp_transceiver(Some(Arc::downgrade(self)));
 
@@ -284,14 +277,12 @@ impl RTCRtpTransceiver {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// receiver returns the RTPTransceiver's RTPReceiver if it has one
     pub async fn receiver(&self) -> Arc<RTCRtpReceiver> {
         let receiver = self.receiver.lock().await;
         receiver.clone()
     }
 
-    #[tracing::instrument(level = "debug", skip(self, r))]
     pub(crate) async fn set_receiver(&self, r: Arc<RTCRtpReceiver>) {
         r.set_transceiver_codecs(Some(Arc::clone(&self.codecs)));
 
@@ -303,7 +294,6 @@ impl RTCRtpTransceiver {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, mid))]
     /// set_mid sets the RTPTransceiver's mid. If it was already set, will return an error.
     pub(crate) fn set_mid(&self, mid: SmolStr) -> Result<()> {
         self.mid
@@ -311,25 +301,21 @@ impl RTCRtpTransceiver {
             .map_err(|_| Error::ErrRTPTransceiverCannotChangeMid)
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// mid gets the Transceiver's mid value. When not already set, this value will be set in CreateOffer or create_answer.
     pub fn mid(&self) -> Option<SmolStr> {
         self.mid.get().cloned()
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// kind returns RTPTransceiver's kind.
     pub fn kind(&self) -> RTPCodecType {
         self.kind
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// direction returns the RTPTransceiver's desired direction.
     pub fn direction(&self) -> RTCRtpTransceiverDirection {
         self.direction.load(Ordering::SeqCst).into()
     }
 
-    #[tracing::instrument(level = "debug", skip(self, d))]
     /// Set the direction of this transceiver. This might trigger a renegotiation.
     pub async fn set_direction(&self, d: RTCRtpTransceiverDirection) {
         let changed = self.set_direction_internal(d);
@@ -342,7 +328,6 @@ impl RTCRtpTransceiver {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, d))]
     pub(crate) fn set_direction_internal(&self, d: RTCRtpTransceiverDirection) -> bool {
         let previous: RTCRtpTransceiverDirection =
             self.direction.swap(d as u8, Ordering::SeqCst).into();
@@ -356,7 +341,6 @@ impl RTCRtpTransceiver {
         changed
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// current_direction returns the RTPTransceiver's current direction as negotiated.
     ///
     /// If this transceiver has never been negotiated or if it's stopped this returns [`RTCRtpTransceiverDirection::Unspecified`].
@@ -368,7 +352,6 @@ impl RTCRtpTransceiver {
         self.current_direction.load(Ordering::SeqCst).into()
     }
 
-    #[tracing::instrument(level = "debug", skip(self, d))]
     pub(crate) fn set_current_direction(&self, d: RTCRtpTransceiverDirection) {
         let previous: RTCRtpTransceiverDirection = self
             .current_direction
@@ -380,7 +363,6 @@ impl RTCRtpTransceiver {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, previous_direction))]
     /// Perform any subsequent actions after altering the transceiver's direction.
     ///
     /// After changing the transceiver's direction this method should be called to perform any
@@ -424,7 +406,6 @@ impl RTCRtpTransceiver {
         Ok(())
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// stop irreversibly stops the RTPTransceiver
     pub async fn stop(&self) -> Result<()> {
         if self.stopped.load(Ordering::SeqCst) {
@@ -447,7 +428,6 @@ impl RTCRtpTransceiver {
         Ok(())
     }
 
-    #[tracing::instrument(level = "debug", skip(self, track))]
     pub(crate) async fn set_sending_track(
         &self,
         track: Option<Arc<dyn TrackLocal + Send + Sync>>,
@@ -471,7 +451,6 @@ impl RTCRtpTransceiver {
 }
 
 impl fmt::Debug for RTCRtpTransceiver {
-    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("RTCRtpTransceiver")
             .field("mid", &self.mid)
@@ -486,7 +465,6 @@ impl fmt::Debug for RTCRtpTransceiver {
     }
 }
 
-#[tracing::instrument(level = "debug", skip(mid, local_transceivers))]
 pub(crate) async fn find_by_mid(
     mid: &str,
     local_transceivers: &mut Vec<Arc<RTCRtpTransceiver>>,
@@ -500,7 +478,6 @@ pub(crate) async fn find_by_mid(
     None
 }
 
-#[tracing::instrument(level = "debug", skip(remote_kind, remote_direction, local_transceivers))]
 /// Given a direction+type pluck a transceiver from the passed list
 /// if no entry satisfies the requested type+direction return a inactive Transceiver
 pub(crate) async fn satisfy_type_and_direction(

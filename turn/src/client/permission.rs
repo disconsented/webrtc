@@ -13,7 +13,6 @@ pub(crate) enum PermState {
 }
 
 impl From<u8> for PermState {
-    #[tracing::instrument(level = "debug", skip(v))]
     fn from(v: u8) -> Self {
         match v {
             0 => PermState::Idle,
@@ -28,12 +27,10 @@ pub(crate) struct Permission {
 }
 
 impl Permission {
-    #[tracing::instrument(level = "debug", skip(self, state))]
     pub(crate) fn set_state(&self, state: PermState) {
         self.st.store(state as u8, Ordering::SeqCst);
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     pub(crate) fn state(&self) -> PermState {
         self.st.load(Ordering::SeqCst).into()
     }
@@ -46,29 +43,24 @@ pub(crate) struct PermissionMap {
 }
 
 impl PermissionMap {
-    #[tracing::instrument(level = "debug", skip())]
     pub(crate) fn new() -> PermissionMap {
         PermissionMap {
             perm_map: HashMap::new(),
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, addr, p))]
     pub(crate) fn insert(&mut self, addr: &SocketAddr, p: Arc<Permission>) {
         self.perm_map.insert(addr.ip().to_string(), p);
     }
 
-    #[tracing::instrument(level = "debug", skip(self, addr))]
     pub(crate) fn find(&self, addr: &SocketAddr) -> Option<&Arc<Permission>> {
         self.perm_map.get(&addr.ip().to_string())
     }
 
-    #[tracing::instrument(level = "debug", skip(self, addr))]
     pub(crate) fn delete(&mut self, addr: &SocketAddr) {
         self.perm_map.remove(&addr.ip().to_string());
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     pub(crate) fn addrs(&self) -> Vec<SocketAddr> {
         let mut a = vec![];
         for k in self.perm_map.keys() {

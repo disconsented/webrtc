@@ -10,7 +10,6 @@ struct Pipe {
     wr_tx: Mutex<mpsc::Sender<Vec<u8>>>,
 }
 
-#[tracing::instrument(level = "debug", skip())]
 pub fn pipe() -> (impl Conn, impl Conn) {
     let (cb1_tx, cb1_rx) = mpsc::channel(16);
     let (cb2_tx, cb2_rx) = mpsc::channel(16);
@@ -30,12 +29,10 @@ pub fn pipe() -> (impl Conn, impl Conn) {
 
 #[async_trait]
 impl Conn for Pipe {
-    #[tracing::instrument(level = "debug", skip(self, _addr))]
     async fn connect(&self, _addr: SocketAddr) -> Result<()> {
         Err(Error::other("Not applicable").into())
     }
 
-    #[tracing::instrument(level = "debug", skip(self, b))]
     async fn recv(&self, b: &mut [u8]) -> Result<usize> {
         let mut rd_rx = self.rd_rx.lock().await;
         let v = match rd_rx.recv().await {
@@ -47,13 +44,11 @@ impl Conn for Pipe {
         Ok(l)
     }
 
-    #[tracing::instrument(level = "debug", skip(self, buf))]
     async fn recv_from(&self, buf: &mut [u8]) -> Result<(usize, SocketAddr)> {
         let n = self.recv(buf).await?;
         Ok((n, SocketAddr::from_str("0.0.0.0:0")?))
     }
 
-    #[tracing::instrument(level = "debug", skip(self, b))]
     async fn send(&self, b: &[u8]) -> Result<usize> {
         let wr_tx = self.wr_tx.lock().await;
         match wr_tx.send(b.to_vec()).await {
@@ -63,27 +58,22 @@ impl Conn for Pipe {
         Ok(b.len())
     }
 
-    #[tracing::instrument(level = "debug", skip(self, _buf, _target))]
     async fn send_to(&self, _buf: &[u8], _target: SocketAddr) -> Result<usize> {
         Err(Error::other("Not applicable").into())
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn local_addr(&self) -> Result<SocketAddr> {
         Err(Error::new(ErrorKind::AddrNotAvailable, "Addr Not Available").into())
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn remote_addr(&self) -> Option<SocketAddr> {
         None
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     async fn close(&self) -> Result<()> {
         Ok(())
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn as_any(&self) -> &(dyn std::any::Any + Send + Sync) {
         self
     }

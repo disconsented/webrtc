@@ -19,7 +19,6 @@ pub struct Uri {
 }
 
 impl fmt::Display for Uri {
-    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let host = if self.host.contains("::") {
             format!("[{}]", self.host)
@@ -37,7 +36,6 @@ impl fmt::Display for Uri {
 
 impl Uri {
     // parse_uri parses URI from string.
-    #[tracing::instrument(level = "debug", skip(raw))]
     pub fn parse_uri(raw: &str) -> Result<Self> {
         // work around for url crate
         if raw.contains("//") {

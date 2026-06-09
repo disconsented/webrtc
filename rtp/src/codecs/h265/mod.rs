@@ -37,7 +37,6 @@ pub enum UnitType {
     IGNORE = -1,
 }
 impl UnitType {
-    #[tracing::instrument(level = "debug", skip(id))]
     pub fn for_id(id: u8) -> Result<UnitType> {
         if id > 64 {
             Err(Error::ErrUnhandledNaluType)
@@ -66,7 +65,6 @@ pub struct HevcPayloader {
 }
 
 impl HevcPayloader {
-    #[tracing::instrument(level = "debug", skip(nalu))]
     pub fn parse(nalu: &Bytes) -> (Vec<usize>, usize) {
         let finder = memchr::memmem::Finder::new(&ANNEXB_NALUSTART_CODE);
         let nals = finder.find_iter(nalu).collect::<Vec<usize>>();
@@ -77,7 +75,6 @@ impl HevcPayloader {
         (nals, 4)
     }
 
-    #[tracing::instrument(level = "debug", skip(self, nalu, mtu, payloads))]
     fn emit(&mut self, nalu: &Bytes, mtu: usize, payloads: &mut Vec<Bytes>) {
         if nalu.is_empty() {
             return;
@@ -199,7 +196,6 @@ impl HevcPayloader {
 }
 
 impl Payloader for HevcPayloader {
-    #[tracing::instrument(level = "debug", skip(self, mtu, payload))]
     /// Payload fragments a H264 packet across one or more byte arrays
     fn payload(&mut self, mtu: usize, payload: &Bytes) -> Result<Vec<Bytes>> {
         if payload.is_empty() || mtu == 0 {
@@ -230,7 +226,6 @@ impl Payloader for HevcPayloader {
         Ok(payloads)
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn clone_to(&self) -> Box<dyn Payloader + Send + Sync> {
         Box::new(self.clone())
     }
@@ -266,18 +261,15 @@ const H265NALU_PACI_PACKET_TYPE: u8 = 50;
 pub struct H265NALUHeader(pub u16);
 
 impl H265NALUHeader {
-    #[tracing::instrument(level = "debug", skip(high_byte, low_byte))]
     pub fn new(high_byte: u8, low_byte: u8) -> Self {
         H265NALUHeader(((high_byte as u16) << 8) | low_byte as u16)
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// f is the forbidden bit, should always be 0.
     pub fn f(&self) -> bool {
         (self.0 >> 15) != 0
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// nalu_type of NAL Unit.
     pub fn nalu_type(&self) -> u8 {
         // 01111110 00000000
@@ -285,7 +277,6 @@ impl H265NALUHeader {
         ((self.0 & MASK) >> (8 + 1)) as u8
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// is_type_vcl_unit returns whether or not the NAL Unit type is a VCL NAL unit.
     pub fn is_type_vcl_unit(&self) -> bool {
         // Type is coded on 6 bits
@@ -293,7 +284,6 @@ impl H265NALUHeader {
         (self.nalu_type() & MSB_MASK) == 0
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// layer_id should always be 0 in non-3D HEVC context.
     pub fn layer_id(&self) -> u8 {
         // 00000001 11111000
@@ -301,26 +291,22 @@ impl H265NALUHeader {
         ((self.0 & MASK) >> 3) as u8
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// tid is the temporal identifier of the NAL unit +1.
     pub fn tid(&self) -> u8 {
         const MASK: u16 = 0b00000111;
         (self.0 & MASK) as u8
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// is_aggregation_packet returns whether or not the packet is an Aggregation packet.
     pub fn is_aggregation_packet(&self) -> bool {
         self.nalu_type() == H265NALU_AGGREGATION_PACKET_TYPE
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// is_fragmentation_unit returns whether or not the packet is a Fragmentation Unit packet.
     pub fn is_fragmentation_unit(&self) -> bool {
         self.nalu_type() == H265NALU_FRAGMENTATION_UNIT_TYPE
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// is_paci_packet returns whether or not the packet is a PACI packet.
     pub fn is_paci_packet(&self) -> bool {
         self.nalu_type() == H265NALU_PACI_PACKET_TYPE
@@ -361,14 +347,12 @@ pub struct H265SingleNALUnitPacket {
 }
 
 impl H265SingleNALUnitPacket {
-    #[tracing::instrument(level = "debug", skip(self, value))]
     /// with_donl can be called to specify whether or not DONL might be parsed.
     /// DONL may need to be parsed if `sprop-max-don-diff` is greater than 0 on the RTP stream.
     pub fn with_donl(&mut self, value: bool) {
         self.might_need_donl = value;
     }
 
-    #[tracing::instrument(level = "debug", skip(self, payload))]
     /// depacketize parses the passed byte slice and stores the result in the H265SingleNALUnitPacket this method is called upon.
     fn depacketize(&mut self, payload: &Bytes) -> Result<()> {
         if payload.len() <= H265NALU_HEADER_SIZE {
@@ -405,19 +389,16 @@ impl H265SingleNALUnitPacket {
         Ok(())
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// payload_header returns the NALU header of the packet.
     pub fn payload_header(&self) -> H265NALUHeader {
         self.payload_header
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// donl returns the DONL of the packet.
     pub fn donl(&self) -> Option<u16> {
         self.donl
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// payload returns the Fragmentation Unit packet payload.
     pub fn payload(&self) -> Bytes {
         self.payload.clone()
@@ -454,7 +435,6 @@ pub struct H265AggregationUnitFirst {
 }
 
 impl H265AggregationUnitFirst {
-    #[tracing::instrument(level = "debug", skip(self))]
     /// donl field, when present, specifies the value of the 16 least
     /// significant bits of the decoding order number of the aggregated NAL
     /// unit.
@@ -462,13 +442,11 @@ impl H265AggregationUnitFirst {
         self.donl
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// nalu_size represents the size, in bytes, of the nal_unit.
     pub fn nalu_size(&self) -> u16 {
         self.nal_unit_size
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// nal_unit payload.
     pub fn nal_unit(&self) -> Bytes {
         self.nal_unit.clone()
@@ -501,7 +479,6 @@ pub struct H265AggregationUnit {
 }
 
 impl H265AggregationUnit {
-    #[tracing::instrument(level = "debug", skip(self))]
     /// dond field plus 1 specifies the difference between
     /// the decoding order number values of the current aggregated NAL unit
     /// and the preceding aggregated NAL unit in the same AP.
@@ -509,13 +486,11 @@ impl H265AggregationUnit {
         self.dond
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// nalu_size represents the size, in bytes, of the nal_unit.
     pub fn nalu_size(&self) -> u16 {
         self.nal_unit_size
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// nal_unit payload.
     pub fn nal_unit(&self) -> Bytes {
         self.nal_unit.clone()
@@ -549,14 +524,12 @@ pub struct H265AggregationPacket {
 }
 
 impl H265AggregationPacket {
-    #[tracing::instrument(level = "debug", skip(self, value))]
     /// with_donl can be called to specify whether or not DONL might be parsed.
     /// DONL may need to be parsed if `sprop-max-don-diff` is greater than 0 on the RTP stream.
     pub fn with_donl(&mut self, value: bool) {
         self.might_need_donl = value;
     }
 
-    #[tracing::instrument(level = "debug", skip(self, payload))]
     /// depacketize parses the passed byte slice and stores the result in the H265AggregationPacket this method is called upon.
     fn depacketize(&mut self, payload: &Bytes) -> Result<()> {
         if payload.len() <= H265NALU_HEADER_SIZE {
@@ -641,13 +614,11 @@ impl H265AggregationPacket {
         Ok(())
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// first_unit returns the first Aggregated Unit of the packet.
     pub fn first_unit(&self) -> Option<&H265AggregationUnitFirst> {
         self.first_unit.as_ref()
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// other_units returns the all the other Aggregated Unit of the packet (excluding the first one).
     pub fn other_units(&self) -> &[H265AggregationUnit] {
         self.other_units.as_slice()
@@ -666,21 +637,18 @@ impl H265AggregationPacket {
 pub struct H265FragmentationUnitHeader(pub u8);
 
 impl H265FragmentationUnitHeader {
-    #[tracing::instrument(level = "debug", skip(self))]
     /// s represents the start of a fragmented NAL unit.
     pub fn s(&self) -> bool {
         const MASK: u8 = 0b10000000;
         ((self.0 & MASK) >> 7) != 0
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// e represents the end of a fragmented NAL unit.
     pub fn e(&self) -> bool {
         const MASK: u8 = 0b01000000;
         ((self.0 & MASK) >> 6) != 0
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// fu_type MUST be equal to the field Type of the fragmented NAL unit.
     pub fn fu_type(&self) -> u8 {
         const MASK: u8 = 0b00111111;
@@ -723,14 +691,12 @@ pub struct H265FragmentationUnitPacket {
 }
 
 impl H265FragmentationUnitPacket {
-    #[tracing::instrument(level = "debug", skip(self, value))]
     /// with_donl can be called to specify whether or not DONL might be parsed.
     /// DONL may need to be parsed if `sprop-max-don-diff` is greater than 0 on the RTP stream.
     pub fn with_donl(&mut self, value: bool) {
         self.might_need_donl = value;
     }
 
-    #[tracing::instrument(level = "debug", skip(self, payload))]
     /// depacketize parses the passed byte slice and stores the result in the H265FragmentationUnitPacket this method is called upon.
     fn depacketize(&mut self, payload: &Bytes) -> Result<()> {
         const TOTAL_HEADER_SIZE: usize = H265NALU_HEADER_SIZE + H265FRAGMENTATION_UNIT_HEADER_SIZE;
@@ -766,25 +732,21 @@ impl H265FragmentationUnitPacket {
         Ok(())
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// payload_header returns the NALU header of the packet.
     pub fn payload_header(&self) -> H265NALUHeader {
         self.payload_header
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// fu_header returns the Fragmentation Unit Header of the packet.
     pub fn fu_header(&self) -> H265FragmentationUnitHeader {
         self.fu_header
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// donl returns the DONL of the packet.
     pub fn donl(&self) -> Option<u16> {
         self.donl
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// payload returns the Fragmentation Unit packet payload.
     pub fn payload(&self) -> Bytes {
         self.payload.clone()
@@ -832,74 +794,63 @@ pub struct H265PACIPacket {
 }
 
 impl H265PACIPacket {
-    #[tracing::instrument(level = "debug", skip(self))]
     /// payload_header returns the NAL Unit Header.
     pub fn payload_header(&self) -> H265NALUHeader {
         self.payload_header
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// a copies the F bit of the PACI payload NALU.
     pub fn a(&self) -> bool {
         const MASK: u16 = 0b10000000 << 8;
         (self.paci_header_fields & MASK) != 0
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// ctype copies the Type field of the PACI payload NALU.
     pub fn ctype(&self) -> u8 {
         const MASK: u16 = 0b01111110 << 8;
         ((self.paci_header_fields & MASK) >> (8 + 1)) as u8
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// phs_size indicates the size of the phes field.
     pub fn phs_size(&self) -> u8 {
         const MASK: u16 = (0b00000001 << 8) | 0b11110000;
         ((self.paci_header_fields & MASK) >> 4) as u8
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// f0 indicates the presence of a Temporal Scalability support extension in the phes.
     pub fn f0(&self) -> bool {
         const MASK: u16 = 0b00001000;
         (self.paci_header_fields & MASK) != 0
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// f1 must be zero, reserved for future extensions.
     pub fn f1(&self) -> bool {
         const MASK: u16 = 0b00000100;
         (self.paci_header_fields & MASK) != 0
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// f2 must be zero, reserved for future extensions.
     pub fn f2(&self) -> bool {
         const MASK: u16 = 0b00000010;
         (self.paci_header_fields & MASK) != 0
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// y must be zero, reserved for future extensions.
     pub fn y(&self) -> bool {
         const MASK: u16 = 0b00000001;
         (self.paci_header_fields & MASK) != 0
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// phes contains header extensions. Its size is indicated by phssize.
     pub fn phes(&self) -> Bytes {
         self.phes.clone()
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// payload is a single NALU or NALU-like struct, not including the first two octets (header).
     pub fn payload(&self) -> Bytes {
         self.payload.clone()
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// tsci returns the Temporal Scalability Control Information extension, if present.
     pub fn tsci(&self) -> Option<H265TSCI> {
         if !self.f0() || self.phs_size() < 3 {
@@ -911,7 +862,6 @@ impl H265PACIPacket {
         ))
     }
 
-    #[tracing::instrument(level = "debug", skip(self, payload))]
     /// depacketize parses the passed byte slice and stores the result in the H265PACIPacket this method is called upon.
     fn depacketize(&mut self, payload: &Bytes) -> Result<()> {
         const TOTAL_HEADER_SIZE: usize = H265NALU_HEADER_SIZE + 2;
@@ -965,7 +915,6 @@ impl H265PACIPacket {
 pub struct H265TSCI(pub u32);
 
 impl H265TSCI {
-    #[tracing::instrument(level = "debug", skip(self))]
     /// tl0picidx see RFC7798 for more details.
     pub fn tl0picidx(&self) -> u8 {
         const M1: u32 = 0xFFFF0000;
@@ -973,7 +922,6 @@ impl H265TSCI {
         ((((self.0 & M1) >> 16) & M2) >> 8) as u8
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// irap_pic_id see RFC7798 for more details.
     pub fn irap_pic_id(&self) -> u8 {
         const M1: u32 = 0xFFFF0000;
@@ -981,7 +929,6 @@ impl H265TSCI {
         (((self.0 & M1) >> 16) & M2) as u8
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// s see RFC7798 for more details.
     pub fn s(&self) -> bool {
         const M1: u32 = 0xFF00;
@@ -989,7 +936,6 @@ impl H265TSCI {
         (((self.0 & M1) >> 8) & M2) != 0
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// e see RFC7798 for more details.
     pub fn e(&self) -> bool {
         const M1: u32 = 0xFF00;
@@ -997,7 +943,6 @@ impl H265TSCI {
         (((self.0 & M1) >> 8) & M2) != 0
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// res see RFC7798 for more details.
     pub fn res(&self) -> u8 {
         const M1: u32 = 0xFF00;
@@ -1018,7 +963,6 @@ pub enum H265Payload {
 }
 
 impl Default for H265Payload {
-    #[tracing::instrument(level = "debug", skip())]
     fn default() -> Self {
         H265Payload::H265SingleNALUnitPacket(H265SingleNALUnitPacket::default())
     }
@@ -1035,14 +979,12 @@ pub struct H265Packet {
 }
 
 impl H265Packet {
-    #[tracing::instrument(level = "debug", skip(self, value))]
     /// with_donl can be called to specify whether or not DONL might be parsed.
     /// DONL may need to be parsed if `sprop-max-don-diff` is greater than 0 on the RTP stream.
     pub fn with_donl(&mut self, value: bool) {
         self.might_need_donl = value;
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// payload returns the populated payload.
     /// Must be casted to one of:
     /// - H265SingleNALUnitPacket
@@ -1055,7 +997,6 @@ impl H265Packet {
 }
 
 impl Depacketizer for H265Packet {
-    #[tracing::instrument(level = "debug", skip(self, payload))]
     /// depacketize parses the passed byte slice and stores the result in the H265Packet this method is called upon
     fn depacketize(&mut self, payload: &Bytes) -> Result<Bytes> {
         if payload.len() <= H265NALU_HEADER_SIZE {
@@ -1098,14 +1039,12 @@ impl Depacketizer for H265Packet {
         Ok(payload.clone())
     }
 
-    #[tracing::instrument(level = "debug", skip(self, _payload))]
     /// is_partition_head checks if this is the head of a packetized nalu stream.
     fn is_partition_head(&self, _payload: &Bytes) -> bool {
         //TODO:
         true
     }
 
-    #[tracing::instrument(level = "debug", skip(self, marker, _payload))]
     fn is_partition_tail(&self, marker: bool, _payload: &Bytes) -> bool {
         marker
     }

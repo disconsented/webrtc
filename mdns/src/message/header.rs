@@ -14,7 +14,6 @@ pub struct Header {
 }
 
 impl fmt::Display for Header {
-    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
@@ -32,7 +31,6 @@ impl fmt::Display for Header {
 }
 
 impl Header {
-    #[tracing::instrument(level = "debug", skip(self))]
     pub fn pack(&self) -> (u16, u16) {
         let id = self.id;
         let mut bits = self.op_code << 11 | self.rcode as u16;
@@ -69,7 +67,6 @@ pub enum Section {
 }
 
 impl From<u8> for Section {
-    #[tracing::instrument(level = "debug", skip(v))]
     fn from(v: u8) -> Self {
         match v {
             0 => Section::NotStarted,
@@ -84,7 +81,6 @@ impl From<u8> for Section {
 }
 
 impl fmt::Display for Section {
-    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let s = match *self {
             Section::NotStarted => "NotStarted",
@@ -111,7 +107,6 @@ pub struct HeaderInternal {
 }
 
 impl HeaderInternal {
-    #[tracing::instrument(level = "debug", skip(self, sec))]
     pub(crate) fn count(&self, sec: Section) -> u16 {
         match sec {
             Section::Questions => self.questions,
@@ -123,7 +118,6 @@ impl HeaderInternal {
     }
 
     // pack appends the wire format of the header to msg.
-    #[tracing::instrument(level = "debug", skip(self, msg))]
     pub(crate) fn pack(&self, mut msg: Vec<u8>) -> Vec<u8> {
         msg = pack_uint16(msg, self.id);
         msg = pack_uint16(msg, self.bits);
@@ -134,7 +128,6 @@ impl HeaderInternal {
         msg
     }
 
-    #[tracing::instrument(level = "debug", skip(self, msg, off))]
     pub(crate) fn unpack(&mut self, msg: &[u8], off: usize) -> Result<usize> {
         let (id, off) = unpack_uint16(msg, off)?;
         self.id = id;
@@ -157,7 +150,6 @@ impl HeaderInternal {
         Ok(off)
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     pub(crate) fn header(&self) -> Header {
         Header {
             id: self.id,

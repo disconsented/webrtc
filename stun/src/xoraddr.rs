@@ -39,7 +39,6 @@ const WORD_SIZE: usize = mem::size_of::<usize>();
     return n
 }*/
 
-#[tracing::instrument(level = "debug", skip(dst, a, b))]
 fn safe_xor_bytes(dst: &mut [u8], a: &[u8], b: &[u8]) -> usize {
     let mut n = a.len();
     if b.len() < n {
@@ -54,7 +53,6 @@ fn safe_xor_bytes(dst: &mut [u8], a: &[u8], b: &[u8]) -> usize {
     n
 }
 
-#[tracing::instrument(level = "debug", skip(dst, a, b))]
 /// xor_bytes xors the bytes in a and b. The destination is assumed to have enough
 /// space. Returns the number of bytes xor'd.
 pub fn xor_bytes(dst: &mut [u8], a: &[u8], b: &[u8]) -> usize {
@@ -73,7 +71,6 @@ pub struct XorMappedAddress {
 }
 
 impl Default for XorMappedAddress {
-    #[tracing::instrument(level = "debug", skip())]
     fn default() -> Self {
         XorMappedAddress {
             ip: IpAddr::V4(Ipv4Addr::from(0)),
@@ -83,7 +80,6 @@ impl Default for XorMappedAddress {
 }
 
 impl fmt::Display for XorMappedAddress {
-    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self.ip {
             IpAddr::V4(_) => write!(f, "{}:{}", self.ip, self.port),
@@ -93,7 +89,6 @@ impl fmt::Display for XorMappedAddress {
 }
 
 impl Setter for XorMappedAddress {
-    #[tracing::instrument(level = "debug", skip(self, m))]
     /// add_to adds XOR-MAPPED-ADDRESS to m. Can return ErrBadIPLength
     /// if len(a.IP) is invalid.
     fn add_to(&self, m: &mut Message) -> Result<()> {
@@ -102,7 +97,6 @@ impl Setter for XorMappedAddress {
 }
 
 impl Getter for XorMappedAddress {
-    #[tracing::instrument(level = "debug", skip(self, m))]
     /// get_from decodes XOR-MAPPED-ADDRESS attribute in message and returns
     /// error if any. While decoding, a.IP is reused if possible and can be
     /// rendered to invalid state (e.g. if a.IP was set to IPv6 and then
@@ -113,7 +107,6 @@ impl Getter for XorMappedAddress {
 }
 
 impl XorMappedAddress {
-    #[tracing::instrument(level = "debug", skip(self, m, t))]
     /// add_to_as adds XOR-MAPPED-ADDRESS value to m as t attribute.
     pub fn add_to_as(&self, m: &mut Message, t: AttrType) -> Result<()> {
         let (family, ip_len, ip) = match self.ip {
@@ -133,7 +126,6 @@ impl XorMappedAddress {
         Ok(())
     }
 
-    #[tracing::instrument(level = "debug", skip(self, m, t))]
     /// get_from_as decodes XOR-MAPPED-ADDRESS attribute value in message
     /// getting it as for t type.
     pub fn get_from_as(&mut self, m: &Message, t: AttrType) -> Result<()> {

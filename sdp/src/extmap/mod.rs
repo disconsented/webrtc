@@ -36,7 +36,6 @@ pub struct ExtMap {
 }
 
 impl fmt::Display for ExtMap {
-    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.value)?;
 
@@ -57,7 +56,6 @@ impl fmt::Display for ExtMap {
 }
 
 impl ExtMap {
-    #[tracing::instrument(level = "debug", skip(self))]
     /// converts this object to an Attribute
     pub fn convert(&self) -> Attribute {
         Attribute {
@@ -66,7 +64,6 @@ impl ExtMap {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(reader))]
     /// unmarshal creates an Extmap from a string
     pub fn unmarshal<R: io::BufRead>(reader: &mut R) -> Result<Self> {
         let mut line = String::new();
@@ -117,7 +114,6 @@ impl ExtMap {
         })
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// marshal creates a string from an ExtMap
     pub fn marshal(&self) -> String {
         "extmap:".to_string() + self.to_string().as_str()

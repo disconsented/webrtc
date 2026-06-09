@@ -26,7 +26,6 @@ use crate::signature_hash_algorithm::*;
 pub(crate) struct Flight5;
 
 impl fmt::Display for Flight5 {
-    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "Flight 5")
     }
@@ -34,12 +33,10 @@ impl fmt::Display for Flight5 {
 
 #[async_trait]
 impl Flight for Flight5 {
-    #[tracing::instrument(level = "debug", skip(self))]
     fn is_last_recv_flight(&self) -> bool {
         true
     }
 
-    #[tracing::instrument(level = "debug", skip(self, _tx, state, cache, cfg))]
     async fn parse(
         &self,
         _tx: &mut mpsc::Sender<mpsc::Sender<()>>,
@@ -176,7 +173,6 @@ impl Flight for Flight5 {
         Ok(Box::new(Flight5 {}))
     }
 
-    #[tracing::instrument(level = "debug", skip(self, state, cache, cfg))]
     async fn generate(
         &self,
         state: &mut State,
@@ -611,7 +607,6 @@ impl Flight for Flight5 {
         Ok(pkts)
     }
 }
-#[tracing::instrument(level = "debug", skip(state, cache, cfg, h, sending_plain_text))]
 async fn initialize_cipher_suite(
     state: &mut State,
     cache: &HandshakeCache,

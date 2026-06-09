@@ -24,7 +24,6 @@ rand = "0.9"
 waitgroup = "0.1"
 log = "0.4"
 portable-atomic = "1.6"
-tracing.workspace = true
 
 [dev-dependencies]
 chrono = "0.4.28"

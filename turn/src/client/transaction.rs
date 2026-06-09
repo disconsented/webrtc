@@ -15,7 +15,6 @@ use crate::error::*;
 const MAX_RTX_INTERVAL_IN_MS: u16 = 1600;
 const MAX_RTX_COUNT: u16 = 7; // total 7 requests (Rc)
 
-#[tracing::instrument(level = "debug", skip(conn, tr_map, tr_key, n_rtx))]
 async fn on_rtx_timeout(
     conn: &Arc<dyn Conn + Send + Sync>,
     tr_map: &Arc<Mutex<TransactionMap>>,
@@ -87,7 +86,6 @@ pub struct TransactionResult {
 }
 
 impl Default for TransactionResult {
-    #[tracing::instrument(level = "debug", skip())]
     fn default() -> Self {
         TransactionResult {
             msg: Message::default(),
@@ -122,7 +120,6 @@ pub struct Transaction {
 }
 
 impl Default for Transaction {
-    #[tracing::instrument(level = "debug", skip())]
     fn default() -> Self {
         Transaction {
             key: String::new(),
@@ -139,7 +136,6 @@ impl Default for Transaction {
 }
 
 impl Transaction {
-    #[tracing::instrument(level = "debug", skip(config))]
     /// Creates a new [`Transaction`] using the given `config`.
     pub fn new(config: TransactionConfig) -> Self {
         let (result_ch_tx, result_ch_rx) = if !config.ignore_result {
@@ -160,7 +156,6 @@ impl Transaction {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, conn, tr_map))]
     /// Starts the transaction timer.
     pub async fn start_rtx_timer(
         &mut self,
@@ -198,7 +193,6 @@ impl Transaction {
         });
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// Stops the transaction timer.
     pub fn stop_rtx_timer(&mut self) {
         if self.timer_ch_tx.is_some() {
@@ -206,7 +200,6 @@ impl Transaction {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, res))]
     /// Writes the result to the result channel.
     pub async fn write_result(&self, res: TransactionResult) -> bool {
         if let Some(result_ch) = &self.result_ch_tx {
@@ -216,13 +209,11 @@ impl Transaction {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// Returns the result channel.
     pub fn get_result_channel(&mut self) -> Option<mpsc::Receiver<TransactionResult>> {
         self.result_ch_rx.take()
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// Closes the transaction.
     pub fn close(&mut self) {
         if self.result_ch_tx.is_some() {
@@ -230,7 +221,6 @@ impl Transaction {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// Returns the number of retransmission it has made.
     pub fn retries(&self) -> u16 {
         self.n_rtx.load(Ordering::SeqCst)
@@ -244,7 +234,6 @@ pub struct TransactionMap {
 }
 
 impl TransactionMap {
-    #[tracing::instrument(level = "debug", skip())]
     /// Create a new [`TransactionMap`].
     pub fn new() -> TransactionMap {
         TransactionMap {
@@ -252,32 +241,27 @@ impl TransactionMap {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, key, tr))]
     /// Inserts a [`Transaction`] to the map.
     pub fn insert(&mut self, key: String, tr: Transaction) -> bool {
         self.tr_map.insert(key, tr);
         true
     }
 
-    #[tracing::instrument(level = "debug", skip(self, key))]
     /// Looks up a [`Transaction`] by its key.
     pub fn find(&self, key: &str) -> Option<&Transaction> {
         self.tr_map.get(key)
     }
 
-    #[tracing::instrument(level = "debug", skip(self, key))]
     /// Gets the [`Transaction`] associated with the given `key`.
     pub fn get(&mut self, key: &str) -> Option<&mut Transaction> {
         self.tr_map.get_mut(key)
     }
 
-    #[tracing::instrument(level = "debug", skip(self, key))]
     /// Deletes a [`Transaction`] by its key.
     pub fn delete(&mut self, key: &str) -> Option<Transaction> {
         self.tr_map.remove(key)
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// Closes and deletes all [`Transaction`]s.
     pub fn close_and_delete_all(&mut self) {
         for tr in self.tr_map.values_mut() {
@@ -286,7 +270,6 @@ impl TransactionMap {
         self.tr_map.clear();
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// Returns its length.
     pub fn size(&self) -> usize {
         self.tr_map.len()

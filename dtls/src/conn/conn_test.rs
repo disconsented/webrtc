@@ -36,14 +36,12 @@ const ERR_NOT_EXPECTED_CHAIN: &str = "not expected chain";
 const ERR_EXPECTED_CHAIN: &str = "expected chain";
 const ERR_WRONG_CERT: &str = "wrong cert";
 
-#[tracing::instrument(level = "debug", skip())]
 async fn build_pipe() -> Result<(DTLSConn, DTLSConn)> {
     let (ua, ub) = pipe();
 
     pipe_conn(Arc::new(ua), Arc::new(ub)).await
 }
 
-#[tracing::instrument(level = "debug", skip(ca, cb))]
 async fn pipe_conn(
     ca: Arc<dyn util::Conn + Send + Sync>,
     cb: Arc<dyn util::Conn + Send + Sync>,
@@ -85,7 +83,6 @@ async fn pipe_conn(
     Ok((client, sever))
 }
 
-#[tracing::instrument(level = "debug", skip(hint))]
 fn psk_callback_client(hint: &[u8]) -> Pin<Box<dyn Future<Output = Result<Vec<u8>>> + Send>> {
     trace!(
         "Server's hint: {}",
@@ -94,7 +91,6 @@ fn psk_callback_client(hint: &[u8]) -> Pin<Box<dyn Future<Output = Result<Vec<u8
     Box::pin(async move { Ok(vec![0xAB, 0xC1, 0x23]) })
 }
 
-#[tracing::instrument(level = "debug", skip(hint))]
 fn psk_callback_server(hint: &[u8]) -> Pin<Box<dyn Future<Output = Result<Vec<u8>>> + Send>> {
     trace!(
         "Client's hint: {}",
@@ -106,12 +102,10 @@ fn psk_callback_server(hint: &[u8]) -> Pin<Box<dyn Future<Output = Result<Vec<u8
     })
 }
 
-#[tracing::instrument(level = "debug", skip(_hint))]
 fn psk_callback_hint_fail(_hint: &[u8]) -> Pin<Box<dyn Future<Output = Result<Vec<u8>>> + Send>> {
     Box::pin(async move { Err(Error::Other(ERR_PSK_REJECTED.to_owned())) })
 }
 
-#[tracing::instrument(level = "debug", skip(ca, cfg, generate_certificate))]
 async fn create_test_client(
     ca: Arc<dyn util::Conn + Send + Sync>,
     mut cfg: Config,
@@ -126,7 +120,6 @@ async fn create_test_client(
     DTLSConn::new(ca, cfg, true, None).await
 }
 
-#[tracing::instrument(level = "debug", skip(cb, cfg, generate_certificate))]
 async fn create_test_server(
     cb: Arc<dyn util::Conn + Send + Sync>,
     mut cfg: Config,
@@ -1306,7 +1299,6 @@ async fn test_extended_master_secret() -> Result<()> {
     Ok(())
 }
 
-#[tracing::instrument(level = "debug", skip(_cert, chain))]
 fn fn_not_expected_chain(_cert: &[Vec<u8>], chain: &[CertificateDer<'static>]) -> Result<()> {
     if !chain.is_empty() {
         return Err(Error::Other(ERR_NOT_EXPECTED_CHAIN.to_owned()));
@@ -1314,7 +1306,6 @@ fn fn_not_expected_chain(_cert: &[Vec<u8>], chain: &[CertificateDer<'static>]) -
     Ok(())
 }
 
-#[tracing::instrument(level = "debug", skip(_cert, chain))]
 fn fn_expected_chain(_cert: &[Vec<u8>], chain: &[CertificateDer<'static>]) -> Result<()> {
     if chain.is_empty() {
         return Err(Error::Other(ERR_EXPECTED_CHAIN.to_owned()));
@@ -1322,7 +1313,6 @@ fn fn_expected_chain(_cert: &[Vec<u8>], chain: &[CertificateDer<'static>]) -> Re
     Ok(())
 }
 
-#[tracing::instrument(level = "debug", skip(_cert, _chain))]
 fn fn_wrong_cert(_cert: &[Vec<u8>], _chain: &[CertificateDer<'static>]) -> Result<()> {
     Err(Error::Other(ERR_WRONG_CERT.to_owned()))
 }
@@ -1647,7 +1637,6 @@ async fn test_cipher_suite_configuration() -> Result<()> {
     Ok(())
 }
 
-#[tracing::instrument(level = "debug", skip(_b))]
 fn psk_callback(_b: &[u8]) -> Pin<Box<dyn Future<Output = Result<Vec<u8>>> + Send>> {
     Box::pin(async move { Ok(vec![0x00, 0x01, 0x02]) })
 }
@@ -2351,7 +2340,6 @@ async fn test_multiple_hello_verify_request() -> Result<()> {
     Ok(())
 }
 
-#[tracing::instrument(level = "debug", skip(cookie, ca, sequence_number, send_renegotiation_info))]
 async fn send_client_hello(
     cookie: Vec<u8>,
     ca: &Arc<dyn Conn + Send + Sync>,

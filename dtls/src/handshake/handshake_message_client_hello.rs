@@ -32,7 +32,6 @@ pub struct HandshakeMessageClientHello {
 }
 
 impl PartialEq for HandshakeMessageClientHello {
-    #[tracing::instrument(level = "debug", skip(self, other))]
     fn eq(&self, other: &Self) -> bool {
         if !(self.version == other.version
             && self.random == other.random
@@ -55,7 +54,6 @@ impl PartialEq for HandshakeMessageClientHello {
 }
 
 impl fmt::Debug for HandshakeMessageClientHello {
-    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut cipher_suites_str = String::new();
         for cipher_suite in &self.cipher_suites {
@@ -76,12 +74,10 @@ impl fmt::Debug for HandshakeMessageClientHello {
 const HANDSHAKE_MESSAGE_CLIENT_HELLO_VARIABLE_WIDTH_START: usize = 34;
 
 impl HandshakeMessageClientHello {
-    #[tracing::instrument(level = "debug", skip(self))]
     pub fn handshake_type(&self) -> HandshakeType {
         HandshakeType::ClientHello
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     pub fn size(&self) -> usize {
         let mut len = 0;
 
@@ -105,7 +101,6 @@ impl HandshakeMessageClientHello {
         len
     }
 
-    #[tracing::instrument(level = "debug", skip(self, writer))]
     pub fn marshal<W: Write>(&self, writer: &mut W) -> Result<()> {
         if self.cookie.len() > 255 {
             return Err(Error::ErrCookieTooLong);
@@ -142,7 +137,6 @@ impl HandshakeMessageClientHello {
         Ok(writer.flush()?)
     }
 
-    #[tracing::instrument(level = "debug", skip(reader))]
     pub fn unmarshal<R: Read>(reader: &mut R) -> Result<Self> {
         let major = reader.read_u8()?;
         let minor = reader.read_u8()?;

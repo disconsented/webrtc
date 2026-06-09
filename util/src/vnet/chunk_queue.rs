@@ -14,7 +14,6 @@ pub(crate) struct ChunkQueue {
 }
 
 impl ChunkQueue {
-    #[tracing::instrument(level = "debug", skip(max_size))]
     pub(crate) fn new(max_size: usize) -> Self {
         ChunkQueue {
             chunks: RwLock::new(VecDeque::new()),
@@ -22,7 +21,6 @@ impl ChunkQueue {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, c))]
     pub(crate) async fn push(&self, c: Box<dyn Chunk + Send + Sync>) -> bool {
         let mut chunks = self.chunks.write().await;
 
@@ -34,13 +32,11 @@ impl ChunkQueue {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     pub(crate) async fn pop(&self) -> Option<Box<dyn Chunk + Send + Sync>> {
         let mut chunks = self.chunks.write().await;
         chunks.pop_front()
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     pub(crate) async fn peek(&self) -> Option<Box<dyn Chunk + Send + Sync>> {
         let chunks = self.chunks.read().await;
         chunks.front().map(|chunk| chunk.clone_to())

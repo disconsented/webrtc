@@ -19,7 +19,6 @@ pub struct StateFn<'a, R: io::BufRead + io::Seek> {
     pub f: StateFnType<'a, R>,
 }
 
-#[tracing::instrument(level = "debug", skip(reader))]
 pub fn read_type<R: io::BufRead + io::Seek>(reader: &mut R) -> Result<(Vec<u8>, usize)> {
     let mut b = [0; 1];
 
@@ -45,14 +44,12 @@ pub fn read_type<R: io::BufRead + io::Seek>(reader: &mut R) -> Result<(Vec<u8>, 
     }
 }
 
-#[tracing::instrument(level = "debug", skip(reader))]
 pub fn read_value<R: io::BufRead + io::Seek>(reader: &mut R) -> Result<(String, usize)> {
     let mut value = String::new();
     let num_bytes = reader.read_line(&mut value)?;
     Ok((value.trim().to_string(), num_bytes))
 }
 
-#[tracing::instrument(level = "debug", skip(element, data))]
 pub fn index_of(element: &str, data: &[&str]) -> i32 {
     for (k, &v) in data.iter().enumerate() {
         if element == v {
@@ -62,7 +59,6 @@ pub fn index_of(element: &str, data: &[&str]) -> i32 {
     -1
 }
 
-#[tracing::instrument(level = "debug", skip(writer, key, value))]
 pub fn write_key_value<W: fmt::Write, V: Display>(
     writer: &mut W,
     key: &str,
@@ -75,7 +71,6 @@ pub fn write_key_value<W: fmt::Write, V: Display>(
     write!(writer, "{key}{value}{END_LINE}")
 }
 
-#[tracing::instrument(level = "debug", skip(writer, key, value))]
 pub fn write_key_slice_of_values<W: fmt::Write, V: Display>(
     writer: &mut W,
     key: &str,

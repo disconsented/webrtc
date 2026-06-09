@@ -6,7 +6,6 @@ use super::agent_vnet_test::*;
 use super::*;
 use crate::agent::agent_transport::AgentConn;
 
-#[tracing::instrument(level = "debug", skip(default_config0, default_config1))]
 pub(crate) async fn pipe(
     default_config0: Option<AgentConfig>,
     default_config1: Option<AgentConfig>,

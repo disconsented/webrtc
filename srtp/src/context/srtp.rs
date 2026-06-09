@@ -5,7 +5,6 @@ use super::*;
 use crate::error::Result;
 
 impl Context {
-    #[tracing::instrument(level = "debug", skip(self, encrypted, header))]
     pub fn decrypt_rtp_with_header(
         &mut self,
         encrypted: &[u8],
@@ -39,7 +38,6 @@ impl Context {
         Ok(dst)
     }
 
-    #[tracing::instrument(level = "debug", skip(self, encrypted))]
     /// DecryptRTP decrypts a RTP packet with an encrypted payload
     pub fn decrypt_rtp(&mut self, encrypted: &[u8]) -> Result<Bytes> {
         let mut buf = encrypted;
@@ -47,7 +45,6 @@ impl Context {
         self.decrypt_rtp_with_header(encrypted, &header)
     }
 
-    #[tracing::instrument(level = "debug", skip(self, payload, header))]
     pub fn encrypt_rtp_with_header(
         &mut self,
         payload: &[u8],
@@ -72,7 +69,6 @@ impl Context {
         Ok(dst)
     }
 
-    #[tracing::instrument(level = "debug", skip(self, plaintext))]
     /// EncryptRTP marshals and encrypts an RTP packet, writing to the dst buffer provided.
     /// If the dst buffer does not have the capacity to hold `len(plaintext) + 10` bytes, a new one will be allocated and returned.
     pub fn encrypt_rtp(&mut self, plaintext: &[u8]) -> Result<Bytes> {

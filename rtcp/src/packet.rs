@@ -32,20 +32,17 @@ pub trait Packet: Marshal + Unmarshal + fmt::Display + fmt::Debug {
 }
 
 impl PartialEq for dyn Packet + Send + Sync {
-    #[tracing::instrument(level = "debug", skip(self, other))]
     fn eq(&self, other: &Self) -> bool {
         self.equal(other)
     }
 }
 
 impl Clone for Box<dyn Packet + Send + Sync> {
-    #[tracing::instrument(level = "debug", skip(self))]
     fn clone(&self) -> Box<dyn Packet + Send + Sync> {
         self.cloned()
     }
 }
 
-#[tracing::instrument(level = "debug", skip(packets))]
 /// marshal takes an array of Packets and serializes them to a single buffer
 pub fn marshal(packets: &[Box<dyn Packet + Send + Sync>]) -> Result<Bytes> {
     let mut out = BytesMut::new();
@@ -56,7 +53,6 @@ pub fn marshal(packets: &[Box<dyn Packet + Send + Sync>]) -> Result<Bytes> {
     Ok(out.freeze())
 }
 
-#[tracing::instrument(level = "debug", skip(raw_data))]
 /// Unmarshal takes an entire udp datagram (which may consist of multiple RTCP packets) and
 /// returns the unmarshaled packets it contains.
 ///
@@ -83,7 +79,6 @@ where
     }
 }
 
-#[tracing::instrument(level = "debug", skip(raw_data))]
 /// unmarshaller is a factory which pulls the first RTCP packet from a bytestream,
 /// and returns it's parsed representation, and the amount of data that was processed.
 pub(crate) fn unmarshaller<B>(raw_data: &mut B) -> Result<Box<dyn Packet + Send + Sync>>

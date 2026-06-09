@@ -10,7 +10,6 @@ use webrtc_sctp::chunk::chunk_payload_data::PayloadProtocolIdentifier;
 use webrtc_sctp::stream::*;
 use webrtc_sctp::Error;
 
-#[tracing::instrument(level = "debug", skip())]
 fn main() -> Result<(), Error> {
     env_logger::Builder::new()
         .format(|buf, record| {

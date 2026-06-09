@@ -79,7 +79,6 @@ pub enum StatsReportType {
 }
 
 impl From<SourceStatsType> for StatsReportType {
-    #[tracing::instrument(level = "debug", skip(stats))]
     fn from(stats: SourceStatsType) -> Self {
         match stats {
             SourceStatsType::LocalCandidate(stats) => StatsReportType::LocalCandidate(
@@ -93,7 +92,6 @@ impl From<SourceStatsType> for StatsReportType {
 }
 
 impl Serialize for StatsReportType {
-    #[tracing::instrument(level = "debug", skip(self, serializer))]
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
@@ -117,7 +115,6 @@ impl Serialize for StatsReportType {
 }
 
 impl<'de> Deserialize<'de> for StatsReportType {
-    #[tracing::instrument(level = "debug", skip(deserializer))]
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
         D: Deserializer<'de>,
@@ -200,7 +197,6 @@ pub struct StatsReport {
 }
 
 impl From<StatsCollector> for StatsReport {
-    #[tracing::instrument(level = "debug", skip(collector))]
     fn from(collector: StatsCollector) -> Self {
         StatsReport {
             reports: collector.into_reports(),
@@ -209,7 +205,6 @@ impl From<StatsCollector> for StatsReport {
 }
 
 impl Serialize for StatsReport {
-    #[tracing::instrument(level = "debug", skip(self, serializer))]
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
@@ -219,7 +214,6 @@ impl Serialize for StatsReport {
 }
 
 impl<'de> Deserialize<'de> for StatsReport {
-    #[tracing::instrument(level = "debug", skip(deserializer))]
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
         D: Deserializer<'de>,
@@ -290,7 +284,6 @@ pub struct ICECandidatePairStats {
 }
 
 impl From<CandidatePairStats> for ICECandidatePairStats {
-    #[tracing::instrument(level = "debug", skip(stats))]
     fn from(stats: CandidatePairStats) -> Self {
         ICECandidatePairStats {
             available_incoming_bitrate: stats.available_incoming_bitrate,
@@ -346,7 +339,6 @@ pub struct ICECandidateStats {
 }
 
 impl ICECandidateStats {
-    #[tracing::instrument(level = "debug", skip(stats, stats_type))]
     fn new(stats: CandidateStats, stats_type: RTCStatsType) -> Self {
         ICECandidateStats {
             candidate_type: stats.candidate_type,
@@ -380,7 +372,6 @@ pub struct ICETransportStats {
 }
 
 impl ICETransportStats {
-    #[tracing::instrument(level = "debug", skip(id, agent))]
     pub(crate) fn new(id: String, agent: Arc<Agent>) -> Self {
         ICETransportStats {
             id,
@@ -409,7 +400,6 @@ pub struct CertificateStats {
 }
 
 impl CertificateStats {
-    #[tracing::instrument(level = "debug", skip(cert, fingerprint))]
     pub(crate) fn new(cert: &RTCCertificate, fingerprint: RTCDtlsFingerprint) -> Self {
         CertificateStats {
             // TODO: base64_certificate
@@ -443,7 +433,6 @@ pub struct CodecStats {
 }
 
 impl From<&RTCRtpCodecParameters> for CodecStats {
-    #[tracing::instrument(level = "debug", skip(codec))]
     fn from(codec: &RTCRtpCodecParameters) -> Self {
         CodecStats {
             channels: codec.capability.channels,
@@ -480,7 +469,6 @@ pub struct DataChannelStats {
 }
 
 impl DataChannelStats {
-    #[tracing::instrument(level = "debug", skip(data_channel))]
     pub(crate) async fn from(data_channel: &RTCDataChannel) -> Self {
         let state = data_channel.ready_state();
 
@@ -534,7 +522,6 @@ pub struct PeerConnectionStats {
 }
 
 impl PeerConnectionStats {
-    #[tracing::instrument(level = "debug", skip(transport, stats_id, data_channels_closed))]
     pub fn new(transport: &RTCSctpTransport, stats_id: String, data_channels_closed: u32) -> Self {
         PeerConnectionStats {
             data_channels_accepted: transport.data_channels_accepted(),

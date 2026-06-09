@@ -20,17 +20,14 @@ pub struct ExtensionSupportedPointFormats {
 }
 
 impl ExtensionSupportedPointFormats {
-    #[tracing::instrument(level = "debug", skip(self))]
     pub fn extension_value(&self) -> ExtensionValue {
         ExtensionValue::SupportedPointFormats
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     pub fn size(&self) -> usize {
         2 + 1 + self.point_formats.len()
     }
 
-    #[tracing::instrument(level = "debug", skip(self, writer))]
     pub fn marshal<W: Write>(&self, writer: &mut W) -> Result<()> {
         writer.write_u16::<BigEndian>(1 + self.point_formats.len() as u16)?;
         writer.write_u8(self.point_formats.len() as u8)?;
@@ -41,7 +38,6 @@ impl ExtensionSupportedPointFormats {
         Ok(writer.flush()?)
     }
 
-    #[tracing::instrument(level = "debug", skip(reader))]
     pub fn unmarshal<R: Read>(reader: &mut R) -> Result<Self> {
         let _ = reader.read_u16::<BigEndian>()?;
 

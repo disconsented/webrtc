@@ -13,14 +13,12 @@ impl CipherSuiteChaCha20Poly1305Sha256 {
     const PRF_KEY_LEN: usize = 32;
     const PRF_IV_LEN: usize = 12;
 
-    #[tracing::instrument(level = "debug", skip(rsa))]
     pub fn new(rsa: bool) -> Self {
         CipherSuiteChaCha20Poly1305Sha256 { rsa, cipher: None }
     }
 }
 
 impl CipherSuite for CipherSuiteChaCha20Poly1305Sha256 {
-    #[tracing::instrument(level = "debug", skip(self))]
     fn to_string(&self) -> String {
         if self.rsa {
             "TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256".to_owned()
@@ -29,7 +27,6 @@ impl CipherSuite for CipherSuiteChaCha20Poly1305Sha256 {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn id(&self) -> CipherSuiteId {
         if self.rsa {
             CipherSuiteId::Tls_Ecdhe_Rsa_With_ChaCha20_Poly1305_Sha256
@@ -38,7 +35,6 @@ impl CipherSuite for CipherSuiteChaCha20Poly1305Sha256 {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn certificate_type(&self) -> ClientCertificateType {
         if self.rsa {
             ClientCertificateType::RsaSign
@@ -47,22 +43,18 @@ impl CipherSuite for CipherSuiteChaCha20Poly1305Sha256 {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn hash_func(&self) -> CipherSuiteHash {
         CipherSuiteHash::Sha256
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn is_psk(&self) -> bool {
         false
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn is_initialized(&self) -> bool {
         self.cipher.is_some()
     }
 
-    #[tracing::instrument(level = "debug", skip(self, master_secret, client_random, server_random, is_client))]
     fn init(
         &mut self,
         master_secret: &[u8],
@@ -99,7 +91,6 @@ impl CipherSuite for CipherSuiteChaCha20Poly1305Sha256 {
         Ok(())
     }
 
-    #[tracing::instrument(level = "debug", skip(self, pkt_rlh, raw))]
     fn encrypt(&self, pkt_rlh: &RecordLayerHeader, raw: &[u8]) -> Result<Vec<u8>> {
         let cg = self.cipher.as_ref().ok_or(Error::Other(
             "CipherSuite has not been initialized, unable to encrypt".to_owned(),
@@ -107,7 +98,6 @@ impl CipherSuite for CipherSuiteChaCha20Poly1305Sha256 {
         cg.encrypt(pkt_rlh, raw)
     }
 
-    #[tracing::instrument(level = "debug", skip(self, input))]
     fn decrypt(&self, input: &[u8]) -> Result<Vec<u8>> {
         let cg = self.cipher.as_ref().ok_or(Error::Other(
             "CipherSuite has not been initialized, unable to decrypt".to_owned(),

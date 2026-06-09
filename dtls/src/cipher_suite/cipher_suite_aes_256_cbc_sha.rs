@@ -13,14 +13,12 @@ impl CipherSuiteAes256CbcSha {
     const PRF_KEY_LEN: usize = 32;
     const PRF_IV_LEN: usize = 16;
 
-    #[tracing::instrument(level = "debug", skip(rsa))]
     pub fn new(rsa: bool) -> Self {
         CipherSuiteAes256CbcSha { cbc: None, rsa }
     }
 }
 
 impl CipherSuite for CipherSuiteAes256CbcSha {
-    #[tracing::instrument(level = "debug", skip(self))]
     fn to_string(&self) -> String {
         if self.rsa {
             "TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA".to_owned()
@@ -29,7 +27,6 @@ impl CipherSuite for CipherSuiteAes256CbcSha {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn id(&self) -> CipherSuiteId {
         if self.rsa {
             CipherSuiteId::Tls_Ecdhe_Rsa_With_Aes_256_Cbc_Sha
@@ -38,7 +35,6 @@ impl CipherSuite for CipherSuiteAes256CbcSha {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn certificate_type(&self) -> ClientCertificateType {
         if self.rsa {
             ClientCertificateType::RsaSign
@@ -47,22 +43,18 @@ impl CipherSuite for CipherSuiteAes256CbcSha {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn hash_func(&self) -> CipherSuiteHash {
         CipherSuiteHash::Sha256
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn is_psk(&self) -> bool {
         false
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn is_initialized(&self) -> bool {
         self.cbc.is_some()
     }
 
-    #[tracing::instrument(level = "debug", skip(self, master_secret, client_random, server_random, is_client))]
     fn init(
         &mut self,
         master_secret: &[u8],
@@ -99,7 +91,6 @@ impl CipherSuite for CipherSuiteAes256CbcSha {
         Ok(())
     }
 
-    #[tracing::instrument(level = "debug", skip(self, pkt_rlh, raw))]
     fn encrypt(&self, pkt_rlh: &RecordLayerHeader, raw: &[u8]) -> Result<Vec<u8>> {
         let cg = self.cbc.as_ref().ok_or(Error::Other(
             "CipherSuite has not been initialized, unable to encrypt".to_owned(),
@@ -107,7 +98,6 @@ impl CipherSuite for CipherSuiteAes256CbcSha {
         cg.encrypt(pkt_rlh, raw)
     }
 
-    #[tracing::instrument(level = "debug", skip(self, input))]
     fn decrypt(&self, input: &[u8]) -> Result<Vec<u8>> {
         let cg = self.cbc.as_ref().ok_or(Error::Other(
             "CipherSuite has not been initialized, unable to decrypt".to_owned(),

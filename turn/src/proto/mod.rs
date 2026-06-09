@@ -30,7 +30,6 @@ pub const PROTO_TCP: Protocol = Protocol(6);
 pub const PROTO_UDP: Protocol = Protocol(17);
 
 impl fmt::Display for Protocol {
-    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let others = format!("{}", self.0);
         let s = match *self {
@@ -50,25 +49,21 @@ pub const DEFAULT_PORT: u16 = stun::DEFAULT_PORT;
 /// `DEFAULT_TLSPORT` is for TURN over TLS and is same as STUN.
 pub const DEFAULT_TLS_PORT: u16 = stun::DEFAULT_TLS_PORT;
 
-#[tracing::instrument(level = "debug", skip())]
 /// Shorthand for create permission request type.
 pub fn create_permission_request() -> MessageType {
     MessageType::new(METHOD_CREATE_PERMISSION, CLASS_REQUEST)
 }
 
-#[tracing::instrument(level = "debug", skip())]
 /// Shorthand for allocation request message type.
 pub fn allocate_request() -> MessageType {
     MessageType::new(METHOD_ALLOCATE, CLASS_REQUEST)
 }
 
-#[tracing::instrument(level = "debug", skip())]
 /// Shorthand for send indication message type.
 pub fn send_indication() -> MessageType {
     MessageType::new(METHOD_SEND, CLASS_INDICATION)
 }
 
-#[tracing::instrument(level = "debug", skip())]
 /// Shorthand for refresh request message type.
 pub fn refresh_request() -> MessageType {
     MessageType::new(METHOD_REFRESH, CLASS_REQUEST)

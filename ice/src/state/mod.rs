@@ -32,7 +32,6 @@ pub enum ConnectionState {
 }
 
 impl fmt::Display for ConnectionState {
-    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let s = match *self {
             Self::Unspecified => "Unspecified",
@@ -49,7 +48,6 @@ impl fmt::Display for ConnectionState {
 }
 
 impl From<u8> for ConnectionState {
-    #[tracing::instrument(level = "debug", skip(v))]
     fn from(v: u8) -> Self {
         match v {
             1 => Self::New,
@@ -81,7 +79,6 @@ pub enum GatheringState {
 }
 
 impl From<u8> for GatheringState {
-    #[tracing::instrument(level = "debug", skip(v))]
     fn from(v: u8) -> Self {
         match v {
             1 => Self::New,
@@ -93,7 +90,6 @@ impl From<u8> for GatheringState {
 }
 
 impl fmt::Display for GatheringState {
-    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let s = match *self {
             Self::New => "new",

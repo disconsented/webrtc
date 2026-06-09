@@ -21,7 +21,6 @@ pub(crate) enum ReconfigResult {
 }
 
 impl fmt::Display for ReconfigResult {
-    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let s = match *self {
             ReconfigResult::SuccessNop => "0: Success - Nothing to do",
@@ -40,7 +39,6 @@ impl fmt::Display for ReconfigResult {
 }
 
 impl From<u32> for ReconfigResult {
-    #[tracing::instrument(level = "debug", skip(v))]
     fn from(v: u32) -> ReconfigResult {
         match v {
             0 => ReconfigResult::SuccessNop,
@@ -82,7 +80,6 @@ pub(crate) struct ParamReconfigResponse {
 }
 
 impl fmt::Display for ParamReconfigResponse {
-    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
@@ -95,7 +92,6 @@ impl fmt::Display for ParamReconfigResponse {
 }
 
 impl Param for ParamReconfigResponse {
-    #[tracing::instrument(level = "debug", skip(self))]
     fn header(&self) -> ParamHeader {
         ParamHeader {
             typ: ParamType::ReconfigResp,
@@ -103,7 +99,6 @@ impl Param for ParamReconfigResponse {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(raw))]
     fn unmarshal(raw: &Bytes) -> Result<Self> {
         let header = ParamHeader::unmarshal(raw)?;
 
@@ -124,7 +119,6 @@ impl Param for ParamReconfigResponse {
         })
     }
 
-    #[tracing::instrument(level = "debug", skip(self, buf))]
     fn marshal_to(&self, buf: &mut BytesMut) -> Result<usize> {
         self.header().marshal_to(buf)?;
         buf.put_u32(self.reconfig_response_sequence_number);
@@ -132,17 +126,14 @@ impl Param for ParamReconfigResponse {
         Ok(buf.len())
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn value_length(&self) -> usize {
         8
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn clone_to(&self) -> Box<dyn Param + Send + Sync> {
         Box::new(self.clone())
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn as_any(&self) -> &(dyn Any + Send + Sync) {
         self
     }

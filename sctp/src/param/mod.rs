@@ -53,13 +53,11 @@ pub(crate) trait Param: fmt::Display + fmt::Debug {
 }
 
 impl Clone for Box<dyn Param + Send + Sync> {
-    #[tracing::instrument(level = "debug", skip(self))]
     fn clone(&self) -> Box<dyn Param + Send + Sync> {
         self.clone_to()
     }
 }
 
-#[tracing::instrument(level = "debug", skip(raw_param))]
 pub(crate) fn build_param(raw_param: &Bytes) -> Result<Box<dyn Param + Send + Sync>> {
     if raw_param.len() < PARAM_HEADER_LENGTH {
         return Err(Error::ErrParamHeaderTooShort);

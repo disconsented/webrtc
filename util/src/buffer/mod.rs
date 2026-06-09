@@ -29,7 +29,6 @@ struct BufferInternal {
 }
 
 impl BufferInternal {
-    #[tracing::instrument(level = "debug", skip(self, size))]
     /// available returns true if the buffer is large enough to fit a packet
     /// of the given size, taking overhead into account.
     fn available(&self, size: usize) -> bool {
@@ -41,7 +40,6 @@ impl BufferInternal {
         size as isize + 2 < available
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// grow increases the size of the buffer.  If it returns nil, then the
     /// buffer has been grown.  It returns ErrFull if hits a limit.
     fn grow(&mut self) -> Result<()> {
@@ -88,7 +86,6 @@ impl BufferInternal {
         Ok(())
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn size(&self) -> usize {
         let mut size = self.tail as isize - self.head as isize;
         if size < 0 {
@@ -105,7 +102,6 @@ pub struct Buffer {
 }
 
 impl Buffer {
-    #[tracing::instrument(level = "debug", skip(limit_count, limit_size))]
     pub fn new(limit_count: usize, limit_size: usize) -> Self {
         Buffer {
             buffer: Arc::new(Mutex::new(BufferInternal {
@@ -124,7 +120,6 @@ impl Buffer {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, packet))]
     /// Write appends a copy of the packet data to the buffer.
     /// Returns ErrFull if the packet doesn't fit.
     /// Note that the packet size is limited to 65536 bytes since v0.11.0
@@ -193,7 +188,6 @@ impl Buffer {
     // Blocks until data is available or the buffer is closed.
     // Returns io.ErrShortBuffer is the packet is too small to copy the Write.
     // Returns io.EOF if the buffer is closed.
-    #[tracing::instrument(level = "debug", skip(self, packet, duration))]
     pub async fn read(&self, packet: &mut [u8], duration: Option<Duration>) -> Result<usize> {
         loop {
             {
@@ -271,7 +265,6 @@ impl Buffer {
 
     // Close will unblock any readers and prevent future writes.
     // Data in the buffer can still be read, returning io.EOF when fully depleted.
-    #[tracing::instrument(level = "debug", skip(self))]
     pub async fn close(&self) {
         // note: We don't use defer so we can close the notify channel after unlocking.
         // This will unblock goroutines that can grab the lock immediately, instead of blocking again.
@@ -285,7 +278,6 @@ impl Buffer {
         self.notify.notify_waiters();
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     pub async fn is_closed(&self) -> bool {
         let b = self.buffer.lock().await;
 
@@ -293,7 +285,6 @@ impl Buffer {
     }
 
     // Count returns the number of packets in the buffer.
-    #[tracing::instrument(level = "debug", skip(self))]
     pub async fn count(&self) -> usize {
         let b = self.buffer.lock().await;
 
@@ -303,7 +294,6 @@ impl Buffer {
     // set_limit_count controls the maximum number of packets that can be buffered.
     // Causes Write to return ErrFull when this limit is reached.
     // A zero value will disable this limit.
-    #[tracing::instrument(level = "debug", skip(self, limit))]
     pub async fn set_limit_count(&self, limit: usize) {
         let mut b = self.buffer.lock().await;
 
@@ -311,7 +301,6 @@ impl Buffer {
     }
 
     // Size returns the total byte size of packets in the buffer.
-    #[tracing::instrument(level = "debug", skip(self))]
     pub async fn size(&self) -> usize {
         let b = self.buffer.lock().await;
 
@@ -325,7 +314,6 @@ impl Buffer {
     // User can set packetioSizeHardlimit build tag to enable 4MB hardlimit.
     // When packetioSizeHardlimit build tag is set, set_limit_size exceeding
     // the hardlimit will be silently discarded.
-    #[tracing::instrument(level = "debug", skip(self, limit))]
     pub async fn set_limit_size(&self, limit: usize) {
         let mut b = self.buffer.lock().await;
 

@@ -15,7 +15,6 @@ pub type G722Payloader = G7xxPayloader;
 pub struct G7xxPayloader;
 
 impl Payloader for G7xxPayloader {
-    #[tracing::instrument(level = "debug", skip(self, mtu, payload))]
     /// Payload fragments an G7xx packet across one or more byte arrays
     fn payload(&mut self, mtu: usize, payload: &Bytes) -> Result<Vec<Bytes>> {
         if payload.is_empty() || mtu == 0 {
@@ -38,7 +37,6 @@ impl Payloader for G7xxPayloader {
         Ok(payloads)
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn clone_to(&self) -> Box<dyn Payloader + Send + Sync> {
         Box::new(*self)
     }

@@ -659,7 +659,6 @@ async fn test_media_engine_double_register() -> Result<()> {
     Ok(())
 }
 
-#[tracing::instrument(level = "debug", skip(m))]
 async fn validate(m: &MediaEngine) -> Result<()> {
     m.update_header_extension(2, "test-extension", RTPCodecType::Audio)
         .await?;

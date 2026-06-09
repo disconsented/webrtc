@@ -13,7 +13,6 @@ const NALU_TTYPE_STAP_A: u32 = 24;
 const NALU_TTYPE_SPS: u32 = 7;
 const NALU_TYPE_BITMASK: u32 = 0x1F;
 
-#[tracing::instrument(level = "debug", skip(data))]
 fn is_key_frame(data: &[u8]) -> bool {
     if data.len() < 4 {
         false
@@ -38,7 +37,6 @@ pub struct H264Writer<W: Write> {
 
 impl<W: Write> H264Writer<W> {
     // new initializes a new H264 writer with an io.Writer output
-    #[tracing::instrument(level = "debug", skip(writer))]
     pub fn new(writer: W) -> Self {
         H264Writer {
             writer,
@@ -49,7 +47,6 @@ impl<W: Write> H264Writer<W> {
 }
 
 impl<W: Write> Writer for H264Writer<W> {
-    #[tracing::instrument(level = "debug", skip(self, packet))]
     /// write_rtp adds a new packet and writes the appropriate headers for it
     fn write_rtp(&mut self, packet: &rtp::packet::Packet) -> Result<()> {
         if packet.payload.is_empty() {
@@ -77,7 +74,6 @@ impl<W: Write> Writer for H264Writer<W> {
         Ok(())
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// close closes the underlying writer
     fn close(&mut self) -> Result<()> {
         self.cached_packet = None;

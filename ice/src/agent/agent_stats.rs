@@ -114,7 +114,6 @@ pub struct CandidatePairStats {
 }
 
 impl Default for CandidatePairStats {
-    #[tracing::instrument(level = "debug", skip())]
     fn default() -> Self {
         Self {
             timestamp: Instant::now(),
@@ -197,7 +196,6 @@ pub struct CandidateStats {
 }
 
 impl Default for CandidateStats {
-    #[tracing::instrument(level = "debug", skip())]
     fn default() -> Self {
         Self {
             timestamp: Instant::now(),
@@ -215,7 +213,6 @@ impl Default for CandidateStats {
 }
 
 impl AgentInternal {
-    #[tracing::instrument(level = "debug", skip(self))]
     /// Returns a list of candidate pair stats.
     pub(crate) async fn get_candidate_pairs_stats(&self) -> Vec<CandidatePairStats> {
         let checklist = self.agent_conn.checklist.lock().await;
@@ -234,7 +231,6 @@ impl AgentInternal {
         res
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// Returns a list of local candidates stats.
     pub(crate) async fn get_local_candidates_stats(&self) -> Vec<CandidateStats> {
         let local_candidates = self.local_candidates.lock().await;
@@ -260,7 +256,6 @@ impl AgentInternal {
         res
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// Returns a list of remote candidates stats.
     pub(crate) async fn get_remote_candidates_stats(&self) -> Vec<CandidateStats> {
         let remote_candidates = self.remote_candidates.lock().await;

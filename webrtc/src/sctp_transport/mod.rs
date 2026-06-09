@@ -91,7 +91,6 @@ pub struct RTCSctpTransport {
 }
 
 impl RTCSctpTransport {
-    #[tracing::instrument(level = "debug", skip(dtls_transport, setting_engine))]
     pub(crate) fn new(
         dtls_transport: Arc<RTCDtlsTransport>,
         setting_engine: Arc<SettingEngine>,
@@ -117,13 +116,11 @@ impl RTCSctpTransport {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// transport returns the DTLSTransport instance the SCTPTransport is sending over.
     pub fn transport(&self) -> Arc<RTCDtlsTransport> {
         Arc::clone(&self.dtls_transport)
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// get_capabilities returns the SCTPCapabilities of the SCTPTransport.
     pub fn get_capabilities(&self) -> SCTPTransportCapabilities {
         SCTPTransportCapabilities {
@@ -131,7 +128,6 @@ impl RTCSctpTransport {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, remote_caps, local_port, remote_port))]
     /// Start the SCTPTransport. Since both local and remote parties must mutually
     /// create an SCTPTransport, SCTP SO (Simultaneous Open) is used to establish
     /// a connection over SCTP.
@@ -205,7 +201,6 @@ impl RTCSctpTransport {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// Stop stops the SCTPTransport
     pub async fn stop(&self) -> Result<()> {
         {
@@ -223,7 +218,6 @@ impl RTCSctpTransport {
         Ok(())
     }
 
-    #[tracing::instrument(level = "debug", skip(param))]
     async fn accept_data_channels(param: AcceptDataChannelParams) {
         let dcs = param.data_channels.lock().await;
         let mut existing_data_channels = Vec::new();
@@ -328,14 +322,12 @@ impl RTCSctpTransport {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, f))]
     /// on_error sets an event handler which is invoked when
     /// the SCTP connection error occurs.
     pub fn on_error(&self, f: OnErrorHdlrFn) {
         self.on_error_handler.store(Some(Arc::new(Mutex::new(f))));
     }
 
-    #[tracing::instrument(level = "debug", skip(self, f))]
     /// on_data_channel sets an event handler which is invoked when a data
     /// channel message arrives from a remote peer.
     pub fn on_data_channel(&self, f: OnDataChannelHdlrFn) {
@@ -343,7 +335,6 @@ impl RTCSctpTransport {
             .store(Some(Arc::new(Mutex::new(f))));
     }
 
-    #[tracing::instrument(level = "debug", skip(self, f))]
     /// on_data_channel_opened sets an event handler which is invoked when a data
     /// channel is opened
     pub fn on_data_channel_opened(&self, f: OnDataChannelOpenedHdlrFn) {
@@ -351,7 +342,6 @@ impl RTCSctpTransport {
             .store(Some(Arc::new(Mutex::new(f))));
     }
 
-    #[tracing::instrument(level = "debug", skip(remote_max_message_size, can_send_size))]
     fn calc_message_size(remote_max_message_size: u32, can_send_size: u32) -> u32 {
         if remote_max_message_size == 0 && can_send_size == 0 {
             u32::MAX
@@ -364,7 +354,6 @@ impl RTCSctpTransport {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// max_channels is the maximum number of RTCDataChannels that can be open simultaneously.
     pub fn max_channels(&self) -> u16 {
         if self.max_channels == 0 {
@@ -374,13 +363,11 @@ impl RTCSctpTransport {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// state returns the current state of the SCTPTransport
     pub fn state(&self) -> RTCSctpTransportState {
         self.state.load(Ordering::SeqCst).into()
     }
 
-    #[tracing::instrument(level = "debug", skip(self, collector, peer_connection_id))]
     pub(crate) async fn collect_stats(
         &self,
         collector: &StatsCollector,
@@ -417,7 +404,6 @@ impl RTCSctpTransport {
         collector.merge(reports);
     }
 
-    #[tracing::instrument(level = "debug", skip(self, dtls_role))]
     pub(crate) async fn generate_and_set_data_channel_id(
         &self,
         dtls_role: DTLSRole,
@@ -448,23 +434,19 @@ impl RTCSctpTransport {
         Err(Error::ErrMaxDataChannelID)
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     pub(crate) async fn association(&self) -> Option<Arc<Association>> {
         let sctp_association = self.sctp_association.lock().await;
         sctp_association.clone()
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     pub(crate) fn data_channels_accepted(&self) -> u32 {
         self.data_channels_accepted.load(Ordering::SeqCst)
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     pub(crate) fn data_channels_opened(&self) -> u32 {
         self.data_channels_opened.load(Ordering::SeqCst)
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     pub(crate) fn data_channels_requested(&self) -> u32 {
         self.data_channels_requested.load(Ordering::SeqCst)
     }

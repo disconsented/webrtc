@@ -31,7 +31,6 @@ use crate::{find_matching_cipher_suite, find_matching_srtp_profile};
 pub(crate) struct Flight3;
 
 impl fmt::Display for Flight3 {
-    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "Flight 3")
     }
@@ -39,7 +38,6 @@ impl fmt::Display for Flight3 {
 
 #[async_trait]
 impl Flight for Flight3 {
-    #[tracing::instrument(level = "debug", skip(self, _tx, state, cache, cfg))]
     async fn parse(
         &self,
         _tx: &mut mpsc::Sender<mpsc::Sender<()>>,
@@ -345,7 +343,6 @@ impl Flight for Flight3 {
         Ok(Box::new(Flight5 {}) as Box<dyn Flight + Send + Sync>)
     }
 
-    #[tracing::instrument(level = "debug", skip(self, state, _cache, cfg))]
     async fn generate(
         &self,
         state: &mut State,
@@ -414,7 +411,6 @@ impl Flight for Flight3 {
     }
 }
 
-#[tracing::instrument(level = "debug", skip(state, cfg, h))]
 pub(crate) async fn handle_server_key_exchange(
     state: &mut State,
     cfg: &HandshakeConfig,

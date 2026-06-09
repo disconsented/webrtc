@@ -36,7 +36,6 @@ const RTP_TRANSCEIVER_DIRECTION_INACTIVE_STR: &str = "inactive";
 /// defines a procedure for creating a new
 /// RTPTransceiverDirection from a raw string naming the transceiver direction.
 impl From<&str> for RTCRtpTransceiverDirection {
-    #[tracing::instrument(level = "debug", skip(raw))]
     fn from(raw: &str) -> Self {
         match raw {
             RTP_TRANSCEIVER_DIRECTION_SENDRECV_STR => RTCRtpTransceiverDirection::Sendrecv,
@@ -49,7 +48,6 @@ impl From<&str> for RTCRtpTransceiverDirection {
 }
 
 impl From<u8> for RTCRtpTransceiverDirection {
-    #[tracing::instrument(level = "debug", skip(v))]
     fn from(v: u8) -> Self {
         match v {
             1 => RTCRtpTransceiverDirection::Sendrecv,
@@ -62,7 +60,6 @@ impl From<u8> for RTCRtpTransceiverDirection {
 }
 
 impl fmt::Display for RTCRtpTransceiverDirection {
-    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match *self {
             RTCRtpTransceiverDirection::Sendrecv => {
@@ -83,7 +80,6 @@ impl fmt::Display for RTCRtpTransceiverDirection {
 }
 
 impl RTCRtpTransceiverDirection {
-    #[tracing::instrument(level = "debug", skip(self))]
     /// reverse indicate the opposite direction
     pub fn reverse(&self) -> RTCRtpTransceiverDirection {
         match *self {
@@ -93,7 +89,6 @@ impl RTCRtpTransceiverDirection {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, other))]
     pub fn intersect(&self, other: RTCRtpTransceiverDirection) -> RTCRtpTransceiverDirection {
         Self::from_send_recv(
             self.has_send() && other.has_send(),
@@ -101,7 +96,6 @@ impl RTCRtpTransceiverDirection {
         )
     }
 
-    #[tracing::instrument(level = "debug", skip(send, recv))]
     pub fn from_send_recv(send: bool, recv: bool) -> RTCRtpTransceiverDirection {
         match (send, recv) {
             (true, true) => Self::Sendrecv,
@@ -111,12 +105,10 @@ impl RTCRtpTransceiverDirection {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     pub fn has_send(&self) -> bool {
         matches!(self, Self::Sendrecv | Self::Sendonly)
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     pub fn has_recv(&self) -> bool {
         matches!(self, Self::Sendrecv | Self::Recvonly)
     }

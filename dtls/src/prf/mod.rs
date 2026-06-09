@@ -35,7 +35,6 @@ pub(crate) struct EncryptionKeys {
 }
 
 impl fmt::Display for EncryptionKeys {
-    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut out = "EncryptionKeys:\n".to_string();
 
@@ -56,7 +55,6 @@ impl fmt::Display for EncryptionKeys {
 // uint16 with the value N, and the PSK itself.
 //
 // https://tools.ietf.org/html/rfc4279#section-2
-#[tracing::instrument(level = "debug", skip(psk))]
 pub(crate) fn prf_psk_pre_master_secret(psk: &[u8]) -> Vec<u8> {
     let psk_len = psk.len();
 
@@ -70,7 +68,6 @@ pub(crate) fn prf_psk_pre_master_secret(psk: &[u8]) -> Vec<u8> {
     out
 }
 
-#[tracing::instrument(level = "debug", skip(public_key, private_key, curve))]
 pub(crate) fn prf_pre_master_secret(
     public_key: &[u8],
     private_key: &NamedCurvePrivateKey,
@@ -84,7 +81,6 @@ pub(crate) fn prf_pre_master_secret(
     }
 }
 
-#[tracing::instrument(level = "debug", skip(public_key, private_key, curve))]
 fn elliptic_curve_pre_master_secret(
     public_key: &[u8],
     private_key: &NamedCurvePrivateKey,
@@ -143,7 +139,6 @@ fn elliptic_curve_pre_master_secret(
 //  output data.
 //
 // https://tools.ietf.org/html/rfc4346w
-#[tracing::instrument(level = "debug", skip(h, key, data))]
 fn hmac_sha(h: CipherSuiteHash, key: &[u8], data: &[u8]) -> Result<Vec<u8>> {
     let mut mac = match h {
         CipherSuiteHash::Sha256 => {
@@ -156,7 +151,6 @@ fn hmac_sha(h: CipherSuiteHash, key: &[u8], data: &[u8]) -> Result<Vec<u8>> {
     Ok(code_bytes.to_vec())
 }
 
-#[tracing::instrument(level = "debug", skip(secret, seed, requested_length, h))]
 pub(crate) fn prf_p_hash(
     secret: &[u8],
     seed: &[u8],
@@ -180,7 +174,6 @@ pub(crate) fn prf_p_hash(
     Ok(out[..requested_length].to_vec())
 }
 
-#[tracing::instrument(level = "debug", skip(pre_master_secret, session_hash, h))]
 pub(crate) fn prf_extended_master_secret(
     pre_master_secret: &[u8],
     session_hash: &[u8],
@@ -191,7 +184,6 @@ pub(crate) fn prf_extended_master_secret(
     prf_p_hash(pre_master_secret, &seed, 48, h)
 }
 
-#[tracing::instrument(level = "debug", skip(pre_master_secret, client_random, server_random, h))]
 pub(crate) fn prf_master_secret(
     pre_master_secret: &[u8],
     client_random: &[u8],
@@ -204,7 +196,6 @@ pub(crate) fn prf_master_secret(
     prf_p_hash(pre_master_secret, &seed, 48, h)
 }
 
-#[tracing::instrument(level = "debug", skip(master_secret, client_random, server_random, prf_mac_len, prf_key_len, prf_iv_len, h))]
 pub(crate) fn prf_encryption_keys(
     master_secret: &[u8],
     client_random: &[u8],
@@ -254,7 +245,6 @@ pub(crate) fn prf_encryption_keys(
     })
 }
 
-#[tracing::instrument(level = "debug", skip(master_secret, handshake_bodies, label, h))]
 pub(crate) fn prf_verify_data(
     master_secret: &[u8],
     handshake_bodies: &[u8],
@@ -272,7 +262,6 @@ pub(crate) fn prf_verify_data(
     prf_p_hash(master_secret, &seed, 12, h)
 }
 
-#[tracing::instrument(level = "debug", skip(master_secret, handshake_bodies, h))]
 pub(crate) fn prf_verify_data_client(
     master_secret: &[u8],
     handshake_bodies: &[u8],
@@ -286,7 +275,6 @@ pub(crate) fn prf_verify_data_client(
     )
 }
 
-#[tracing::instrument(level = "debug", skip(master_secret, handshake_bodies, h))]
 pub(crate) fn prf_verify_data_server(
     master_secret: &[u8],
     handshake_bodies: &[u8],
@@ -301,7 +289,6 @@ pub(crate) fn prf_verify_data_server(
 }
 
 // compute the MAC using HMAC-SHA1
-#[tracing::instrument(level = "debug", skip(epoch, sequence_number, content_type, protocol_version, payload, key))]
 pub(crate) fn prf_mac(
     epoch: u16,
     sequence_number: u64,

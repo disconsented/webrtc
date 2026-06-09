@@ -21,24 +21,20 @@ use super::error::*;
 pub struct ChangeCipherSpec;
 
 impl ChangeCipherSpec {
-    #[tracing::instrument(level = "debug", skip(self))]
     pub fn content_type(&self) -> ContentType {
         ContentType::ChangeCipherSpec
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     pub fn size(&self) -> usize {
         1
     }
 
-    #[tracing::instrument(level = "debug", skip(self, writer))]
     pub fn marshal<W: Write>(&self, writer: &mut W) -> Result<()> {
         writer.write_u8(0x01)?;
 
         Ok(writer.flush()?)
     }
 
-    #[tracing::instrument(level = "debug", skip(reader))]
     pub fn unmarshal<R: Read>(reader: &mut R) -> Result<Self> {
         let data = reader.read_u8()?;
         if data != 0x01 {

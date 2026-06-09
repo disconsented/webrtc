@@ -20,7 +20,6 @@ pub struct FiveTuple {
 }
 
 impl Default for FiveTuple {
-    #[tracing::instrument(level = "debug", skip())]
     fn default() -> Self {
         FiveTuple {
             protocol: PROTO_UDP,
@@ -31,14 +30,12 @@ impl Default for FiveTuple {
 }
 
 impl fmt::Display for FiveTuple {
-    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}_{}_{}", self.protocol, self.src_addr, self.dst_addr)
     }
 }
 
 impl fmt::Debug for FiveTuple {
-    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("FiveTuple")
             .field("protocol", &self.protocol)

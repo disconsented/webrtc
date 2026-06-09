@@ -23,7 +23,6 @@ pub enum HashAlgorithm {
 }
 
 impl From<u8> for HashAlgorithm {
-    #[tracing::instrument(level = "debug", skip(val))]
     fn from(val: u8) -> Self {
         match val {
             0 => HashAlgorithm::Md2,
@@ -40,7 +39,6 @@ impl From<u8> for HashAlgorithm {
 }
 
 impl fmt::Display for HashAlgorithm {
-    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match *self {
             HashAlgorithm::Md2 => write!(f, "md2"),
@@ -57,7 +55,6 @@ impl fmt::Display for HashAlgorithm {
 }
 
 impl HashAlgorithm {
-    #[tracing::instrument(level = "debug", skip(self))]
     pub(crate) fn insecure(&self) -> bool {
         matches!(
             *self,
@@ -65,7 +62,6 @@ impl HashAlgorithm {
         )
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     pub(crate) fn invalid(&self) -> bool {
         matches!(*self, HashAlgorithm::Md2)
     }
@@ -81,7 +77,6 @@ pub enum SignatureAlgorithm {
 }
 
 impl From<u8> for SignatureAlgorithm {
-    #[tracing::instrument(level = "debug", skip(val))]
     fn from(val: u8) -> Self {
         match val {
             1 => SignatureAlgorithm::Rsa,
@@ -100,7 +95,6 @@ pub struct SignatureHashAlgorithm {
 
 impl SignatureHashAlgorithm {
     // is_compatible checks that given private key is compatible with the signature scheme.
-    #[tracing::instrument(level = "debug", skip(self, private_key))]
     pub(crate) fn is_compatible(&self, private_key: &CryptoPrivateKey) -> bool {
         match &private_key.kind {
             CryptoPrivateKeyKind::Ed25519(_) => self.signature == SignatureAlgorithm::Ed25519,
@@ -110,7 +104,6 @@ impl SignatureHashAlgorithm {
     }
 }
 
-#[tracing::instrument(level = "debug", skip())]
 pub(crate) fn default_signature_schemes() -> Vec<SignatureHashAlgorithm> {
     vec![
         SignatureHashAlgorithm {
@@ -145,7 +138,6 @@ pub(crate) fn default_signature_schemes() -> Vec<SignatureHashAlgorithm> {
 }
 
 // select Signature Scheme returns most preferred and compatible scheme.
-#[tracing::instrument(level = "debug", skip(sigs, private_key))]
 pub(crate) fn select_signature_scheme(
     sigs: &[SignatureHashAlgorithm],
     private_key: &CryptoPrivateKey,
@@ -188,7 +180,6 @@ pub enum SignatureScheme {
 
 // parse_signature_schemes translates []tls.SignatureScheme to []signatureHashAlgorithm.
 // It returns default signature scheme list if no SignatureScheme is passed.
-#[tracing::instrument(level = "debug", skip(sigs, insecure_hashes))]
 pub(crate) fn parse_signature_schemes(
     sigs: &[u16],
     insecure_hashes: bool,

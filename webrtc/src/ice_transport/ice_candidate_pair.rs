@@ -17,19 +17,16 @@ pub struct RTCIceCandidatePair {
 }
 
 impl fmt::Display for RTCIceCandidatePair {
-    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "(local) {} <-> (remote) {}", self.local, self.remote)
     }
 }
 
 impl RTCIceCandidatePair {
-    #[tracing::instrument(level = "debug", skip(local_id, remote_id))]
     fn stats_id(local_id: &str, remote_id: &str) -> String {
         format!("{local_id}-{remote_id}")
     }
 
-    #[tracing::instrument(level = "debug", skip(local, remote))]
     /// returns an initialized ICECandidatePair
     /// for the given pair of ICECandidate instances
     pub fn new(local: RTCIceCandidate, remote: RTCIceCandidate) -> Self {

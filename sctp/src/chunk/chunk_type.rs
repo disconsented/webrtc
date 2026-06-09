@@ -25,7 +25,6 @@ pub(crate) const CT_RECONFIG: ChunkType = ChunkType(130);
 pub(crate) const CT_FORWARD_TSN: ChunkType = ChunkType(192);
 
 impl fmt::Display for ChunkType {
-    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let others = format!("Unknown ChunkType: {}", self.0);
         let s = match *self {

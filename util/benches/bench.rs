@@ -3,7 +3,6 @@ use criterion::measurement::WallTime;
 use criterion::{criterion_main, BenchmarkGroup, Criterion};
 use webrtc_util::Buffer;
 
-#[tracing::instrument(level = "debug", skip(times))]
 async fn buffer_write_then_read(times: u32) {
     let buffer = Buffer::new(0, 0);
     let mut packet: Vec<u8> = vec![0; 4];
@@ -13,7 +12,6 @@ async fn buffer_write_then_read(times: u32) {
     }
 }
 
-#[tracing::instrument(level = "debug", skip(g))]
 fn benchmark_buffer(g: &mut BenchmarkGroup<WallTime>) {
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -36,7 +34,6 @@ fn benchmark_buffer(g: &mut BenchmarkGroup<WallTime>) {
     });
 }
 
-#[tracing::instrument(level = "debug", skip())]
 fn benches() {
     let mut c = Criterion::default().configure_from_args();
     let mut g = c.benchmark_group("Util");

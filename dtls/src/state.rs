@@ -73,7 +73,6 @@ pub struct KeyLogData {
 }
 
 impl Default for State {
-    #[tracing::instrument(level = "debug", skip())]
     fn default() -> Self {
         State {
             local_epoch: Arc::new(AtomicU16::new(0)),
@@ -110,7 +109,6 @@ impl Default for State {
 }
 
 impl State {
-    #[tracing::instrument(level = "debug", skip(self))]
     pub(crate) async fn clone(&self) -> Self {
         let mut state = State::default();
 
@@ -121,7 +119,6 @@ impl State {
         state
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     async fn serialize(&self) -> Result<SerializedState> {
         let mut local_rand = vec![];
         {
@@ -169,7 +166,6 @@ impl State {
         })
     }
 
-    #[tracing::instrument(level = "debug", skip(self, serialized))]
     async fn deserialize(&mut self, serialized: &SerializedState) -> Result<()> {
         // Set epoch values
         self.local_epoch
@@ -211,7 +207,6 @@ impl State {
         Ok(())
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     pub async fn init_cipher_suite(&mut self) -> Result<()> {
         let mut cipher_suite = self.cipher_suite.lock().await;
         if let Some(cipher_suite) = &mut *cipher_suite {
@@ -241,7 +236,6 @@ impl State {
     }
 
     // marshal_binary is a binary.BinaryMarshaler.marshal_binary implementation
-    #[tracing::instrument(level = "debug", skip(self))]
     pub async fn marshal_binary(&self) -> Result<Vec<u8>> {
         let serialized = self.serialize().await?;
 
@@ -252,7 +246,6 @@ impl State {
     }
 
     // unmarshal_binary is a binary.BinaryUnmarshaler.unmarshal_binary implementation
-    #[tracing::instrument(level = "debug", skip(self, data))]
     pub async fn unmarshal_binary(&mut self, data: &[u8]) -> Result<()> {
         let serialized: SerializedState =
             match rkyv::access::<ArchivedSerializedState, rkyv::rancor::Error>(data)
@@ -267,7 +260,6 @@ impl State {
         Ok(())
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// key_log_data returns the key log data for the current state.
     pub fn key_log_data(&self) -> Result<KeyLogData> {
         let mut local_random = vec![];
@@ -291,7 +283,6 @@ impl State {
 
 #[async_trait]
 impl KeyingMaterialExporter for State {
-    #[tracing::instrument(level = "debug", skip(self, label, context, length))]
     /// export_keying_material returns length bytes of exported key material in a new
     /// slice as defined in RFC 5705.
     /// This allows protocols to use DTLS for key establishment, but

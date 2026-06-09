@@ -50,7 +50,6 @@ struct QueryResult {
 }
 
 impl DnsConn {
-    #[tracing::instrument(level = "debug", skip(addr, config))]
     /// server establishes a mDNS connection over an existing connection
     pub fn server(addr: SocketAddr, config: Config) -> Result<Self> {
         let socket = socket2::Socket::new(
@@ -141,7 +140,6 @@ impl DnsConn {
         Ok(c)
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// Close closes the mDNS Conn
     pub async fn close(&self) -> Result<()> {
         log::info!("Closing connection");
@@ -162,7 +160,6 @@ impl DnsConn {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, name, close_query_signal))]
     /// Query sends mDNS Queries for the following name until
     /// either there's a close signal or we get a result
     pub async fn query(
@@ -210,7 +207,6 @@ impl DnsConn {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, name))]
     async fn send_question(&self, name: &str) {
         let packed_name = match Name::new(name) {
             Ok(pn) => pn,
@@ -246,7 +242,6 @@ impl DnsConn {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(closed_rx, close_server, socket, local_names, dst_addr, queries))]
     async fn start(
         mut closed_rx: mpsc::Receiver<()>,
         close_server: Arc<atomic::AtomicBool>,
@@ -296,7 +291,6 @@ impl DnsConn {
     }
 }
 
-#[tracing::instrument(level = "debug", skip(p, socket, local_names, src, dst_addr, queries))]
 async fn run(
     p: &mut Parser<'_>,
     socket: &Arc<UdpSocket>,
@@ -390,7 +384,6 @@ async fn run(
     }
 }
 
-#[tracing::instrument(level = "debug", skip(socket, interface_addr, name, dst, dst_addr))]
 async fn send_answer(
     socket: &Arc<UdpSocket>,
     interface_addr: &SocketAddr,
@@ -435,7 +428,6 @@ async fn send_answer(
     Ok(())
 }
 
-#[tracing::instrument(level = "debug", skip(addr))]
 async fn get_interface_addr_for_ip(addr: impl ToSocketAddrs) -> std::io::Result<SocketAddr> {
     let socket = UdpSocket::bind("0.0.0.0:0").await?;
     socket.connect(addr).await?;

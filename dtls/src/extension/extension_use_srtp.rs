@@ -20,7 +20,6 @@ pub enum SrtpProtectionProfile {
 }
 
 impl From<u16> for SrtpProtectionProfile {
-    #[tracing::instrument(level = "debug", skip(val))]
     fn from(val: u16) -> Self {
         match val {
             0x0001 => SrtpProtectionProfile::Srtp_Aes128_Cm_Hmac_Sha1_80,
@@ -46,17 +45,14 @@ pub struct ExtensionUseSrtp {
 }
 
 impl ExtensionUseSrtp {
-    #[tracing::instrument(level = "debug", skip(self))]
     pub fn extension_value(&self) -> ExtensionValue {
         ExtensionValue::UseSrtp
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     pub fn size(&self) -> usize {
         2 + 2 + self.protection_profiles.len() * 2 + 1
     }
 
-    #[tracing::instrument(level = "debug", skip(self, writer))]
     pub fn marshal<W: Write>(&self, writer: &mut W) -> Result<()> {
         writer.write_u16::<BigEndian>(
             2 + /* MKI Length */ 1 + 2 * self.protection_profiles.len() as u16,
@@ -72,7 +68,6 @@ impl ExtensionUseSrtp {
         Ok(writer.flush()?)
     }
 
-    #[tracing::instrument(level = "debug", skip(reader))]
     pub fn unmarshal<R: Read>(reader: &mut R) -> Result<Self> {
         let _ = reader.read_u16::<BigEndian>()?;
 

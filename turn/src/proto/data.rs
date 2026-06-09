@@ -17,7 +17,6 @@ use stun::message::*;
 pub struct Data(pub Vec<u8>);
 
 impl Setter for Data {
-    #[tracing::instrument(level = "debug", skip(self, m))]
     /// Adds `DATA` to message.
     fn add_to(&self, m: &mut Message) -> Result<(), stun::Error> {
         m.add(ATTR_DATA, &self.0);
@@ -26,7 +25,6 @@ impl Setter for Data {
 }
 
 impl Getter for Data {
-    #[tracing::instrument(level = "debug", skip(self, m))]
     /// Decodes `DATA` from message.
     fn get_from(&mut self, m: &Message) -> Result<(), stun::Error> {
         self.0 = m.get(ATTR_DATA)?;

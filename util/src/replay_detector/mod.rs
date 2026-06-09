@@ -25,7 +25,6 @@ impl SlidingWindowDetector {
     // Created ReplayDetector doesn't allow wrapping.
     // It can handle monotonically increasing sequence number up to
     // full 64bit number. It is suitable for DTLS replay protection.
-    #[tracing::instrument(level = "debug", skip(window_size, max_seq))]
     pub fn new(window_size: usize, max_seq: u64) -> Self {
         SlidingWindowDetector {
             accepted: false,
@@ -39,7 +38,6 @@ impl SlidingWindowDetector {
 }
 
 impl ReplayDetector for SlidingWindowDetector {
-    #[tracing::instrument(level = "debug", skip(self, seq))]
     fn check(&mut self, seq: u64) -> bool {
         self.accepted = false;
 
@@ -63,7 +61,6 @@ impl ReplayDetector for SlidingWindowDetector {
         true
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn accept(&mut self) {
         if !self.accepted {
             return;
@@ -92,7 +89,6 @@ pub struct WrappedSlidingWindowDetector {
 impl WrappedSlidingWindowDetector {
     // WithWrap creates ReplayDetector allowing sequence wrapping.
     // This is suitable for short bitwidth counter like SRTP and SRTCP.
-    #[tracing::instrument(level = "debug", skip(window_size, max_seq))]
     pub fn new(window_size: usize, max_seq: u64) -> Self {
         WrappedSlidingWindowDetector {
             accepted: false,
@@ -107,7 +103,6 @@ impl WrappedSlidingWindowDetector {
 }
 
 impl ReplayDetector for WrappedSlidingWindowDetector {
-    #[tracing::instrument(level = "debug", skip(self, seq))]
     fn check(&mut self, seq: u64) -> bool {
         self.accepted = false;
 
@@ -146,7 +141,6 @@ impl ReplayDetector for WrappedSlidingWindowDetector {
         true
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn accept(&mut self) {
         if !self.accepted {
             return;
@@ -177,10 +171,8 @@ impl ReplayDetector for WrappedSlidingWindowDetector {
 pub struct NoOpReplayDetector;
 
 impl ReplayDetector for NoOpReplayDetector {
-    #[tracing::instrument(level = "debug", skip(self))]
     fn check(&mut self, _: u64) -> bool {
         true
     }
-    #[tracing::instrument(level = "debug", skip(self))]
     fn accept(&mut self) {}
 }

@@ -23,7 +23,6 @@ pub struct CryptoChaCha20 {
     remote_write_iv: Vec<u8>,
 }
 
-#[tracing::instrument(level = "debug", skip(nonce, epoch, seqnum))]
 fn noncegen(nonce: &mut [u8], epoch: u16, seqnum: u64) {
     let epoch: u64 = epoch.into();
     let seqnum = (seqnum & 0xFFFFFFFFFFFF) | (epoch << 48);
@@ -33,7 +32,6 @@ fn noncegen(nonce: &mut [u8], epoch: u16, seqnum: u64) {
 }
 
 impl CryptoChaCha20 {
-    #[tracing::instrument(level = "debug", skip(local_key, local_write_iv, remote_key, remote_write_iv))]
     pub fn new(
         local_key: &[u8],
         local_write_iv: &[u8],
@@ -56,7 +54,6 @@ impl CryptoChaCha20 {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, pkt_rlh, raw))]
     pub fn encrypt(&self, pkt_rlh: &RecordLayerHeader, raw: &[u8]) -> Result<Vec<u8>> {
         let payload = &raw[RECORD_LAYER_HEADER_SIZE..];
         let raw = &raw[..RECORD_LAYER_HEADER_SIZE];
@@ -91,7 +88,6 @@ impl CryptoChaCha20 {
         Ok(r)
     }
 
-    #[tracing::instrument(level = "debug", skip(self, r))]
     pub fn decrypt(&self, r: &[u8]) -> Result<Vec<u8>> {
         let mut reader = Cursor::new(r);
         let h = RecordLayerHeader::unmarshal(&mut reader)?;

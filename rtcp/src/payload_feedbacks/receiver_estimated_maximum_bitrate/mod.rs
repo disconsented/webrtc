@@ -41,7 +41,6 @@ const UNIQUE_IDENTIFIER: [u8; 4] = [b'R', b'E', b'M', b'B'];
 
 /// String prints the REMB packet in a human-readable format.
 impl fmt::Display for ReceiverEstimatedMaximumBitrate {
-    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         // Do some unit conversions because b/s is far too difficult to read.
         let mut bitrate = self.bitrate;
@@ -64,7 +63,6 @@ impl fmt::Display for ReceiverEstimatedMaximumBitrate {
 }
 
 impl Packet for ReceiverEstimatedMaximumBitrate {
-    #[tracing::instrument(level = "debug", skip(self))]
     /// Header returns the Header associated with this packet.
     fn header(&self) -> Header {
         Header {
@@ -75,23 +73,19 @@ impl Packet for ReceiverEstimatedMaximumBitrate {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// destination_ssrc returns an array of SSRC values that this packet refers to.
     fn destination_ssrc(&self) -> Vec<u32> {
         self.ssrcs.clone()
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn raw_size(&self) -> usize {
         HEADER_LENGTH + REMB_OFFSET + self.ssrcs.len() * 4
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn as_any(&self) -> &(dyn Any + Send + Sync) {
         self
     }
 
-    #[tracing::instrument(level = "debug", skip(self, other))]
     fn equal(&self, other: &(dyn Packet + Send + Sync)) -> bool {
         other
             .as_any()
@@ -99,14 +93,12 @@ impl Packet for ReceiverEstimatedMaximumBitrate {
             == Some(self)
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn cloned(&self) -> Box<dyn Packet + Send + Sync> {
         Box::new(self.clone())
     }
 }
 
 impl MarshalSize for ReceiverEstimatedMaximumBitrate {
-    #[tracing::instrument(level = "debug", skip(self))]
     fn marshal_size(&self) -> usize {
         let l = self.raw_size();
         // align to 32-bit boundary
@@ -115,7 +107,6 @@ impl MarshalSize for ReceiverEstimatedMaximumBitrate {
 }
 
 impl Marshal for ReceiverEstimatedMaximumBitrate {
-    #[tracing::instrument(level = "debug", skip(self, buf))]
     /// Marshal serializes the packet and returns a byte slice.
     fn marshal_to(&self, mut buf: &mut [u8]) -> Result<usize> {
         const BITRATE_MAX: f32 = 2.417_842_4e24; //0x3FFFFp+63;
@@ -197,7 +188,6 @@ impl Marshal for ReceiverEstimatedMaximumBitrate {
 }
 
 impl Unmarshal for ReceiverEstimatedMaximumBitrate {
-    #[tracing::instrument(level = "debug", skip(raw_packet))]
     /// Unmarshal reads a REMB packet from the given byte slice.
     fn unmarshal<B>(raw_packet: &mut B) -> Result<Self>
     where

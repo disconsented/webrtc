@@ -34,7 +34,6 @@ const ICE_GATHERING_STATE_COMPLETE_STR: &str = "complete";
 
 /// takes a string and converts it to ICEGatheringState
 impl From<&str> for RTCIceGatheringState {
-    #[tracing::instrument(level = "debug", skip(raw))]
     fn from(raw: &str) -> Self {
         match raw {
             ICE_GATHERING_STATE_NEW_STR => RTCIceGatheringState::New,
@@ -46,7 +45,6 @@ impl From<&str> for RTCIceGatheringState {
 }
 
 impl fmt::Display for RTCIceGatheringState {
-    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match *self {
             RTCIceGatheringState::New => write!(f, "{ICE_GATHERING_STATE_NEW_STR}"),

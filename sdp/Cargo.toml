@@ -14,7 +14,6 @@ url = "2"
 rand = "0.9"
 thiserror = "1"
 substring = "1"
-tracing.workspace = true
 
 [dev-dependencies]
 criterion = "0.5"

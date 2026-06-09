@@ -24,7 +24,6 @@ pub struct TrackLocalStaticSample {
 }
 
 impl TrackLocalStaticSample {
-    #[tracing::instrument(level = "debug", skip(codec, id, stream_id))]
     /// returns a TrackLocalStaticSample without RID
     pub fn new(codec: RTCRtpCodecCapability, id: String, stream_id: String) -> Self {
         let rtp_track = TrackLocalStaticRTP::new(codec, id, stream_id);
@@ -40,7 +39,6 @@ impl TrackLocalStaticSample {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(codec, id, rid, stream_id))]
     /// returns a TrackLocalStaticSample with RID
     pub fn new_with_rid(
         codec: RTCRtpCodecCapability,
@@ -61,13 +59,11 @@ impl TrackLocalStaticSample {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// codec gets the Codec of the track
     pub fn codec(&self) -> RTCRtpCodecCapability {
         self.rtp_track.codec()
     }
 
-    #[tracing::instrument(level = "debug", skip(self, sample))]
     /// write_sample writes a Sample to the TrackLocalStaticSample
     /// If one PeerConnection fails the packets will still be sent to
     /// all PeerConnections. The error message will contain the ID of the failed
@@ -76,7 +72,6 @@ impl TrackLocalStaticSample {
         self.write_sample_with_extensions(sample, &[]).await
     }
 
-    #[tracing::instrument(level = "debug", skip(self, sample, extensions))]
     /// Write a sample with provided RTP extensions.
     ///
     /// Alternatively to this method [`TrackLocalStaticSample::sample_writer`] can be used instead.
@@ -162,7 +157,6 @@ impl TrackLocalStaticSample {
         flatten_errs(write_errs)
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// Create a builder for writing samples with additional data.
     ///
     /// # Example
@@ -204,7 +198,6 @@ impl TrackLocalStaticSample {
 
 #[async_trait]
 impl TrackLocal for TrackLocalStaticSample {
-    #[tracing::instrument(level = "debug", skip(self, t))]
     /// Bind is called by the PeerConnection after negotiation is complete
     /// This asserts that the code requested is supported by the remote peer.
     /// If so it setups all the state (SSRC and PayloadType) to have a call
@@ -235,14 +228,12 @@ impl TrackLocal for TrackLocalStaticSample {
         Ok(codec)
     }
 
-    #[tracing::instrument(level = "debug", skip(self, t))]
     /// unbind implements the teardown logic when the track is no longer needed. This happens
     /// because a track has been stopped.
     async fn unbind(&self, t: &TrackLocalContext) -> Result<()> {
         self.rtp_track.unbind(t).await
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// id is the unique identifier for this Track. This should be unique for the
     /// stream, but doesn't have to globally unique. A common example would be 'audio' or 'video'
     /// and StreamID would be 'desktop' or 'webcam'
@@ -250,25 +241,21 @@ impl TrackLocal for TrackLocalStaticSample {
         self.rtp_track.id()
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// RID is the RTP Stream ID for this track.
     fn rid(&self) -> Option<&str> {
         self.rtp_track.rid()
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// stream_id is the group this track belongs too. This must be unique
     fn stream_id(&self) -> &str {
         self.rtp_track.stream_id()
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// kind controls if this TrackLocal is audio or video
     fn kind(&self) -> RTPCodecType {
         self.rtp_track.kind()
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn as_any(&self) -> &dyn Any {
         self
     }
@@ -292,7 +279,6 @@ mod sample_writer {
     }
 
     impl<'track> SampleWriter<'track> {
-        #[tracing::instrument(level = "debug", skip(track))]
         pub(super) fn new(track: &'track TrackLocalStaticSample) -> Self {
             Self {
                 track,
@@ -300,7 +286,6 @@ mod sample_writer {
             }
         }
 
-        #[tracing::instrument(level = "debug", skip(self, ext))]
         /// Add a RTP audio level extension to all packets written for the sample.
         ///
         /// This overwrites any previously configured audio level extension.
@@ -308,7 +293,6 @@ mod sample_writer {
             self.with_extension(HeaderExtension::AudioLevel(ext))
         }
 
-        #[tracing::instrument(level = "debug", skip(self, ext))]
         /// Add a RTP video orientation extension to all packets written for the sample.
         ///
         /// This overwrites any previously configured video orientation extension.
@@ -316,7 +300,6 @@ mod sample_writer {
             self.with_extension(HeaderExtension::VideoOrientation(ext))
         }
 
-        #[tracing::instrument(level = "debug", skip(self, ext))]
         /// Add any RTP extension to all packets written for the sample.
         pub fn with_extension(mut self, ext: HeaderExtension) -> Self {
             self.extensions.retain(|e| !e.is_same(&ext));
@@ -326,7 +309,6 @@ mod sample_writer {
             self
         }
 
-        #[tracing::instrument(level = "debug", skip(self, sample))]
         /// Write the sample to the track.
         ///
         /// Creates one or more RTP packets with any extensions specified for each packet and sends

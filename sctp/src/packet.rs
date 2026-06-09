@@ -69,7 +69,6 @@ pub(crate) struct Packet {
 
 /// makes packet printable
 impl fmt::Display for Packet {
-    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut res = format!(
             "Packet:
@@ -89,7 +88,6 @@ impl fmt::Display for Packet {
 pub(crate) const PACKET_HEADER_SIZE: usize = 12;
 
 impl Packet {
-    #[tracing::instrument(level = "debug", skip(raw))]
     pub(crate) fn unmarshal(raw: &Bytes) -> Result<Self> {
         if raw.len() < PACKET_HEADER_SIZE {
             return Err(Error::ErrPacketRawTooSmall);
@@ -156,7 +154,6 @@ impl Packet {
         })
     }
 
-    #[tracing::instrument(level = "debug", skip(self, writer))]
     pub(crate) fn marshal_to(&self, writer: &mut BytesMut) -> Result<usize> {
         // Populate static headers
         // 8-12 is Checksum which will be populated when packet is complete
@@ -191,7 +188,6 @@ impl Packet {
         Ok(writer.len())
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     pub(crate) fn marshal(&self) -> Result<Bytes> {
         let mut buf = BytesMut::with_capacity(PACKET_HEADER_SIZE);
         self.marshal_to(&mut buf)?;
@@ -200,7 +196,6 @@ impl Packet {
 }
 
 impl Packet {
-    #[tracing::instrument(level = "debug", skip(self))]
     pub(crate) fn check_packet(&self) -> Result<()> {
         // All packets must adhere to these rules
 

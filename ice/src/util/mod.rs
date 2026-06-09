@@ -19,7 +19,6 @@ use crate::agent::agent_config::{InterfaceFilterFn, IpFilterFn};
 use crate::error::*;
 use crate::network_type::*;
 
-#[tracing::instrument(level = "debug", skip(_network, ip, port))]
 pub fn create_addr(_network: NetworkType, ip: IpAddr, port: u16) -> SocketAddr {
     /*if network.is_tcp(){
         return &net.TCPAddr{IP: ip, Port: port}
@@ -29,7 +28,6 @@ pub fn create_addr(_network: NetworkType, ip: IpAddr, port: u16) -> SocketAddr {
     SocketAddr::new(ip, port)
 }
 
-#[tracing::instrument(level = "debug", skip(m, expected_username))]
 pub fn assert_inbound_username(m: &Message, expected_username: &str) -> Result<()> {
     let mut username = Username::new(ATTR_USERNAME, String::new());
     username.get_from(m)?;
@@ -46,13 +44,11 @@ pub fn assert_inbound_username(m: &Message, expected_username: &str) -> Result<(
     Ok(())
 }
 
-#[tracing::instrument(level = "debug", skip(m, key))]
 pub fn assert_inbound_message_integrity(m: &mut Message, key: &[u8]) -> Result<()> {
     let message_integrity_attr = MessageIntegrity(key.to_vec());
     Ok(message_integrity_attr.check(m)?)
 }
 
-#[tracing::instrument(level = "debug", skip(conn, server_addr, deadline))]
 /// Initiates a stun requests to `server_addr` using conn, reads the response and returns the
 /// `XORMappedAddress` returned by the stun server.
 /// Adapted from stun v0.2.
@@ -69,7 +65,6 @@ pub async fn get_xormapped_addr(
 
 const MAX_MESSAGE_SIZE: usize = 1280;
 
-#[tracing::instrument(level = "debug", skip(conn, server_addr, deadline))]
 pub async fn stun_request(
     conn: &Arc<dyn Conn + Send + Sync>,
     server_addr: SocketAddr,
@@ -99,7 +94,6 @@ pub async fn stun_request(
     Ok(res)
 }
 
-#[tracing::instrument(level = "debug", skip(vnet, interface_filter, ip_filter, network_types, include_loopback))]
 pub async fn local_interfaces(
     vnet: &Arc<Net>,
     interface_filter: &Option<InterfaceFilterFn>,
@@ -145,7 +139,6 @@ pub async fn local_interfaces(
     ips
 }
 
-#[tracing::instrument(level = "debug", skip(vnet, port_max, port_min, laddr))]
 pub async fn listen_udp_in_port_range(
     vnet: &Arc<Net>,
     port_max: u16,

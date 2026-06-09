@@ -25,7 +25,6 @@ const DIRECTION_INACTIVE_STR: &str = "inactive";
 const DIRECTION_UNSPECIFIED_STR: &str = "Unspecified";
 
 impl fmt::Display for Direction {
-    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let s = match self {
             Direction::SendRecv => DIRECTION_SEND_RECV_STR,
@@ -39,7 +38,6 @@ impl fmt::Display for Direction {
 }
 
 impl Direction {
-    #[tracing::instrument(level = "debug", skip(raw))]
     /// new defines a procedure for creating a new direction from a raw string.
     pub fn new(raw: &str) -> Self {
         match raw {

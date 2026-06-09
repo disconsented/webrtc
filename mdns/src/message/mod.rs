@@ -49,7 +49,6 @@ pub enum DnsType {
 }
 
 impl From<u16> for DnsType {
-    #[tracing::instrument(level = "debug", skip(v))]
     fn from(v: u16) -> Self {
         match v {
             1 => DnsType::A,
@@ -76,7 +75,6 @@ impl From<u16> for DnsType {
 }
 
 impl fmt::Display for DnsType {
-    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let s = match *self {
             DnsType::A => "A",
@@ -102,19 +100,16 @@ impl fmt::Display for DnsType {
 
 impl DnsType {
     // pack_type appends the wire format of field to msg.
-    #[tracing::instrument(level = "debug", skip(self, msg))]
     pub(crate) fn pack(&self, msg: Vec<u8>) -> Vec<u8> {
         pack_uint16(msg, *self as u16)
     }
 
-    #[tracing::instrument(level = "debug", skip(self, msg, off))]
     pub(crate) fn unpack(&mut self, msg: &[u8], off: usize) -> Result<usize> {
         let (t, o) = unpack_uint16(msg, off)?;
         *self = DnsType::from(t);
         Ok(o)
     }
 
-    #[tracing::instrument(level = "debug", skip(msg, off))]
     pub(crate) fn skip(msg: &[u8], off: usize) -> Result<usize> {
         skip_uint16(msg, off)
     }
@@ -133,7 +128,6 @@ pub const DNSCLASS_HESIOD: DnsClass = DnsClass(4);
 pub const DNSCLASS_ANY: DnsClass = DnsClass(255);
 
 impl fmt::Display for DnsClass {
-    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let other = format!("{}", self.0);
         let s = match *self {
@@ -150,19 +144,16 @@ impl fmt::Display for DnsClass {
 
 impl DnsClass {
     // pack_class appends the wire format of field to msg.
-    #[tracing::instrument(level = "debug", skip(self, msg))]
     pub(crate) fn pack(&self, msg: Vec<u8>) -> Vec<u8> {
         pack_uint16(msg, self.0)
     }
 
-    #[tracing::instrument(level = "debug", skip(self, msg, off))]
     pub(crate) fn unpack(&mut self, msg: &[u8], off: usize) -> Result<usize> {
         let (c, o) = unpack_uint16(msg, off)?;
         *self = DnsClass(c);
         Ok(o)
     }
 
-    #[tracing::instrument(level = "debug", skip(msg, off))]
     pub(crate) fn skip(msg: &[u8], off: usize) -> Result<usize> {
         skip_uint16(msg, off)
     }
@@ -186,7 +177,6 @@ pub enum RCode {
 }
 
 impl From<u8> for RCode {
-    #[tracing::instrument(level = "debug", skip(v))]
     fn from(v: u8) -> Self {
         match v {
             0 => RCode::Success,
@@ -201,7 +191,6 @@ impl From<u8> for RCode {
 }
 
 impl fmt::Display for RCode {
-    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let s = match *self {
             RCode::Success => "RCodeSuccess",
@@ -253,7 +242,6 @@ pub struct Message {
 }
 
 impl fmt::Display for Message {
-    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut s = "dnsmessage.Message{Header: ".to_owned();
         s += self.header.to_string().as_str();
@@ -280,7 +268,6 @@ impl fmt::Display for Message {
 
 impl Message {
     // Unpack parses a full Message.
-    #[tracing::instrument(level = "debug", skip(self, msg))]
     pub fn unpack(&mut self, msg: &[u8]) -> Result<()> {
         let mut p = Parser::default();
         self.header = p.start(msg)?;
@@ -292,14 +279,12 @@ impl Message {
     }
 
     // Pack packs a full Message.
-    #[tracing::instrument(level = "debug", skip(self))]
     pub fn pack(&mut self) -> Result<Vec<u8>> {
         self.append_pack(vec![])
     }
 
     // append_pack is like Pack but appends the full Message to b and returns the
     // extended buffer.
-    #[tracing::instrument(level = "debug", skip(self, b))]
     pub fn append_pack(&mut self, b: Vec<u8>) -> Result<Vec<u8>> {
         // Validate the lengths. It is very unlikely that anyone will try to
         // pack more than 65535 of any particular type, but it is possible and

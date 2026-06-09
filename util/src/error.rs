@@ -122,7 +122,6 @@ pub enum Error {
 }
 
 impl Error {
-    #[tracing::instrument(level = "debug", skip(error))]
     pub fn from_std<T>(error: T) -> Self
     where
         T: std::error::Error + Send + Sync + 'static,
@@ -130,7 +129,6 @@ impl Error {
         Error::Std(StdError(Box::new(error)))
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     pub fn downcast_ref<T: std::error::Error + 'static>(&self) -> Option<&T> {
         if let Error::Std(s) = self {
             return s.0.downcast_ref();
@@ -146,14 +144,12 @@ pub struct IoError(#[from] pub io::Error);
 
 // Workaround for wanting PartialEq for io::Error.
 impl PartialEq for IoError {
-    #[tracing::instrument(level = "debug", skip(self, other))]
     fn eq(&self, other: &Self) -> bool {
         self.0.kind() == other.0.kind()
     }
 }
 
 impl From<io::Error> for Error {
-    #[tracing::instrument(level = "debug", skip(e))]
     fn from(e: io::Error) -> Self {
         Error::Io(IoError(e))
     }
@@ -172,7 +168,6 @@ impl From<io::Error> for Error {
 pub struct StdError(pub Box<dyn std::error::Error + Send + Sync>);
 
 impl PartialEq for StdError {
-    #[tracing::instrument(level = "debug", skip(self))]
     fn eq(&self, _: &Self) -> bool {
         false
     }

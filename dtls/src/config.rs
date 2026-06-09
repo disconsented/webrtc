@@ -105,7 +105,6 @@ pub struct Config {
 }
 
 impl Default for Config {
-    #[tracing::instrument(level = "debug", skip())]
     fn default() -> Self {
         Config {
             certificates: vec![],
@@ -159,7 +158,6 @@ pub enum ExtendedMasterSecretType {
     Disable = 2,
 }
 
-#[tracing::instrument(level = "debug", skip(is_client, config))]
 pub(crate) fn validate_config(is_client: bool, config: &Config) -> Result<()> {
     if is_client && config.psk.is_some() && config.psk_identity_hint.is_none() {
         return Err(Error::ErrPskAndIdentityMustBeSetForClient);

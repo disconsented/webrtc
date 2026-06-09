@@ -37,7 +37,6 @@ crc = "3"
 ring = "0.17.14"
 md-5 = "0.10"
 thiserror = "1"
-tracing.workspace = true
 
 [dev-dependencies]
 clap = "3"

@@ -11,7 +11,6 @@ pub const EXT_MAP_VALUE_TRANSPORT_CC_KEY: isize = 3;
 pub const EXT_MAP_VALUE_TRANSPORT_CC_URI: &str =
     "http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01";
 
-#[tracing::instrument(level = "debug", skip())]
 fn ext_map_uri() -> HashMap<isize, &'static str> {
     let mut m = HashMap::new();
     m.insert(
@@ -66,13 +65,11 @@ pub struct MediaDescription {
 }
 
 impl MediaDescription {
-    #[tracing::instrument(level = "debug", skip(self, key))]
     /// Returns whether an attribute exists
     pub fn has_attribute(&self, key: &str) -> bool {
         self.attributes.iter().any(|a| a.key == key)
     }
 
-    #[tracing::instrument(level = "debug", skip(self, key))]
     /// attribute returns the value of an attribute and if it exists
     pub fn attribute(&self, key: &str) -> Option<Option<&str>> {
         for a in &self.attributes {
@@ -83,7 +80,6 @@ impl MediaDescription {
         None
     }
 
-    #[tracing::instrument(level = "debug", skip(codec_type, _codec_prefs))]
     /// new_jsep_media_description creates a new MediaName with
     /// some settings that are required by the JSEP spec.
     pub fn new_jsep_media_description(codec_type: String, _codec_prefs: Vec<&str>) -> Self {
@@ -118,34 +114,29 @@ impl MediaDescription {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, key))]
     /// with_property_attribute adds a property attribute 'a=key' to the media description
     pub fn with_property_attribute(mut self, key: String) -> Self {
         self.attributes.push(Attribute::new(key, None));
         self
     }
 
-    #[tracing::instrument(level = "debug", skip(self, key, value))]
     /// with_value_attribute adds a value attribute 'a=key:value' to the media description
     pub fn with_value_attribute(mut self, key: String, value: String) -> Self {
         self.attributes.push(Attribute::new(key, Some(value)));
         self
     }
 
-    #[tracing::instrument(level = "debug", skip(self, algorithm, value))]
     /// with_fingerprint adds a fingerprint to the media description
     pub fn with_fingerprint(self, algorithm: String, value: String) -> Self {
         self.with_value_attribute("fingerprint".to_owned(), algorithm + " " + &value)
     }
 
-    #[tracing::instrument(level = "debug", skip(self, username, password))]
     /// with_ice_credentials adds ICE credentials to the media description
     pub fn with_ice_credentials(self, username: String, password: String) -> Self {
         self.with_value_attribute("ice-ufrag".to_string(), username)
             .with_value_attribute("ice-pwd".to_string(), password)
     }
 
-    #[tracing::instrument(level = "debug", skip(self, payload_type, name, clockrate, channels, fmtp))]
     /// with_codec adds codec information to the media description
     pub fn with_codec(
         mut self,
@@ -170,7 +161,6 @@ impl MediaDescription {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, ssrc, cname, stream_label, label))]
     /// with_media_source adds media source information to the media description
     pub fn with_media_source(
         self,
@@ -187,19 +177,16 @@ impl MediaDescription {
         // Deprecated but not phased out?
     }
 
-    #[tracing::instrument(level = "debug", skip(self, value))]
     /// with_candidate adds an ICE candidate to the media description
     /// Deprecated: use WithICECandidate instead
     pub fn with_candidate(self, value: String) -> Self {
         self.with_value_attribute("candidate".to_string(), value)
     }
 
-    #[tracing::instrument(level = "debug", skip(self, e))]
     pub fn with_extmap(self, e: ExtMap) -> Self {
         self.with_property_attribute(e.marshal())
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// with_transport_cc_extmap adds an extmap to the media description
     pub fn with_transport_cc_extmap(self) -> Self {
         let uri = {
@@ -232,7 +219,6 @@ pub struct RangedPort {
 }
 
 impl fmt::Display for RangedPort {
-    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         if let Some(range) = self.range {
             write!(f, "{}/{}", self.value, range)
@@ -252,7 +238,6 @@ pub struct MediaName {
 }
 
 impl fmt::Display for MediaName {
-    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{} {}", self.media, self.port)?;
 

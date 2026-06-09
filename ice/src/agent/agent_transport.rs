@@ -10,7 +10,6 @@ use super::*;
 use crate::error::*;
 
 impl Agent {
-    #[tracing::instrument(level = "debug", skip(self, cancel_rx, remote_ufrag, remote_pwd))]
     /// Connects to the remote agent, acting as the controlling ice agent.
     /// The method blocks until at least one ice candidate pair has successfully connected.
     ///
@@ -46,7 +45,6 @@ impl Agent {
         Ok(agent_conn)
     }
 
-    #[tracing::instrument(level = "debug", skip(self, cancel_rx, remote_ufrag, remote_pwd))]
     /// Connects to the remote agent, acting as the controlled ice agent.
     /// The method blocks until at least one ice candidate pair has successfully connected.
     ///
@@ -95,7 +93,6 @@ pub(crate) struct AgentConn {
 }
 
 impl AgentConn {
-    #[tracing::instrument(level = "debug", skip())]
     pub(crate) fn new() -> Self {
         Self {
             selected_pair: ArcSwapOption::empty(),
@@ -109,12 +106,10 @@ impl AgentConn {
             done: AtomicBool::new(false),
         }
     }
-    #[tracing::instrument(level = "debug", skip(self))]
     pub(crate) fn get_selected_pair(&self) -> Option<Arc<CandidatePair>> {
         self.selected_pair.load().clone()
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     pub(crate) async fn get_best_available_candidate_pair(&self) -> Option<Arc<CandidatePair>> {
         let mut best: Option<&Arc<CandidatePair>> = None;
 
@@ -136,7 +131,6 @@ impl AgentConn {
         best.cloned()
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     pub(crate) async fn get_best_valid_candidate_pair(&self) -> Option<Arc<CandidatePair>> {
         let mut best: Option<&Arc<CandidatePair>> = None;
 
@@ -158,13 +152,11 @@ impl AgentConn {
         best.cloned()
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// Returns the number of bytes sent.
     pub fn bytes_sent(&self) -> usize {
         self.bytes_sent.load(Ordering::SeqCst)
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// Returns the number of bytes received.
     pub fn bytes_received(&self) -> usize {
         self.bytes_received.load(Ordering::SeqCst)
@@ -173,12 +165,10 @@ impl AgentConn {
 
 #[async_trait]
 impl Conn for AgentConn {
-    #[tracing::instrument(level = "debug", skip(self, _addr))]
     async fn connect(&self, _addr: SocketAddr) -> std::result::Result<(), util::Error> {
         Err(io::Error::other("Not applicable").into())
     }
 
-    #[tracing::instrument(level = "debug", skip(self, buf))]
     async fn recv(&self, buf: &mut [u8]) -> std::result::Result<usize, util::Error> {
         if self.done.load(Ordering::SeqCst) {
             return Err(io::Error::other("Conn is closed").into());
@@ -193,7 +183,6 @@ impl Conn for AgentConn {
         Ok(n)
     }
 
-    #[tracing::instrument(level = "debug", skip(self, buf))]
     async fn recv_from(
         &self,
         buf: &mut [u8],
@@ -206,7 +195,6 @@ impl Conn for AgentConn {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, buf))]
     async fn send(&self, buf: &[u8]) -> std::result::Result<usize, util::Error> {
         if self.done.load(Ordering::SeqCst) {
             return Err(io::Error::other("Conn is closed").into());
@@ -233,7 +221,6 @@ impl Conn for AgentConn {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, _buf, _target))]
     async fn send_to(
         &self,
         _buf: &[u8],
@@ -242,7 +229,6 @@ impl Conn for AgentConn {
         Err(io::Error::other("Not applicable").into())
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn local_addr(&self) -> std::result::Result<SocketAddr, util::Error> {
         if let Some(pair) = self.get_selected_pair() {
             Ok(pair.local.addr())
@@ -251,17 +237,14 @@ impl Conn for AgentConn {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn remote_addr(&self) -> Option<SocketAddr> {
         self.get_selected_pair().map(|pair| pair.remote.addr())
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     async fn close(&self) -> std::result::Result<(), util::Error> {
         Ok(())
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn as_any(&self) -> &(dyn std::any::Any + Send + Sync) {
         self
     }

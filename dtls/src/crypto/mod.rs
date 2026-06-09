@@ -36,7 +36,6 @@ pub struct Certificate {
 }
 
 impl Certificate {
-    #[tracing::instrument(level = "debug", skip(subject_alt_names))]
     /// Generate a self-signed certificate.
     ///
     /// See [`rcgen::generate_simple_self_signed`].
@@ -49,7 +48,6 @@ impl Certificate {
         })
     }
 
-    #[tracing::instrument(level = "debug", skip(subject_alt_names, alg))]
     /// Generate a self-signed certificate with the given algorithm.
     ///
     /// See [`rcgen::Certificate::from_params`].
@@ -67,7 +65,6 @@ impl Certificate {
         })
     }
 
-    #[tracing::instrument(level = "debug", skip(pem_str))]
     /// Parses a certificate from the ASCII PEM format.
     #[cfg(feature = "pem")]
     pub fn from_pem(pem_str: &str) -> Result<Self> {
@@ -105,7 +102,6 @@ impl Certificate {
         })
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// Serializes the certificate (including the private key) in PKCS#8 format in PEM.
     #[cfg(feature = "pem")]
     pub fn serialize_pem(&self) -> String {
@@ -123,7 +119,6 @@ impl Certificate {
     }
 }
 
-#[tracing::instrument(level = "debug", skip(client_random, server_random, public_key, named_curve))]
 pub(crate) fn value_key_message(
     client_random: &[u8],
     server_random: &[u8],
@@ -162,7 +157,6 @@ pub struct CryptoPrivateKey {
 }
 
 impl PartialEq for CryptoPrivateKey {
-    #[tracing::instrument(level = "debug", skip(self, other))]
     fn eq(&self, other: &Self) -> bool {
         if self.serialized_der != other.serialized_der {
             return false;
@@ -185,7 +179,6 @@ impl PartialEq for CryptoPrivateKey {
 }
 
 impl Clone for CryptoPrivateKey {
-    #[tracing::instrument(level = "debug", skip(self))]
     fn clone(&self) -> Self {
         match self.kind {
             CryptoPrivateKeyKind::Ed25519(_) => CryptoPrivateKey {
@@ -218,14 +211,12 @@ impl Clone for CryptoPrivateKey {
 impl TryFrom<&KeyPair> for CryptoPrivateKey {
     type Error = Error;
 
-    #[tracing::instrument(level = "debug", skip(key_pair))]
     fn try_from(key_pair: &KeyPair) -> Result<Self> {
         Self::from_key_pair(key_pair)
     }
 }
 
 impl CryptoPrivateKey {
-    #[tracing::instrument(level = "debug", skip(key_pair))]
     pub fn from_key_pair(key_pair: &KeyPair) -> Result<Self> {
         let serialized_der = key_pair.serialize_der();
         if key_pair.is_compatible(&rcgen::PKCS_ED25519) {
@@ -267,7 +258,6 @@ impl CryptoPrivateKey {
 // hash/signature algorithm pair that appears in that extension
 //
 // https://tools.ietf.org/html/rfc5246#section-7.4.2
-#[tracing::instrument(level = "debug", skip(client_random, server_random, public_key, named_curve, private_key))]
 pub(crate) fn generate_key_signature(
     client_random: &[u8],
     server_random: &[u8],
@@ -307,7 +297,6 @@ pub(crate) fn generate_key_signature(
 pub const OID_ED25519: Oid<'static> = oid!(1.3.101 .112);
 pub const OID_ECDSA: Oid<'static> = oid!(1.2.840 .10045 .2 .1);
 
-#[tracing::instrument(level = "debug", skip(message, hash_algorithm, remote_key_signature, raw_certificates, insecure_verification))]
 fn verify_signature(
     message: &[u8],
     hash_algorithm: &SignatureHashAlgorithm,
@@ -371,7 +360,6 @@ fn verify_signature(
     Ok(())
 }
 
-#[tracing::instrument(level = "debug", skip(message, hash_algorithm, remote_key_signature, raw_certificates, insecure_verification))]
 pub(crate) fn verify_key_signature(
     message: &[u8],
     hash_algorithm: &SignatureHashAlgorithm,
@@ -396,7 +384,6 @@ pub(crate) fn verify_key_signature(
 // CertificateVerify message is sent to explicitly verify possession of
 // the private key in the certificate.
 // https://tools.ietf.org/html/rfc5246#section-7.3
-#[tracing::instrument(level = "debug", skip(handshake_bodies, private_key))]
 pub(crate) fn generate_certificate_verify(
     handshake_bodies: &[u8],
     private_key: &CryptoPrivateKey, /*, hashAlgorithm hashAlgorithm*/
@@ -428,7 +415,6 @@ pub(crate) fn generate_certificate_verify(
     Ok(signature)
 }
 
-#[tracing::instrument(level = "debug", skip(handshake_bodies, hash_algorithm, remote_key_signature, raw_certificates, insecure_verification))]
 pub(crate) fn verify_certificate_verify(
     handshake_bodies: &[u8],
     hash_algorithm: &SignatureHashAlgorithm,
@@ -445,7 +431,6 @@ pub(crate) fn verify_certificate_verify(
     )
 }
 
-#[tracing::instrument(level = "debug", skip(raw_certificates))]
 pub(crate) fn load_certs(raw_certificates: &[Vec<u8>]) -> Result<Vec<CertificateDer<'static>>> {
     if raw_certificates.is_empty() {
         return Err(Error::ErrLengthMismatch);
@@ -460,7 +445,6 @@ pub(crate) fn load_certs(raw_certificates: &[Vec<u8>]) -> Result<Vec<Certificate
     Ok(certs)
 }
 
-#[tracing::instrument(level = "debug", skip(raw_certificates, cert_verifier))]
 pub(crate) fn verify_client_cert(
     raw_certificates: &[Vec<u8>],
     cert_verifier: &Arc<dyn ClientCertVerifier>,
@@ -483,7 +467,6 @@ pub(crate) fn verify_client_cert(
     Ok(chains)
 }
 
-#[tracing::instrument(level = "debug", skip(raw_certificates, cert_verifier, server_name))]
 pub(crate) fn verify_server_cert(
     raw_certificates: &[Vec<u8>],
     cert_verifier: &Arc<dyn ServerCertVerifier>,
@@ -512,7 +495,6 @@ pub(crate) fn verify_server_cert(
     Ok(chains)
 }
 
-#[tracing::instrument(level = "debug", skip(h, payload_len))]
 pub(crate) fn generate_aead_additional_data(h: &RecordLayerHeader, payload_len: usize) -> Vec<u8> {
     let mut additional_data = vec![0u8; 13];
     // SequenceNumber MUST be set first

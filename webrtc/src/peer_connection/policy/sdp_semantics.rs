@@ -35,7 +35,6 @@ const SDP_SEMANTICS_UNIFIED_PLAN: &str = "unified-plan";
 const SDP_SEMANTICS_PLAN_B: &str = "plan-b";
 
 impl From<&str> for RTCSdpSemantics {
-    #[tracing::instrument(level = "debug", skip(raw))]
     fn from(raw: &str) -> Self {
         match raw {
             SDP_SEMANTICS_UNIFIED_PLAN_WITH_FALLBACK => RTCSdpSemantics::UnifiedPlanWithFallback,
@@ -47,7 +46,6 @@ impl From<&str> for RTCSdpSemantics {
 }
 
 impl fmt::Display for RTCSdpSemantics {
-    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let s = match *self {
             RTCSdpSemantics::UnifiedPlanWithFallback => SDP_SEMANTICS_UNIFIED_PLAN_WITH_FALLBACK,
@@ -87,7 +85,6 @@ mod test {
 
     // The following tests are for non-standard SDP semantics
     // (i.e. not unified-unified)
-    #[tracing::instrument(level = "debug", skip(sdp))]
     fn get_md_names(sdp: &SessionDescription) -> Vec<String> {
         sdp.media_descriptions
             .iter()
@@ -95,7 +92,6 @@ mod test {
             .collect()
     }
 
-    #[tracing::instrument(level = "debug", skip(md))]
     fn extract_ssrc_list(md: &MediaDescription) -> Vec<String> {
         let mut ssrcs = HashSet::new();
         for attr in &md.attributes {

@@ -24,7 +24,6 @@ const IPV6_ADDRESS_SIZE: usize = 27;
 pub(super) const MAX_ADDR_SIZE: usize = IPV6_ADDRESS_SIZE;
 
 impl SocketAddrExt for SocketAddr {
-    #[tracing::instrument(level = "debug", skip(self, buffer))]
     fn encode(&self, buffer: &mut [u8]) -> Result<usize, Error> {
         use std::net::SocketAddr::{V4, V6};
 
@@ -62,7 +61,6 @@ impl SocketAddrExt for SocketAddr {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(buffer))]
     fn decode(buffer: &[u8]) -> Result<SocketAddr, Error> {
         use std::net::{Ipv4Addr, Ipv6Addr, SocketAddrV4, SocketAddrV6};
 
@@ -88,7 +86,6 @@ impl SocketAddrExt for SocketAddr {
                 }
 
                 // Just to help the type system infer correctly
-                #[tracing::instrument(level = "debug", skip(b))]
                 fn helper(b: &[u8]) -> Result<&[u8; 16], TryFromSliceError> {
                     b.try_into()
                 }

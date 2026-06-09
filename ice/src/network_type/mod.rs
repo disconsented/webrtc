@@ -11,7 +11,6 @@ use crate::error::*;
 pub(crate) const UDP: &str = "udp";
 pub(crate) const TCP: &str = "tcp";
 
-#[tracing::instrument(level = "debug", skip())]
 #[must_use]
 pub fn supported_network_types() -> Vec<NetworkType> {
     vec![
@@ -47,7 +46,6 @@ pub enum NetworkType {
 }
 
 impl From<u8> for NetworkType {
-    #[tracing::instrument(level = "debug", skip(v))]
     fn from(v: u8) -> Self {
         match v {
             1 => Self::Udp4,
@@ -60,7 +58,6 @@ impl From<u8> for NetworkType {
 }
 
 impl fmt::Display for NetworkType {
-    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let s = match *self {
             Self::Udp4 => "udp4",
@@ -74,21 +71,18 @@ impl fmt::Display for NetworkType {
 }
 
 impl NetworkType {
-    #[tracing::instrument(level = "debug", skip(self))]
     /// Returns true when network is UDP4 or UDP6.
     #[must_use]
     pub fn is_udp(self) -> bool {
         self == Self::Udp4 || self == Self::Udp6
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// Returns true when network is TCP4 or TCP6.
     #[must_use]
     pub fn is_tcp(self) -> bool {
         self == Self::Tcp4 || self == Self::Tcp6
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// Returns the short network description.
     #[must_use]
     pub fn network_short(self) -> String {
@@ -127,7 +121,6 @@ impl NetworkType {
     }
 }
 
-#[tracing::instrument(level = "debug", skip(network, ip))]
 /// Determines the type of network based on the short network string and an IP address.
 pub(crate) fn determine_network_type(network: &str, ip: &IpAddr) -> Result<NetworkType> {
     let ipv4 = ip.is_ipv4();

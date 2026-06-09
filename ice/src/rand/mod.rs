@@ -11,7 +11,6 @@ const LEN_UFRAG: usize = 16;
 const LEN_PWD: usize = 32;
 
 // TODO: cryptographically strong random source
-#[tracing::instrument(level = "debug", skip(n, runes))]
 pub fn generate_crypto_random_string(n: usize, runes: &[u8]) -> String {
     let mut rng = rng();
 
@@ -25,7 +24,6 @@ pub fn generate_crypto_random_string(n: usize, runes: &[u8]) -> String {
     rand_string
 }
 
-#[tracing::instrument(level = "debug", skip())]
 /// <https://tools.ietf.org/html/rfc5245#section-15.1>
 /// candidate-id = "candidate" ":" foundation
 /// foundation   = 1*32ice-char
@@ -37,14 +35,12 @@ pub fn generate_cand_id() -> String {
     )
 }
 
-#[tracing::instrument(level = "debug", skip())]
 /// Generates ICE pwd.
 /// This internally uses `generate_crypto_random_string`.
 pub fn generate_pwd() -> String {
     generate_crypto_random_string(LEN_PWD, RUNES_ALPHA)
 }
 
-#[tracing::instrument(level = "debug", skip())]
 /// ICE user fragment.
 /// This internally uses `generate_crypto_random_string`.
 pub fn generate_ufrag() -> String {

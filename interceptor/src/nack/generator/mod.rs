@@ -30,7 +30,6 @@ pub struct GeneratorBuilder {
 }
 
 impl GeneratorBuilder {
-    #[tracing::instrument(level = "debug", skip(self, log2_size_minus_6))]
     /// with_size sets the size of the interceptor.
     /// Size must be one of: 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768
     pub fn with_log2_size_minus_6(mut self, log2_size_minus_6: u8) -> GeneratorBuilder {
@@ -38,7 +37,6 @@ impl GeneratorBuilder {
         self
     }
 
-    #[tracing::instrument(level = "debug", skip(self, skip_last_n))]
     /// with_skip_last_n sets the number of packets (n-1 packets before the last received packets) to ignore when generating
     /// nack requests.
     pub fn with_skip_last_n(mut self, skip_last_n: u16) -> GeneratorBuilder {
@@ -46,7 +44,6 @@ impl GeneratorBuilder {
         self
     }
 
-    #[tracing::instrument(level = "debug", skip(self, interval))]
     /// with_interval sets the nack send interval for the interceptor
     pub fn with_interval(mut self, interval: Duration) -> GeneratorBuilder {
         self.interval = Some(interval);
@@ -55,7 +52,6 @@ impl GeneratorBuilder {
 }
 
 impl InterceptorBuilder for GeneratorBuilder {
-    #[tracing::instrument(level = "debug", skip(self, _id))]
     fn build(&self, _id: &str) -> Result<Arc<dyn Interceptor + Send + Sync>> {
         let (close_tx, close_rx) = mpsc::channel(1);
         Ok(Arc::new(Generator {
@@ -96,19 +92,16 @@ pub struct Generator {
 }
 
 impl Generator {
-    #[tracing::instrument(level = "debug", skip())]
     /// builder returns a new GeneratorBuilder.
     pub fn builder() -> GeneratorBuilder {
         GeneratorBuilder::default()
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     async fn is_closed(&self) -> bool {
         let close_tx = self.close_tx.lock().await;
         close_tx.is_none()
     }
 
-    #[tracing::instrument(level = "debug", skip(rtcp_writer, internal))]
     async fn run(
         rtcp_writer: Arc<dyn RTCPWriter + Send + Sync>,
         internal: Arc<GeneratorInternal>,
@@ -160,7 +153,6 @@ impl Generator {
 
 #[async_trait]
 impl Interceptor for Generator {
-    #[tracing::instrument(level = "debug", skip(self, reader))]
     /// bind_rtcp_reader lets you modify any incoming RTCP packets. It is called once per sender/receiver, however this might
     /// change in the future. The returned method will be called once per packet batch.
     async fn bind_rtcp_reader(
@@ -170,7 +162,6 @@ impl Interceptor for Generator {
         reader
     }
 
-    #[tracing::instrument(level = "debug", skip(self, writer))]
     /// bind_rtcp_writer lets you modify any outgoing RTCP packets. It is called once per PeerConnection. The returned method
     /// will be called once per packet batch.
     async fn bind_rtcp_writer(
@@ -197,7 +188,6 @@ impl Interceptor for Generator {
         writer
     }
 
-    #[tracing::instrument(level = "debug", skip(self, _info, writer))]
     /// bind_local_stream lets you modify any outgoing RTP packets. It is called once for per LocalStream. The returned method
     /// will be called once per rtp packet.
     async fn bind_local_stream(
@@ -208,11 +198,9 @@ impl Interceptor for Generator {
         writer
     }
 
-    #[tracing::instrument(level = "debug", skip(self, _info))]
     /// unbind_local_stream is called when the Stream is removed. It can be used to clean up any data related to that track.
     async fn unbind_local_stream(&self, _info: &StreamInfo) {}
 
-    #[tracing::instrument(level = "debug", skip(self, info, reader))]
     /// bind_remote_stream lets you modify any incoming RTP packets. It is called once for per RemoteStream. The returned method
     /// will be called once per rtp packet.
     async fn bind_remote_stream(
@@ -236,14 +224,12 @@ impl Interceptor for Generator {
         stream
     }
 
-    #[tracing::instrument(level = "debug", skip(self, info))]
     /// unbind_remote_stream is called when the Stream is removed. It can be used to clean up any data related to that track.
     async fn unbind_remote_stream(&self, info: &StreamInfo) {
         let mut receive_logs = self.internal.streams.lock().await;
         receive_logs.remove(&info.ssrc);
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     /// close closes the Interceptor, cleaning up any data if necessary.
     async fn close(&self) -> Result<()> {
         {

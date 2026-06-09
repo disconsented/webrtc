@@ -13,41 +13,34 @@ pub struct ChunkUnknown {
 }
 
 impl Display for ChunkUnknown {
-    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(f, "ChunkUnknown( {} {:?} )", self.hdr, self.value)
     }
 }
 
 impl Chunk for ChunkUnknown {
-    #[tracing::instrument(level = "debug", skip(self))]
     fn header(&self) -> ChunkHeader {
         self.hdr.clone()
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn as_any(&self) -> &(dyn Any + Send + Sync) {
         self
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn check(&self) -> crate::error::Result<()> {
         Ok(())
     }
 
-    #[tracing::instrument(level = "debug", skip(self))]
     fn value_length(&self) -> usize {
         self.value.len()
     }
 
-    #[tracing::instrument(level = "debug", skip(self, buf))]
     fn marshal_to(&self, buf: &mut BytesMut) -> crate::error::Result<usize> {
         self.header().marshal_to(buf)?;
         buf.extend(&self.value);
         Ok(buf.len())
     }
 
-    #[tracing::instrument(level = "debug", skip(raw))]
     fn unmarshal(raw: &Bytes) -> crate::error::Result<Self>
     where
         Self: Sized,

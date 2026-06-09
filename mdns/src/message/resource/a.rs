@@ -8,20 +8,17 @@ pub struct AResource {
 }
 
 impl fmt::Display for AResource {
-    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "dnsmessage.AResource{{A: {:?}}}", self.a)
     }
 }
 
 impl ResourceBody for AResource {
-    #[tracing::instrument(level = "debug", skip(self))]
     fn real_type(&self) -> DnsType {
         DnsType::A
     }
 
     // pack appends the wire format of the AResource to msg.
-    #[tracing::instrument(level = "debug", skip(self, msg, _compression, _compression_off))]
     fn pack(
         &self,
         msg: Vec<u8>,
@@ -31,7 +28,6 @@ impl ResourceBody for AResource {
         Ok(pack_bytes(msg, &self.a))
     }
 
-    #[tracing::instrument(level = "debug", skip(self, msg, off, _length))]
     fn unpack(&mut self, msg: &[u8], off: usize, _length: usize) -> Result<usize> {
         unpack_bytes(msg, off, &mut self.a)
     }

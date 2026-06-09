@@ -15,7 +15,6 @@ struct ResponderStreamInternal {
 }
 
 impl ResponderStreamInternal {
-    #[tracing::instrument(level = "debug", skip(log2_size))]
     fn new(log2_size: u8) -> Self {
         ResponderStreamInternal {
             packets: vec![None; 1 << log2_size],
@@ -25,7 +24,6 @@ impl ResponderStreamInternal {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, packet))]
     fn add(&mut self, packet: &rtp::packet::Packet) {
         let seq = packet.header.sequence_number;
         if !self.started {
@@ -50,7 +48,6 @@ impl ResponderStreamInternal {
         self.last_added = seq;
     }
 
-    #[tracing::instrument(level = "debug", skip(self, seq))]
     fn get(&self, seq: u16) -> Option<&rtp::packet::Packet> {
         let diff = self.last_added.wrapping_sub(seq);
         if diff >= UINT16SIZE_HALF {
@@ -71,7 +68,6 @@ pub(super) struct ResponderStream {
 }
 
 impl ResponderStream {
-    #[tracing::instrument(level = "debug", skip(log2_size, writer))]
     pub(super) fn new(log2_size: u8, writer: Arc<dyn RTPWriter + Send + Sync>) -> Self {
         ResponderStream {
             internal: Mutex::new(ResponderStreamInternal::new(log2_size)),
@@ -79,13 +75,11 @@ impl ResponderStream {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, pkt))]
     async fn add(&self, pkt: &rtp::packet::Packet) {
         let mut internal = self.internal.lock().await;
         internal.add(pkt);
     }
 
-    #[tracing::instrument(level = "debug", skip(self, seq))]
     pub(super) async fn get(&self, seq: u16) -> Option<rtp::packet::Packet> {
         let internal = self.internal.lock().await;
         internal.get(seq).cloned()
@@ -95,7 +89,6 @@ impl ResponderStream {
 /// RTPWriter is used by Interceptor.bind_local_stream.
 #[async_trait]
 impl RTPWriter for ResponderStream {
-    #[tracing::instrument(level = "debug", skip(self, pkt, a))]
     /// write a rtp packet
     async fn write(&self, pkt: &rtp::packet::Packet, a: &Attributes) -> Result<usize> {
         self.add(pkt).await;

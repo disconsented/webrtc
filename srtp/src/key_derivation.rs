@@ -14,7 +14,6 @@ pub const LABEL_SRTCP_SALT: u8 = 0x05;
 
 pub(crate) const SRTCP_INDEX_SIZE: usize = 4;
 
-#[tracing::instrument(level = "debug", skip(label, master_key, master_salt, index_over_kdr, out_len))]
 pub(crate) fn aes_cm_key_derivation(
     label: u8,
     master_key: &[u8],
@@ -61,7 +60,6 @@ pub(crate) fn aes_cm_key_derivation(
 // As per https://datatracker.ietf.org/doc/html/rfc6188
 // The key derivation rate is zero as per https://datatracker.ietf.org/doc/html/rfc5764 hence index_over-kdr is 0
 const AES_256_BS: usize = 16;
-#[tracing::instrument(level = "debug", skip(label, master_key, master_salt, index_over_kdr, out_len))]
 pub(crate) fn aes_256_cm_key_derivation(
     label: u8,
     master_key: &[u8],
@@ -110,7 +108,6 @@ pub(crate) fn aes_256_cm_key_derivation(
     Ok(out[..out_len].to_vec())
 }
 
-#[tracing::instrument(level = "debug", skip(sequence_number, rollover_counter, ssrc, session_salt))]
 /// Generate IV https://tools.ietf.org/html/rfc3711#section-4.1.1
 /// where the 128-bit integer value IV SHALL be defined by the SSRC, the
 /// SRTP packet index i, and the SRTP session salting key k_s, as below.

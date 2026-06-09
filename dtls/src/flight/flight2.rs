@@ -15,7 +15,6 @@ use crate::record_layer::record_layer_header::*;
 pub(crate) struct Flight2;
 
 impl fmt::Display for Flight2 {
-    #[tracing::instrument(level = "debug", skip(self, f))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "Flight 2")
     }
@@ -23,12 +22,10 @@ impl fmt::Display for Flight2 {
 
 #[async_trait]
 impl Flight for Flight2 {
-    #[tracing::instrument(level = "debug", skip(self))]
     fn has_retransmit(&self) -> bool {
         false
     }
 
-    #[tracing::instrument(level = "debug", skip(self, tx, state, cache, cfg))]
     async fn parse(
         &self,
         tx: &mut mpsc::Sender<mpsc::Sender<()>>,
@@ -109,7 +106,6 @@ impl Flight for Flight2 {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, state, _cache, _cfg))]
     async fn generate(
         &self,
         state: &mut State,
