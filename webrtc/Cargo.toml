@@ -75,6 +75,10 @@ buf-handoff         = []  # alloc+zero 65535 bytes + zero copy
 buf-handoff-uninit  = []  # alloc 65535 bytes (no zero-fill) + zero copy [unsafe]; fastest for large messages
 buf-adaptive        = []  # buf-copy below 1500 B, buf-handoff-uninit above
 
+# DTLS I/O strategy (restore pre-optimisation behaviour; omit both for the defaults)
+dtls-buf-reader     = ["dtls/dtls-buf-reader"]  # BufReader instead of Cursor for in-memory reads
+dtls-buf-writer     = ["dtls/dtls-buf-writer"]  # BufWriter instead of Vec::with_capacity for writes
+
 [[bench]]
 name = "data_channel_buffer"
 harness = false
